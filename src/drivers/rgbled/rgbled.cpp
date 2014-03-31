@@ -242,6 +242,8 @@ RGBLED::ioctl(struct file *filp, int cmd, unsigned long arg)
 		return OK;
 
 	default:
+		/* see if the parent class can make any use of it */
+		ret = CDev::ioctl(filp, cmd, arg);
 		break;
 	}
 
@@ -559,7 +561,7 @@ RGBLED::get(bool &on, bool &powersave, uint8_t &r, uint8_t &g, uint8_t &b)
 void
 rgbled_usage()
 {
-	warnx("missing command: try 'start', 'test', 'info', 'off', 'rgb 30 40 50'");
+	warnx("missing command: try 'start', 'test', 'info', 'off', 'stop', 'rgb 30 40 50'");
 	warnx("options:");
 	warnx("    -b i2cbus (%d)", PX4_I2C_BUS_LED);
 	warnx("    -a addr (0x%x)", ADDR);
@@ -643,7 +645,7 @@ rgbled_main(int argc, char *argv[])
 	if (g_rgbled == nullptr) {
 		warnx("not started");
 		rgbled_usage();
-		exit(0);
+		exit(1);
 	}
 
 	if (!strcmp(verb, "test")) {
@@ -669,7 +671,7 @@ rgbled_main(int argc, char *argv[])
 		exit(0);
 	}
 
-	if (!strcmp(verb, "off")) {
+	if (!strcmp(verb, "off") || !strcmp(verb, "stop")) {
 		fd = open(RGBLED_DEVICE_PATH, 0);
 
 		if (fd == -1) {
@@ -679,6 +681,12 @@ rgbled_main(int argc, char *argv[])
 		ret = ioctl(fd, RGBLED_SET_MODE, (unsigned long)RGBLED_MODE_OFF);
 		close(fd);
 		exit(ret);
+	}
+
+	if (!strcmp(verb, "stop")) {
+		delete g_rgbled;
+		g_rgbled = nullptr;
+		exit(0);
 	}
 
 	if (!strcmp(verb, "rgb")) {

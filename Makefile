@@ -106,7 +106,7 @@ $(STAGED_FIRMWARES): $(IMAGE_DIR)%.vrbrain: $(BUILD_DIR)%.build/firmware.vrbrain
 	@$(ECHO) %% Copying $@
 	$(Q) $(COPY) $< $@
 	$(Q) $(COPY) $(patsubst %.vrbrain,%.bin,$<) $(patsubst %.vrbrain,%.bin,$@)
-	$(Q) $(COPY) $(patsubst %.px4,%.hex,$<) $(patsubst %.px4,%.hex,$@)
+	$(Q) $(COPY) $(patsubst %.vrbrain,%.hex,$<) $(patsubst %.vrbrain,%.hex,$@)
 
 #
 # Generate FIRMWARES.

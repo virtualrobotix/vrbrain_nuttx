@@ -1,5 +1,4 @@
-
- f4_memdump
+define f4_memdump
 	shell mkdir -p /tmp/dump
 	printf "Dumping CCSRAM to /tmp/dump/ccsram\n"
 	dump memory /tmp/dump/ccsram 0x10000000 0x10010000

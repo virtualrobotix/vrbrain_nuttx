@@ -1,5 +1,4 @@
-
- remote :3333
+target remote :3333
 
 # Don't let GDB get confused while stepping
 define hook-step

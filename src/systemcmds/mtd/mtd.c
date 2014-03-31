@@ -263,7 +263,6 @@ mtd_start(char *partition_names[], unsigned n_partitions)
 
 	/* Now create MTD FLASH partitions */
 
-	warnx("Creating partitions");
 	FAR struct mtd_dev_s *part[n_partitions];
 	char blockname[32];
 
@@ -272,9 +271,6 @@ mtd_start(char *partition_names[], unsigned n_partitions)
 
 	for (offset = 0, i = 0; i < n_partitions; offset += nblocks, i++) {
 
-		warnx("  Partition %d. Block offset=%lu, size=%lu",
-		      i, (unsigned long)offset, (unsigned long)nblocks);
-
 		/* Create the partition */
 
 		part[i] = mtd_partition(mtd_dev, offset, nblocks);
@@ -282,7 +278,6 @@ mtd_start(char *partition_names[], unsigned n_partitions)
 		if (!part[i]) {
 			warnx("ERROR: mtd_partition failed. offset=%lu nblocks=%lu",
 			      (unsigned long)offset, (unsigned long)nblocks);
-			fflush(stderr);
 			exit(4);
 		}
 
@@ -294,7 +289,6 @@ mtd_start(char *partition_names[], unsigned n_partitions)
 
 		if (ret < 0) {
 			warnx("ERROR: ftl_initialize %s failed: %d", blockname, ret);
-			fflush(stderr);
 			exit(5);
 		}
 
@@ -304,7 +298,6 @@ mtd_start(char *partition_names[], unsigned n_partitions)
 
 		if (ret < 0) {
 			warnx("ERROR: bchdev_register %s failed: %d", partition_names[i], ret);
-			fflush(stderr);
 			exit(6);
 		}
 	}
