@@ -17,8 +17,11 @@ MODULES		+= drivers/stm32/adc
 MODULES		+= drivers/stm32/tone_alarm
 MODULES		+= drivers/led
 
-MODULES		+= drivers/px4fmu
+
 MODULES		+= drivers/boards/vrbrain-v4
+MODULES		+= drivers/vrbrain/vroutput
+MODULES		+= drivers/vrbrain/vrinput/controls
+MODULES		+= drivers/vrbrain/vrinput
 
 
 
@@ -52,7 +55,7 @@ MODULES		+= systemcmds/mtd
 
 
 
-
+MODULES		+= systemcmds/top
 
 MODULES		+= systemcmds/tests
 

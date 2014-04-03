@@ -95,21 +95,24 @@
 /**
  * Device paths for things that support the GPIO ioctl protocol.
  */
-# define PX4FMU_DEVICE_PATH	"/dev/px4fmu"
+# define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
+# define VRINPUT_DEVICE_PATH	"/dev/vrinput"
 
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V5)
 
 /**
  * Device paths for things that support the GPIO ioctl protocol.
  */
-# define PX4FMU_DEVICE_PATH	"/dev/px4fmu"
+# define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
+# define VRINPUT_DEVICE_PATH	"/dev/vrinput"
 
 #elif defined(CONFIG_ARCH_BOARD_VRHERO_V1)
 
 /**
  * Device paths for things that support the GPIO ioctl protocol.
  */
-# define PX4FMU_DEVICE_PATH	"/dev/px4fmu"
+# define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
+# define VRINPUT_DEVICE_PATH	"/dev/vrinput"
 
 #endif
 

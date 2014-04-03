@@ -168,6 +168,11 @@ __BEGIN_DECLS
 #define HRT_PPM_CHANNEL		1	/* use capture/compare channel 1 */
 #define GPIO_PPM_IN			(GPIO_ALT|GPIO_AF1|GPIO_SPEED_50MHz|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN9)
 
+/* XXX these should be UART pins */
+#define GPIO_SBUS_INPUT   (GPIO_INPUT|GPIO_CNF_INFLOAT|GPIO_MODE_INPUT|GPIO_PORTC|GPIO_PIN7)
+//#define GPIO_SBUS_OUTPUT  (GPIO_OUTPUT|GPIO_CNF_OUTPP|GPIO_MODE_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN10)
+//#define GPIO_SBUS_OENABLE (GPIO_OUTPUT|GPIO_CNF_OUTPP|GPIO_MODE_50MHz|GPIO_OUTPUT_SET|GPIO_PORTB|GPIO_PIN4)
+
 /****************************************************************************************************
  * Public Types
  ****************************************************************************************************/

@@ -113,7 +113,9 @@ const struct {
 	{"file",		test_file,	0},
 	{"file2",		test_file2,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mixer",		test_mixer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#endif
 	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"conv",		test_conv,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mount",		test_mount,	OPT_NOJIGTEST | OPT_NOALLTEST},
 #endif

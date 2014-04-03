@@ -63,14 +63,10 @@
 
 #include <systemlib/systemlib.h>
 #include <systemlib/err.h>
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 #include <systemlib/mixer/mixer.h>
-#endif
 #include <systemlib/pwm_limit/pwm_limit.h>
 #include <systemlib/board_serial.h>
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 #include <drivers/drv_mixer.h>
-#endif
 #include <drivers/drv_rc_input.h>
 
 #include <uORB/topics/actuator_controls.h>
@@ -96,7 +92,6 @@ public:
 		MODE_2PWM,
 		MODE_4PWM,
 		MODE_6PWM,
-		MODE_8PWM,
 	};
 	PX4FMU();
 	virtual ~PX4FMU();
@@ -118,9 +113,6 @@ private:
 #if defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	static const unsigned _max_actuators = 6;
 #endif
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V4) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V5)
-	static const unsigned _max_actuators = 8;
-#endif
 
 	Mode		_mode;
 	unsigned	_pwm_default_rate;
@@ -138,9 +130,7 @@ private:
 	bool		_armed;
 	bool		_pwm_on;
 
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	MixerGroup	*_mixers;
-#endif
 
 	actuator_controls_s _controls;
 
@@ -207,10 +197,6 @@ const PX4FMU::GPIOConfig PX4FMU::_gpio_tab[] = {
 	{GPIO_VDD_5V_HIPOWER_OC, 0,                       0},
 	{GPIO_VDD_5V_PERIPH_OC,  0,                       0},
 #endif
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V4)
-#endif
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V5)
-#endif
 };
 
 const unsigned PX4FMU::_ngpio = sizeof(PX4FMU::_gpio_tab) / sizeof(PX4FMU::_gpio_tab[0]);
@@ -238,9 +224,7 @@ PX4FMU::PX4FMU() :
 	_task_should_exit(false),
 	_armed(false),
 	_pwm_on(false),
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	_mixers(nullptr),
-#endif
 	_failsafe_pwm({0}),
 	      _disarmed_pwm({0}),
 	      _num_failsafe_set(0),
@@ -377,20 +361,6 @@ PX4FMU::set_mode(Mode mode)
 
 		/* XXX magic numbers */
 		up_pwm_servo_init(0x3f);
-		set_pwm_rate(_pwm_alt_rate_channels, _pwm_default_rate, _pwm_alt_rate);
-
-		break;
-
-	case MODE_8PWM: // v2 PWMs as 8 PWM outs
-		debug("MODE_8PWM");
-
-		/* default output rates */
-		_pwm_default_rate = 50;
-		_pwm_alt_rate = 50;
-		_pwm_alt_rate_channels = 0;
-
-		/* XXX magic numbers */
-		up_pwm_servo_init(0xff);
 		set_pwm_rate(_pwm_alt_rate_channels, _pwm_default_rate, _pwm_alt_rate);
 
 		break;
@@ -573,7 +543,6 @@ PX4FMU::task_main()
 				/* get controls - must always do this to avoid spinning */
 				orb_copy(_primary_pwm_device ? ORB_ID_VEHICLE_ATTITUDE_CONTROLS : ORB_ID(actuator_controls_1), _t_actuators, &_controls);
 
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 				/* can we mix? */
 				if (_mixers != nullptr) {
 
@@ -629,7 +598,6 @@ PX4FMU::task_main()
 					/* and publish for anyone that cares to see */
 					orb_publish(_primary_pwm_device ? ORB_ID_VEHICLE_CONTROLS : ORB_ID(actuator_outputs_1), _t_outputs, &outputs);
 				}
-#endif
 			}
 
 			/* how about an arming update? */
@@ -739,7 +707,6 @@ PX4FMU::ioctl(file *filp, int cmd, unsigned long arg)
 	case MODE_2PWM:
 	case MODE_4PWM:
 	case MODE_6PWM:
-	case MODE_8PWM:
 		ret = pwm_ioctl(filp, cmd, arg);
 		break;
 
@@ -969,13 +936,6 @@ PX4FMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 			break;
 		}
 
-	case PWM_SERVO_SET(7):
-	case PWM_SERVO_SET(6):
-		if (_mode < MODE_8PWM) {
-			ret = -EINVAL;
-			break;
-		}
-
 	case PWM_SERVO_SET(5):
 	case PWM_SERVO_SET(4):
 		if (_mode < MODE_6PWM) {
@@ -1002,13 +962,6 @@ PX4FMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 		}
 
 		break;
-
-	case PWM_SERVO_GET(7):
-	case PWM_SERVO_GET(6):
-		if (_mode < MODE_8PWM) {
-			ret = -EINVAL;
-			break;
-		}
 
 	case PWM_SERVO_GET(5):
 	case PWM_SERVO_GET(4):
@@ -1041,14 +994,8 @@ PX4FMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 		break;
 
 	case PWM_SERVO_GET_COUNT:
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	case MIXERIOCGETOUTPUTCOUNT:
-#endif
 		switch (_mode) {
-		case MODE_8PWM:
-			*(unsigned *)arg = 8;
-			break;
-
 		case MODE_6PWM:
 			*(unsigned *)arg = 6;
 			break;
@@ -1095,11 +1042,6 @@ PX4FMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 			break;
 #endif
 
-
-		case 8:
-			set_mode(MODE_8PWM);
-			break;
-
 		default:
 			ret = -EINVAL;
 			break;
@@ -1107,7 +1049,6 @@ PX4FMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 		break;
 	}
 
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	case MIXERIOCRESET:
 		if (_mixers != nullptr) {
 			delete _mixers;
@@ -1161,7 +1102,6 @@ PX4FMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 
 			break;
 		}
-#endif
 
 	default:
 		ret = -ENOTTY;
@@ -1461,10 +1401,6 @@ fmu_new_mode(PortMode new_mode)
 #if defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 		servo_mode = PX4FMU::MODE_6PWM;
 #endif
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V4) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V5)
-		/* select 4-pin PWM mode */
-		servo_mode = PX4FMU::MODE_8PWM;
-#endif
 		break;
 
 		/* mixed modes supported on v1 board only */
@@ -1718,6 +1654,7 @@ fmu_main(int argc, char *argv[])
 		     (unsigned)id[6], (unsigned)id[7], (unsigned)id[8], (unsigned)id[9], (unsigned)id[10], (unsigned)id[11]);
 	}
 
+
 	if (fmu_start() != OK)
 		errx(1, "failed to start the FMU driver");
 
@@ -1783,8 +1720,6 @@ fmu_main(int argc, char *argv[])
 	fprintf(stderr, "  mode_gpio, mode_serial, mode_pwm, mode_gpio_serial, mode_pwm_serial, mode_pwm_gpio, test\n");
 #elif defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	fprintf(stderr, "  mode_gpio, mode_pwm, test, sensor_reset [milliseconds]\n");
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V4) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V5)
-	fprintf(stderr, "  mode_gpio, mode_pwm, test\n");
 #endif
 	exit(1);
 }
