@@ -181,6 +181,7 @@ __EXPORT int nsh_archinitialize(void)
 	/* configure always-on ADC pins */
 	stm32_configgpio(GPIO_ADC1_IN0);
 	stm32_configgpio(GPIO_ADC1_IN10);
+	stm32_configgpio(GPIO_ADC1_IN11);
 
 	/* configure the high-resolution time/callout interface */
 	hrt_init();

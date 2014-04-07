@@ -421,7 +421,7 @@ adc_main(int argc, char *argv[])
 #endif
 #ifdef CONFIG_ARCH_BOARD_VRBRAIN_V4
 		/* XXX this hardcodes the default channel set for VRBRAINv4 - should be configurable */
-		g_adc = new ADC((1 <<  0) | (1 << 10));
+		g_adc = new ADC((1 <<  0) | (1 << 10) | (1 << 11));
 #endif
 #ifdef CONFIG_ARCH_BOARD_VRBRAIN_V5
 		/* XXX this hardcodes the default channel set for VRBRAINv4 - should be configurable */
