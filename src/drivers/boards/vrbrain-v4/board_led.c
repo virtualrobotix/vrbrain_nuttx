@@ -68,8 +68,8 @@ __EXPORT void led_init()
 	stm32_configgpio(GPIO_LED2);
 	stm32_configgpio(GPIO_LED3);
 	stm32_configgpio(GPIO_EXT_LED1);
-	stm32_configgpio(GPIO_EXT_LED1);
-	stm32_configgpio(GPIO_EXT_LED1);
+	stm32_configgpio(GPIO_EXT_LED2);
+	stm32_configgpio(GPIO_EXT_LED3);
 }
 
 __EXPORT void led_on(int led)
