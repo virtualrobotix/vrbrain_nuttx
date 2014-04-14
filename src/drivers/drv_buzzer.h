@@ -32,9 +32,9 @@
  ****************************************************************************/
 
 /**
- * @file drv_led.h
+ * @file drv_buzzer.h
  *
- * LED driver API
+ * BUZZER driver API
  */
 
 #pragma once
@@ -42,36 +42,21 @@
 #include <stdint.h>
 #include <sys/ioctl.h>
 
-#define LED_DEVICE_PATH		"/dev/led"
+#define BUZZER_DEVICE_PATH	"/dev/buzzer"
 
-#define _LED_BASE		0x2800
+#define _BUZZER_BASE		0x2800
 
-/* PX4 LED colour codes */
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
-#define LED_AMBER		1
-#define LED_RED			1	/* some boards have red rather than amber */
-#define LED_BLUE		0
-#define LED_SAFETY		2
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V4) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V5) || defined(CONFIG_ARCH_BOARD_VRHERO_V1)
-#define LED_YELLOW	    0
-#define LED_BLUE		0
-#define LED_AMBER		1
-#define LED_RED			1
-#define LED_GREEN		2
-#define LED_EXT1		3
-#define LED_EXT2		4
-#define LED_EXT3		5
-#endif
+#define BUZZER_EXT		0
 
-#define LED_ON			_IOC(_LED_BASE, 0)
-#define LED_OFF			_IOC(_LED_BASE, 1)
-#define LED_TOGGLE		_IOC(_LED_BASE, 2)
+#define BUZZER_ON			_IOC(_BUZZER_BASE, 0)
+#define BUZZER_OFF			_IOC(_BUZZER_BASE, 1)
+#define BUZZER_TOGGLE		_IOC(_BUZZER_BASE, 2)
 
 __BEGIN_DECLS
 
 /*
- * Initialise the LED driver.
+ * Initialise the BUZZER driver.
  */
-__EXPORT void drv_led_start(void);
+__EXPORT void drv_buzzer_start(void);
 
 __END_DECLS

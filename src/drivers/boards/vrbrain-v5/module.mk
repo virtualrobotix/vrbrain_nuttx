@@ -2,7 +2,8 @@
 # Board-specific startup code for the VRBRAIN
 #
 
-SRCS		 = board_can.c \
+SRCS		 = board_buzzer.c \
+		   board_can.c \
 		   board_init.c \
 		   board_pwm_servo.c \
 		   board_spi.c \

@@ -74,6 +74,10 @@ __EXPORT void weak_function stm32_spiinitialize(void)
 	stm32_configgpio(GPIO_SPI_CS_SDCARD);
 	stm32_configgpio(GPIO_SPI_CS_MS5611);
 	stm32_configgpio(GPIO_SPI_CS_MPU6000);
+	stm32_configgpio(GPIO_SPI_CS_MPU6000_EXT);
+	stm32_configgpio(GPIO_SPI_CS_HMC5983_EXT);
+	stm32_configgpio(GPIO_SPI_CS_EEPROM_EXT);
+	stm32_configgpio(GPIO_SPI_CS_WIFI);
 
 	/* De-activate all peripherals,
 	 * required for some peripheral
@@ -84,6 +88,10 @@ __EXPORT void weak_function stm32_spiinitialize(void)
 	stm32_gpiowrite(GPIO_SPI_CS_SDCARD, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_MS5611, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_MPU6000_EXT, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_HMC5983_EXT, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_EEPROM_EXT, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_WIFI, 1);
 }
 
 __EXPORT void stm32_spi1select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected)
@@ -91,9 +99,16 @@ __EXPORT void stm32_spi1select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, 
 	/* SPI select is active low, so write !selected to select the device */
 
 	switch (devid) {
+	case SPIDEV_WIFI:
+		/* Making sure the other peripherals are not selected */
+		stm32_gpiowrite(GPIO_SPI_CS_WIFI, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_MS5611, 1);
+		break;
+
 	case SPIDEV_MS5611:
 		/* Making sure the other peripherals are not selected */
 		stm32_gpiowrite(GPIO_SPI_CS_MS5611, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_WIFI, 1);
 		break;
 
 	default:
@@ -115,6 +130,33 @@ __EXPORT void stm32_spi2select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, 
 	case SPIDEV_MPU6000:
 		/* Making sure the other peripherals are not selected */
 		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000_EXT, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_HMC5983_EXT, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_EEPROM_EXT, 1);
+		break;
+
+	case SPIDEV_MPU6000_EXT:
+		/* Making sure the other peripherals are not selected */
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000_EXT, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_HMC5983_EXT, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_EEPROM_EXT, 1);
+		break;
+
+	case SPIDEV_HMC5983_EXT:
+		/* Making sure the other peripherals are not selected */
+		stm32_gpiowrite(GPIO_SPI_CS_HMC5983_EXT, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000_EXT, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_EEPROM_EXT, 1);
+		break;
+
+	case SPIDEV_EEPROM_EXT:
+		/* Making sure the other peripherals are not selected */
+		stm32_gpiowrite(GPIO_SPI_CS_EEPROM_EXT, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000_EXT, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_HMC5983_EXT, 1);
 		break;
 
 	default:

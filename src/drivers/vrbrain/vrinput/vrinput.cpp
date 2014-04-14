@@ -767,7 +767,7 @@ VRINPUT::init()
 
 
 	/* start the IO interface task */
-	_task = task_create("VRINPUT", SCHED_PRIORITY_ACTUATOR_OUTPUTS, 2048, (main_t)&VRINPUT::task_main_trampoline, nullptr);
+	_task = task_create("vrinput", SCHED_PRIORITY_ACTUATOR_OUTPUTS, 2048, (main_t)&VRINPUT::task_main_trampoline, nullptr);
 
 	if (_task < 0) {
 		debug("task start failed: %d", errno);

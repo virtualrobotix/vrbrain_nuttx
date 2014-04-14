@@ -66,6 +66,7 @@
 
 #include <drivers/drv_hrt.h>
 #include <drivers/drv_led.h>
+#include <drivers/drv_buzzer.h>
 
 #include <systemlib/cpuload.h>
 
@@ -91,17 +92,13 @@
 #  endif
 #endif
 
-/*
- * Ideally we'd be able to get these from up_internal.h,
- * but since we want to be able to disable the NuttX use
- * of leds for system indication at will and there is no
- * separate switch, we need to build independent of the
- * CONFIG_ARCH_LEDS configuration switch.
- */
 __BEGIN_DECLS
 extern void led_init();
 extern void led_on(int led);
 extern void led_off(int led);
+extern void buzzer_init();
+extern void buzzer_on(int buzzer);
+extern void buzzer_off(int buzzer);
 __END_DECLS
 
 /****************************************************************************
@@ -129,6 +126,9 @@ __EXPORT void stm32_boardinitialize(void)
 
 	/* configure LEDs (empty call to NuttX' ledinit) */
 	up_ledinit();
+
+	/* configure BUZZERSs */
+	buzzer_init();
 }
 
 /****************************************************************************
@@ -208,11 +208,18 @@ __EXPORT int nsh_archinitialize(void)
 
 
 
+	/* initial BUZZER state */
+	drv_buzzer_start();
+	buzzer_off(BUZZER_EXT);
+
 	/* initial LED state */
 	drv_led_start();
 	led_off(LED_AMBER);
 	led_off(LED_BLUE);
 	led_off(LED_GREEN);
+	led_off(LED_EXT1);
+	led_off(LED_EXT2);
+	led_off(LED_EXT3);
 
 	/* Configure SPI-based devices */
 
@@ -229,6 +236,7 @@ __EXPORT int nsh_archinitialize(void)
 	SPI_SETFREQUENCY(spi1, 10000000);
 	SPI_SETBITS(spi1, 8);
 	SPI_SETMODE(spi1, SPIDEV_MODE3);
+	SPI_SELECT(spi1, GPIO_SPI_CS_WIFI, false);
 	SPI_SELECT(spi1, GPIO_SPI_CS_MS5611, false);
 	up_udelay(20);
 
@@ -248,6 +256,9 @@ __EXPORT int nsh_archinitialize(void)
 	SPI_SETBITS(spi2, 8);
 	SPI_SETMODE(spi2, SPIDEV_MODE3);
 	SPI_SELECT(spi2, GPIO_SPI_CS_MPU6000, false);
+	SPI_SELECT(spi2, GPIO_SPI_CS_MPU6000_EXT, false);
+	SPI_SELECT(spi2, GPIO_SPI_CS_HMC5983_EXT, false);
+	SPI_SELECT(spi2, GPIO_SPI_CS_EEPROM_EXT, false);
 
 	message("[boot] Successfully initialized SPI port 2\n");
 

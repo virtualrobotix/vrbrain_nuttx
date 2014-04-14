@@ -42,5 +42,6 @@ SRCS			 = test_adc.c \
 			   test_sensors.c \
 			   tests_main.c \
 			   test_rc.c \
-			   test_mtd.c
+			   test_mtd.c \
+			   test_buzzer.c
 endif

@@ -32,46 +32,55 @@
  ****************************************************************************/
 
 /**
- * @file drv_led.h
+ * @file vrbrain_buzzer.c
  *
- * LED driver API
+ * VRBRAIN BUZZER backend.
  */
 
-#pragma once
+#include <nuttx/config.h>
 
-#include <stdint.h>
-#include <sys/ioctl.h>
+#include <stdbool.h>
 
-#define LED_DEVICE_PATH		"/dev/led"
+#include "stm32.h"
+#include "board_config.h"
 
-#define _LED_BASE		0x2800
-
-/* PX4 LED colour codes */
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
-#define LED_AMBER		1
-#define LED_RED			1	/* some boards have red rather than amber */
-#define LED_BLUE		0
-#define LED_SAFETY		2
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V4) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V5) || defined(CONFIG_ARCH_BOARD_VRHERO_V1)
-#define LED_YELLOW	    0
-#define LED_BLUE		0
-#define LED_AMBER		1
-#define LED_RED			1
-#define LED_GREEN		2
-#define LED_EXT1		3
-#define LED_EXT2		4
-#define LED_EXT3		5
-#endif
-
-#define LED_ON			_IOC(_LED_BASE, 0)
-#define LED_OFF			_IOC(_LED_BASE, 1)
-#define LED_TOGGLE		_IOC(_LED_BASE, 2)
+#include <arch/board/board.h>
 
 __BEGIN_DECLS
-
-/*
- * Initialise the LED driver.
- */
-__EXPORT void drv_led_start(void);
-
+extern void buzzer_init();
+extern void buzzer_on(int buzzer);
+extern void buzzer_off(int buzzer);
+extern void buzzer_toggle(int buzzer);
 __END_DECLS
+
+__EXPORT void buzzer_init()
+{
+	stm32_configgpio(GPIO_BUZZER);
+}
+
+__EXPORT void buzzer_on(int buzzer)
+{
+	if (buzzer == 0)
+	{
+		stm32_gpiowrite(GPIO_BUZZER, true);
+	}
+}
+
+__EXPORT void buzzer_off(int buzzer)
+{
+	if (buzzer == 0)
+	{
+		stm32_gpiowrite(GPIO_BUZZER, false);
+	}
+}
+
+__EXPORT void buzzer_toggle(int buzzer)
+{
+	if (buzzer == 0)
+	{
+		if (stm32_gpioread(GPIO_BUZZER))
+			stm32_gpiowrite(GPIO_BUZZER, false);
+		else
+			stm32_gpiowrite(GPIO_BUZZER, true);
+	}
+}

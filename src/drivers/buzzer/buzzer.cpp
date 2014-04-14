@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2013 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,46 +32,87 @@
  ****************************************************************************/
 
 /**
- * @file drv_led.h
+ * @file buzzer.cpp
  *
- * LED driver API
+ * BUZZER driver.
  */
 
-#pragma once
-
-#include <stdint.h>
-#include <sys/ioctl.h>
-
-#define LED_DEVICE_PATH		"/dev/led"
-
-#define _LED_BASE		0x2800
-
-/* PX4 LED colour codes */
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
-#define LED_AMBER		1
-#define LED_RED			1	/* some boards have red rather than amber */
-#define LED_BLUE		0
-#define LED_SAFETY		2
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V4) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V5) || defined(CONFIG_ARCH_BOARD_VRHERO_V1)
-#define LED_YELLOW	    0
-#define LED_BLUE		0
-#define LED_AMBER		1
-#define LED_RED			1
-#define LED_GREEN		2
-#define LED_EXT1		3
-#define LED_EXT2		4
-#define LED_EXT3		5
-#endif
-
-#define LED_ON			_IOC(_LED_BASE, 0)
-#define LED_OFF			_IOC(_LED_BASE, 1)
-#define LED_TOGGLE		_IOC(_LED_BASE, 2)
+#include <nuttx/config.h>
+#include <drivers/device/device.h>
+#include <drivers/drv_buzzer.h>
 
 __BEGIN_DECLS
-
-/*
- * Initialise the LED driver.
- */
-__EXPORT void drv_led_start(void);
-
+extern void buzzer_init();
+extern void buzzer_on(int buzzer);
+extern void buzzer_off(int buzzer);
+extern void buzzer_toggle(int buzzer);
 __END_DECLS
+
+class BUZZER : device::CDev
+{
+public:
+	BUZZER();
+	virtual ~BUZZER();
+
+	virtual int		init();
+	virtual int		ioctl(struct file *filp, int cmd, unsigned long arg);
+};
+
+BUZZER::BUZZER() :
+	CDev("buzzer", BUZZER_DEVICE_PATH)
+{
+	init();
+}
+
+BUZZER::~BUZZER()
+{
+}
+
+int
+BUZZER::init()
+{
+	CDev::init();
+	buzzer_init();
+
+	return 0;
+}
+
+int
+BUZZER::ioctl(struct file *filp, int cmd, unsigned long arg)
+{
+	int result = OK;
+
+	switch (cmd) {
+	case BUZZER_ON:
+		buzzer_on(arg);
+		break;
+
+	case BUZZER_OFF:
+		buzzer_off(arg);
+		break;
+
+	case BUZZER_TOGGLE:
+		buzzer_toggle(arg);
+		break;
+
+
+	default:
+		result = CDev::ioctl(filp, cmd, arg);
+	}
+	return result;
+}
+
+namespace
+{
+BUZZER	*gBUZZER;
+}
+
+void
+drv_buzzer_start(void)
+{
+	if (gBUZZER == nullptr) {
+		gBUZZER = new BUZZER;
+		if (gBUZZER != nullptr)
+			gBUZZER->init();
+	}
+}

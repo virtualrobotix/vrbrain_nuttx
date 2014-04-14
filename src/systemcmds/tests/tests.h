@@ -114,6 +114,7 @@ extern int	test_conv(int argc, char *argv[]);
 extern int	test_mount(int argc, char *argv[]);
 extern int	test_mtd(int argc, char *argv[]);
 extern int	test_mathlib(int argc, char *argv[]);
+extern int	test_buzzer(int argc, char *argv[]);
 
 __END_DECLS
 

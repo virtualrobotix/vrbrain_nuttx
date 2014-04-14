@@ -125,6 +125,9 @@ const struct {
 	{"mathlib",		test_mathlib,	0},
 #endif
 #endif
+#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V4) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V5)
+	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#endif
 	{"help",		test_help,	OPT_NOALLTEST | OPT_NOHELP | OPT_NOJIGTEST},
 	{NULL,			NULL, 		0}
 };
