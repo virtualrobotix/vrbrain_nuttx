@@ -75,3 +75,4 @@ const uint8_t g_funcnparms[SYS_nsyscalls] =
  ****************************************************************************/
 
  #endif /* CONFIG_NUTTX_KERNEL */
+ 

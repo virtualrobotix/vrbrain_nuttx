@@ -199,8 +199,7 @@ void uip_arp_update(uint16_t *pipaddr, uint8_t *ethaddr)
   if (i == CONFIG_NET_ARPTAB_SIZE)
     {
       uint8_t tmpage = 0;
-      int j = 0;
-
+      int   j      = 0;
       for (i = 0; i < CONFIG_NET_ARPTAB_SIZE; ++i)
         {
           tabptr = &g_arptable[i];
@@ -210,7 +209,6 @@ void uip_arp_update(uint16_t *pipaddr, uint8_t *ethaddr)
               j = i;
             }
         }
-
       i = j;
       tabptr = &g_arptable[i];
     }
@@ -231,7 +229,7 @@ void uip_arp_update(uint16_t *pipaddr, uint8_t *ethaddr)
  *   Find the ARP entry corresponding to this IP address.
  *
  * Input parameters:
- *   ipaddr - Refers to an IP address in network order
+ *   ipaddr - Refers to an IP addressin network order
  *
  * Assumptions
  *   Interrupts are disabled; Returned value will become unstable when
@@ -252,7 +250,6 @@ struct arp_entry *uip_arp_find(in_addr_t ipaddr)
           return tabptr;
         }
     }
-
   return NULL;
 }
 

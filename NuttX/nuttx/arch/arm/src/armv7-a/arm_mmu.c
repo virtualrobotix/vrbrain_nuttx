@@ -194,7 +194,7 @@ void mmu_invalidate_region(uint32_t vstart, size_t size)
   uint32_t vaddr = vstart & 0xfffff000;
   uint32_t vend  = vaddr + size;
 
-  /* Loop, invalidating regions */
+  /* Loop, writing each mapping into the L1 page table */
 
   while (vaddr < vend)
     {

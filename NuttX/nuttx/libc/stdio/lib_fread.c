@@ -45,7 +45,7 @@
 #include "lib_internal.h"
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Definitions
  ****************************************************************************/
 
 /****************************************************************************
@@ -95,6 +95,5 @@ size_t fread(FAR void *ptr, size_t size, size_t n_items, FAR FILE *stream)
 
       items_read = bytes_read / size;
     }
-
   return items_read;
 }

@@ -10,7 +10,6 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -58,7 +57,7 @@ void uip_neighbor_init(void)
 {
   int i;
 
-  for (i = 0; i < ENTRIES; ++i)
+  for(i = 0; i < ENTRIES; ++i)
     {
       entries[i].time = MAX_TIME;
     }
@@ -68,7 +67,7 @@ void uip_neighbor_periodic(void)
 {
   int i;
 
-  for (i = 0; i < ENTRIES; ++i)
+  for(i = 0; i < ENTRIES; ++i)
     {
       if (entries[i].time < MAX_TIME)
         {
@@ -92,7 +91,6 @@ void uip_neighbor_add(uip_ipaddr_t ipaddr, struct uip_neighbor_addr *addr)
 
   oldest_time = 0;
   oldest = 0;
-
   for (i = 0; i < ENTRIES; ++i)
     {
       if (entries[i].time == MAX_TIME)
@@ -125,14 +123,13 @@ static struct neighbor_entry *find_entry(uip_ipaddr_t ipaddr)
 {
   int i;
 
-  for (i = 0; i < ENTRIES; ++i)
+  for(i = 0; i < ENTRIES; ++i)
     {
       if (uip_ipaddr_cmp(entries[i].ipaddr, ipaddr))
         {
           return &entries[i];
         }
     }
-
   return NULL;
 }
 
@@ -159,8 +156,7 @@ struct uip_neighbor_addr *uip_neighbor_lookup(uip_ipaddr_t ipaddr)
              e->addr.addr.ether_addr_octet[2], e->addr.addr.ether_addr_octet[3],
              e->addr.addr.ether_addr_octet[4], e->addr.addr.ether_addr_octet[5]);
 
-      return &e->addr;
-    }
-
+    return &e->addr;
+  }
   return NULL;
 }

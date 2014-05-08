@@ -301,3 +301,5 @@ int usbhost_trdump(void)
   return usbhost_trenumerate(usbhost_trsyslog, NULL);
 }
 #endif /* CONFIG_USBHOST_TRACE */
+
+

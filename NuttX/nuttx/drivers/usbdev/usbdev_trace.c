@@ -49,7 +49,7 @@
 #undef usbtrace
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Definitions
  ****************************************************************************/
 
 /* Configuration ************************************************************/
@@ -173,7 +173,6 @@ void usbtrace(uint16_t event, uint16_t value)
       usbtrace_trprintf((trprintf_t)lowsyslog, event, value);
 #endif
     }
-
   irqrestore(flags);
 }
 #endif /* CONFIG_USBDEV_TRACE || CONFIG_DEBUG && CONFIG_DEBUG_USB */
