@@ -105,7 +105,7 @@ static uint8_t g_nestlevel;
  ************************************************************************************/
 
 /************************************************************************************
- * Name: up_ledinit
+ * Name: board_led_initialize
  ************************************************************************************/
 
 static void up_setleds(uint8_t gybits, uint8_t rbit)
@@ -116,7 +116,7 @@ static void up_setleds(uint8_t gybits, uint8_t rbit)
   regval &= ~GREENYELLOW_LED_MASK;
   regval |= gybits;
   putreg8(regval, GREENYELLOW_LED_PORT);
-  
+
   regval  = getreg8(RED_LED_PORT);
   regval &= ~RED_LED_MASK;
   regval |= rbit;
@@ -128,10 +128,10 @@ static void up_setleds(uint8_t gybits, uint8_t rbit)
  ************************************************************************************/
 
 /************************************************************************************
- * Name: up_ledinit
+ * Name: board_led_initialize
  ************************************************************************************/
 
-void up_ledinit(void)
+void board_led_initialize(void)
 {
   register uint8_t regval;
 
@@ -140,27 +140,27 @@ void up_ledinit(void)
   regval  = getreg8(GREENYELLOW_LED_PORT);
   regval |= (GREEN_LED_OFF |YELLOW_LED_OFF);
   putreg8(regval, GREENYELLOW_LED_PORT);
-  
+
   regval  = getreg8(RED_LED_PORT);
   regval |=  RED_LED_OFF;
   putreg8(regval, RED_LED_PORT);
 
   /* Set the direction to output */
-  
+
   regval  = getreg8(GREENYELLOW_DIR_PORT);
   regval |= (GREEN_LED |YELLOW_LED);
   putreg8(regval, GREENYELLOW_DIR_PORT);
-  
+
   regval  = getreg8(RED_DIR_PORT);
   regval |=  RED_LED;
   putreg8(regval, RED_DIR_PORT);
 }
 
 /************************************************************************************
- * Name: up_ledon
+ * Name: board_led_on
  ************************************************************************************/
 
-void up_ledon(int led)
+void board_led_on(int led)
 {
   uint8_t ledset;
 
@@ -193,10 +193,10 @@ void up_ledon(int led)
 }
 
 /************************************************************************************
- * Name: up_ledoff
+ * Name: board_led_off
  ************************************************************************************/
 
-void up_ledoff(int led)
+void board_led_off(int led)
 {
   uint8_t ledset;
 

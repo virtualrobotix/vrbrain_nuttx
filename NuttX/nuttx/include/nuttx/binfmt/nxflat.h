@@ -98,7 +98,7 @@ struct nxflat_loadinfo_s
    *
    * addrenv - This is the handle created by up_addrenv_create() that can be
    *   used to manage the tasks address space.
-   * oldenv  - This is a value returned by up_addrenv_select() that must be 
+   * oldenv  - This is a value returned by up_addrenv_select() that must be
    *   used to restore the current hardware address environment.
    */
 
@@ -236,7 +236,7 @@ EXTERN int nxflat_bind(FAR struct nxflat_loadinfo_s *loadinfo,
  * Description:
  *   This function unloads the object from memory. This essentially undoes
  *   the actions of nxflat_load.  It is called only under certain error
- *   conditions after the the module has been loaded but not yet started.
+ *   conditions after the module has been loaded but not yet started.
  *
  * Returned Value:
  *   0 (OK) is returned on success and a negated errno is returned on

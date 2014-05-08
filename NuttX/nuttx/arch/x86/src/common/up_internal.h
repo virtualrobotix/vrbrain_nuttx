@@ -137,7 +137,7 @@ extern volatile uint32_t *current_regs;
 
 /* This is the beginning of heap as provided from up_head.S. This is the first
  * address in DRAM after the loaded program+bss+idle stack.  The end of the
- * heap is CONFIG_DRAM_END
+ * heap is CONFIG_RAM_END
  */
 
 extern uint32_t g_idle_topstack;
@@ -145,7 +145,7 @@ extern uint32_t g_idle_topstack;
 /* Address of the saved user stack pointer */
 
 #if CONFIG_ARCH_INTERRUPTSTACK > 3
-extern uint32_t g_userstack;
+extern uint32_t g_intstackbase;
 #endif
 
 /* These 'addresses' of these values are setup by the linker script.  They are
@@ -241,13 +241,13 @@ extern void up_maskack_irq(int irq);
 /* Defined in board/up_leds.c */
 
 #ifdef CONFIG_ARCH_LEDS
-extern void up_ledinit(void);
-extern void up_ledon(int led);
-extern void up_ledoff(int led);
+extern void board_led_initialize(void);
+extern void board_led_on(int led);
+extern void board_led_off(int led);
 #else
-# define up_ledinit()
-# define up_ledon(led)
-# define up_ledoff(led)
+# define board_led_initialize()
+# define board_led_on(led)
+# define board_led_off(led)
 #endif
 
 /* Defined in board/up_network.c */

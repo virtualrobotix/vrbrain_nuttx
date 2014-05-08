@@ -7,8 +7,8 @@ This port is based on patches contributed by Denis Carikli for both the
 compal e99 and e88. At the time of initial check-in, the following phones
 were tested:
 
-* motorolla c155 (compal e99) with the compalram and highram configuration
-* motorolla W220 (compal e88)
+* Motorola c155 (compal e99) with the compalram and highram configuration
+* Motorola W220 (compal e88)
 * The openmoko freerunner baseband(compal e88)
 
 The patches were made by Alan Carvalho de Assis and Denis Carikli using
@@ -27,11 +27,11 @@ directory at same level as the nuttx project:
   `- osmocom-bb
 
 If you attempt to build this configuration without osmocom-bb, and that
-you added support for sercomm in your configuration(CONFIG_SERCOMM_CONSOLE=y) 
-you will get compilation errors in drivers/sercomm due to header files that 
+you added support for sercomm in your configuration(CONFIG_SERCOMM_CONSOLE=y)
+you will get compilation errors in drivers/sercomm due to header files that
 are needed from the osmocom-bb directory.
 
-By default, NuttX will not use sercomm (HDLC protocol) to communicate with 
+By default, NuttX will not use sercomm (HDLC protocol) to communicate with
 the host system. Sercomm is the transport used by osmocom-bb that runs on top
 of serial.  See http://bb.osmocom.org/trac/wiki/nuttx-bb/run for detailed
 the usage of nuttx with sercomm.

@@ -150,7 +150,7 @@ int nxflat_addrenv_alloc(FAR struct nxflat_loadinfo_s *loadinfo, size_t envsize)
   /* Success... save the fruits of our labor */
 
   loadinfo->dspace = dspace;
-  dspace->crefs    = 1;  
+  dspace->crefs    = 1;
   dspace->region   = (FAR uint8_t *)vaddr;
   return OK;
 
@@ -172,7 +172,7 @@ errout_with_dspace:
     }
 
   loadinfo->dspace = dspace;
-  dspace->crefs    = 1;  
+  dspace->crefs    = 1;
   return OK;
 #endif
 }
@@ -183,7 +183,7 @@ errout_with_dspace:
  * Description:
  *   Release the address environment previously created by
  *   nxflat_addrenv_create().  This function  is called only under certain
- *   error conditions after the the module has been loaded but not yet
+ *   error conditions after the module has been loaded but not yet
  *   started. After the module has been started, the address environment
  *   will automatically be freed when the module exits.
  *

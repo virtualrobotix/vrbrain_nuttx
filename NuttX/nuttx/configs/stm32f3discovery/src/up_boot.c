@@ -83,7 +83,7 @@ void stm32_boardinitialize(void)
 #endif
 
   /* Initialize USB if the 1) USB device controller is in the configuration and 2)
-   * disabled, and 3) the weak function stm32_usbinitialize() has been brought 
+   * disabled, and 3) the weak function stm32_usbinitialize() has been brought
    * into the build. Presumeably either CONFIG_USBDEV is also selected.
    */
 
@@ -97,6 +97,6 @@ void stm32_boardinitialize(void)
   /* Configure on-board LEDs if LED support has been selected. */
 
 #ifdef CONFIG_ARCH_LEDS
-  up_ledinit();
+  board_led_initialize();
 #endif
 }

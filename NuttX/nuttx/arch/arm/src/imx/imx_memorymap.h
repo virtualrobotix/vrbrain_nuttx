@@ -65,7 +65,7 @@
 
 /* Mapped sections */
 #define IMX_PERIPHERALS_NSECTIONS 1          /*  1Mb  1 section                     */
-#define IMX_SDRAM0_NSECTIONS      16         /* 16Mb Based on CONFIG_DRAM_SIZE      */
+#define IMX_SDRAM0_NSECTIONS      16         /* 16Mb Based on CONFIG_RAM_SIZE      */
 #define IMX_SDRAM1_NSECTIONS      0          /* 64Mb (Not mapped)                   */
 #define IMX_FLASH_NSECTIONS       32         /* 64Mb Based on CONFIG_FLASH_SIZE     */
 #define IMX_CS1_NSECTIONS         16         /* 16Mb                                */
@@ -85,7 +85,7 @@
  *    - All vector addresses are FLASH absolute addresses,
  *    - DRAM cannot reside at address zero,
  *    - Vectors at address zero (CR_V is not set),
- *    - The boot logic must configure SDRAM and, 
+ *    - The boot logic must configure SDRAM and,
  *    - The .data section in RAM must be initialized.
  *
  * 2. We boot in FLASH but copy ourselves to DRAM from better performance.
@@ -116,11 +116,11 @@
 #ifdef CONFIG_BOOT_RUNFROMFLASH
    /* Use the identity mapping */
 
-#  define IMX_SDRAM_VSECTION      0x08000000 /* -(+CONFIG_DRAM_SIZE)                */
+#  define IMX_SDRAM_VSECTION      0x08000000 /* -(+CONFIG_RAM_SIZE)                 */
 #else
    /* Map SDRAM to address zero */
 
-#  define IMX_SDRAM_VSECTION      0x00000000 /* -(+CONFIG_DRAM_SIZE)                */
+#  define IMX_SDRAM_VSECTION      0x00000000 /* -(+CONFIG_RAM_SIZE)                 */
 #endif
 
 /* We use a identity mapping for other regions */
@@ -140,7 +140,7 @@
 /* Peripheral Register Offsets ******************************************************/
 
 #define IMX_AIPI1_OFFSET          0x00000000 /* -0x00000fff AIPI1               4Kb */
-#define IMX_WDOG_OFFSET           0x00001000 /* -0x00001fff WatchDog            4Kb */          
+#define IMX_WDOG_OFFSET           0x00001000 /* -0x00001fff WatchDog            4Kb */
 #define IMX_TIMER1_OFFSET         0x00002000 /* -0x00002fff Timer1              4Kb */
 #define IMX_TIMER2_OFFSET         0x00003000 /* -0x00003fff Timer2              4Kb */
 #define IMX_RTC_OFFSET            0x00004000 /* -0x00004fff RTC                 4Kb */
@@ -216,10 +216,11 @@
  * This offset reserves space for the MMU page cache.
  */
 
-#define NUTTX_START_VADDR         ((CONFIG_DRAM_NUTTXENTRY & 0xfff00000) | PGTABLE_SIZE)
+#define NUTTX_START_VADDR         ((CONFIG_RAM_NUTTXENTRY & 0xfff00000) | PGTABLE_SIZE)
+#define NUTTX_START_PADDR         (IMX_SDRAM0_PSECTION | PGTABLE_SIZE)
 
-#if NUTTX_START_VADDR != CONFIG_DRAM_NUTTXENTRY
-# error "CONFIG_DRAM_NUTTXENTRY does not have correct offset for page table"
+#if NUTTX_START_VADDR != CONFIG_RAM_NUTTXENTRY
+# error "CONFIG_RAM_NUTTXENTRY does not have correct offset for page table"
 #endif
 
 /* Section MMU Flags  */

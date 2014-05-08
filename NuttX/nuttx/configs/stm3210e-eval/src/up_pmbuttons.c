@@ -53,7 +53,7 @@
 #include "stm32_pm.h"
 #include "stm3210e-internal.h"
 
-#if defined(CONFIG_PM) && defined(CONFIG_IDLE_CUSTOM) && defined(CONFIG_PM_BUTTONS)
+#if defined(CONFIG_PM) && defined(CONFIG_ARCH_IDLE_CUSTOM) && defined(CONFIG_PM_BUTTONS)
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -298,13 +298,13 @@ void up_pmbuttons(void)
 {
   /* Initialize the button GPIOs */
 
-  up_buttoninit();
+  board_button_initialize();
 
 #ifdef CONFIG_ARCH_IRQBUTTONS
   int i;
   for (i = CONFIG_PM_IRQBUTTONS_MIN; i <= CONFIG_PM_IRQBUTTONS_MAX; i++)
     {
-      xcpt_t oldhandler = up_irqbutton(i, g_buttonhandlers[BUTTON_INDEX(i)]);
+      xcpt_t oldhandler = board_button_irq(i, g_buttonhandlers[BUTTON_INDEX(i)]);
 
       if (oldhandler != NULL)
         {
@@ -316,4 +316,4 @@ void up_pmbuttons(void)
 #endif
 }
 
-#endif /* defined(CONFIG_PM) && defined(CONFIG_IDLE_CUSTOM) && defined(CONFIG_PM_BUTTONS) */
+#endif /* defined(CONFIG_PM) && defined(CONFIG_ARCH_IDLE_CUSTOM) && defined(CONFIG_PM_BUTTONS) */

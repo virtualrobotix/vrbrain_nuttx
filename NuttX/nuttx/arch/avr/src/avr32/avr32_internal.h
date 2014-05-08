@@ -52,7 +52,7 @@
  ****************************************************************************/
 
 /* Macros to handle saving and restore interrupt state.  The state is copied
- * from the stack to the TCB, but only a referenced is passed to get the 
+ * from the stack to the TCB, but only a referenced is passed to get the
  * state from the TCB.
  */
 
@@ -76,7 +76,7 @@ extern volatile uint32_t *current_regs;
 
 /* This is the beginning of heap as provided from up_head.S. This is the first
  * address in DRAM after the loaded program+bss+idle stack.  The end of the
- * heap is CONFIG_DRAM_END
+ * heap is CONFIG_RAM_END
  */
 
 extern uint32_t g_idle_topstack;

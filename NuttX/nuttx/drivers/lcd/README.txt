@@ -22,7 +22,7 @@ LCD Header files
       Structures and APIs needed to work with LCD drivers are provided in
       this header file.  This header file also depends on some of the same
       definitions used for the frame buffer driver as privided in
-      include/nuttx/fb.h.
+      include/nuttx/video/fb.h.
 
   struct lcd_dev_s
 
@@ -81,7 +81,7 @@ Binding LCD Drivers
   binding sequence is:
 
   1. Get an instance of struct lcd_dev_s from the hardware-specific LCD
-     device driver, and 
+     device driver, and
   2. Provide that instance to the initialization method of the higher
      level device driver.
 
@@ -90,6 +90,8 @@ Examples: /drivers/lcd/
 
 Re-usable LCD drivers reside in the drivers/lcd directory:
 
+  LEDs:
+  ----
   mio283qt2.c. This is a driver for the MI0283QT-2 LCD from Multi-Inno
     Technology Co., Ltd.  This LCD is based on the Himax HX8347-D LCD
     controller.
@@ -97,10 +99,6 @@ Re-usable LCD drivers reside in the drivers/lcd directory:
   nokia6100.c.  Supports the Nokia 6100 display with either the Philips
     PCF883 or the Epson S1D15G10 display controller.  This LCD is used
     with the Olimex LPC1766-STK (but has not been fully integrated).
-  
-  p14201.c.  Driver for RiT P14201 series display with SD1329 IC
-    controller.  This OLED is used with older versions of the
-    TI/Luminary LM3S8962 Evaluation Kit.
 
   ssd12989.c.  Generic LCD driver for LCDs based on the Solomon Systech
     SSD1289 LCD controller. Think of this as a template for an LCD driver
@@ -110,13 +108,41 @@ Re-usable LCD drivers reside in the drivers/lcd directory:
   st7567.c.  LCD Display Module, ST7567, Univision Technology Inc. Used
     with the LPCXpresso and Embedded Artists base board.
 
+  memlcd.c.  Sharp Memory LCD Suite, LS013B7DH01, LS013B7DH03, etc.
+    There are some more different models, they are basically controlled
+    by similar logics, thus this driver can be extended.  Example usage:
+
+      configs/maple
+
+  OLEDs:
+  -----
+  p14201.c.  Driver for RiT P14201 series display with SD1329 IC
+    controller.  Based on the SD1329 controller.  This OLED is used with
+    older versions of the TI/Luminary LM3S8962 Evaluation Kit.  Example
+    usage
+
+      configs/lm3s6965-ek/src
+      configs/lm3s8962-ek/src
+
   ug-2864ambag01.c.  OLED Display Module, UUG-2864AMBAG01, Univision
-    Technology Inc.  See configs/stm32f4discovery and configs/zp214xp
-    for example usage.
+    Technology Inc.  Based on the SH1101A controller.  Example usage:
+
+      configs/stm32f4discovery
+      configs/zp214xp
 
   ug-9664hswag01.c.  OLED Display Module, UG-9664HSWAG01, Univision
-    Technology Inc.  Used with the LPC Xpresso and Embedded Artists
-    base board.
+    Technology Inc.  Based on the SSD1305 controller.  Used with the
+    LPC Xpresso and Embedded Artists base board.  Example usage:
+
+      configs/lpcxpresso-lpc1768
+
+  ssd1306.c.  OLED Display Modules based on the SSD1306 controllers.
+    This includes the UG-2864HSWEG01 and UG2832HSWEG04, Both from Univision
+    Technology Inc.  The latter is used with the OLED1 module that comes
+    with the Atmel SAM4l Xplained Pro board.  Examplel usage:
+
+      configs/stm32f4discovery
+      configs/sam4l-xplained
 
 Examples: configs/
 ==================
@@ -141,7 +167,7 @@ that makes then less re-usable:
     configs/shenzhou/src/up_ssd1289.c
 
   kwikstik-k40:
-  
+
     configs/kwikstik-k40/src/up_lcd.c.  Don't waste your time.  This is
       just a stub.
 
@@ -163,7 +189,7 @@ that makes then less re-usable:
     configs/pic32mx7mmb/src/up_mio283qt2.c.  This driver is for the MI0283QT-2
       LCD from Multi-Inno Technology Co., Ltd. This LCD is based on the Himax
       HX8347-D LCD controller.
- 
+
   ILI93xx and Similar:
 
     configs/stm3210e-eval/src/up_lcd.c. This driver supports the following
@@ -182,10 +208,15 @@ that makes then less re-usable:
 
     configs/hymini-stm32v/src/up_r61505u.c
 
+  Sharp Memory LCD:
+
+    configs/maple/src/up_lcd.c
+
   OLEDs:
 
     configs/stm32f4discovery/src/up_ug2864ambag01.c
     configs/stm32f4discovery/src/up_ug2864hsweg01.c
+    configs/sam4l-xplained/src/up_ug2832hsweg04.c
     configs/zp214xpa/src/up_ug2864ambag01.c
 
   LCD controllers built-into the MCU:

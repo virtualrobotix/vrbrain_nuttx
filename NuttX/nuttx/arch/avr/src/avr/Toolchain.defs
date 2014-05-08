@@ -47,16 +47,19 @@ ifeq ($(filter y, \
     ),y)
   CONFIG_AVR_TOOLCHAIN ?= BUILDROOT
 endif
+
 ifeq ($(filter y, \
       $(CONFIG_AVR_CROSSPACK) \
     ),y)
   CONFIG_AVR_TOOLCHAIN ?= CROSSPACK
 endif
+
 ifeq ($(filter y, \
       $(CONFIG_AVR_LINUXGCC) \
     ),y)
   CONFIG_AVR_TOOLCHAIN ?= LINUXGCC
 endif
+
 ifeq ($(filter y, \
       $(CONFIG_AVR_WINAVR) \
     ),y)
@@ -79,11 +82,15 @@ else
   $(error "No valid CONFIG_ARCH_CHIP_ set in the configuration")
 endif
 
+ifeq ($(CONFIG_DEBUG_CUSTOMOPT),y)
+  MAXOPTIMIZATION := $(CONFIG_DEBUG_OPTLEVEL)
+endif
+
 # NuttX buildroot GCC toolchain under Linux or Cygwin
 
 ifeq ($(CONFIG_AVR_TOOLCHAIN),BUILDROOT)
   CROSSDEV ?= avr-nuttx-elf-
-  MAXOPTIMIZATION = -O2
+  MAXOPTIMIZATION ?= -O2
   LDFLAGS += -nostartfiles -nodefaultlibs
 endif
 
@@ -91,7 +98,7 @@ endif
 
 ifeq ($(CONFIG_AVR_TOOLCHAIN),CROSSPACK)
   CROSSDEV ?= avr-
-  MAXOPTIMIZATION = -O2
+  MAXOPTIMIZATION ?= -O2
   LDFLAGS += -nostartfiles -nodefaultlibs
 endif
 
@@ -99,7 +106,7 @@ endif
 
 ifeq ($(CONFIG_AVR_TOOLCHAIN),LINUXGCC)
   CROSSDEV ?= avr-
-  MAXOPTIMIZATION = -O2
+  MAXOPTIMIZATION ?= -O2
   LDFLAGS += -nostartfiles -nodefaultlibs
 endif
 
@@ -110,7 +117,7 @@ ifeq ($(CONFIG_AVR_TOOLCHAIN),WINAVR)
   ifneq ($(CONFIG_WINDOWS_NATIVE),y)
     WINTOOL = y
   endif
-  MAXOPTIMIZATION = -O2
+  MAXOPTIMIZATION ?= -O2
   LDFLAGS += -nostartfiles -nodefaultlibs
 endif
 

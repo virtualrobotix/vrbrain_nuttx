@@ -89,7 +89,7 @@
 #define IFD_TAG_IMAGEWIDTH        256 /* ImageLength, SHORT or LONG (Required) */
 #define IFD_TAG_IMAGELENGTH       257 /* ImageWidth, SHORT or LONG (Required) */
 #define IFD_TAG_BITSPERSAMPLE     258 /* BitsPerSample, SHORT (Required
-                                       * in greyscale and pallette-color image files) */ 
+                                       * in greyscale and pallette-color image files) */
 #define IFD_TAG_COMPRESSION       259 /* Compression, SHORT (Required) */
 #  define TAG_COMP_NONE             1 /*   No compression */
 #  define TAG_COMP_CCITT            2 /*   CCITT Group 3 1-Dimensional Modified Huffman
@@ -253,7 +253,7 @@ struct tiff_ifdentry_s
 #define SIZEOF_IFD_ENTRY 12
 
 /************************************************************************************/
-/* Structures needed to interface with the TIFF file creation library )and also 
+/* Structures needed to interface with the TIFF file creation library )and also
  * structures used only internally by the TIFF file creation library).
  */
 
@@ -298,7 +298,7 @@ struct tiff_info_s
    *
    * colorfmt  - Specifies the form of the color data that will be provided
    *             in the strip data.  These are the FB_FMT_* definitions
-   *             provided in include/nuttx/fb.h.  Only the following values
+   *             provided in include/nuttx/video/fb.h.  Only the following values
    *             are supported:
    *
    *             FB_FMT_Y1               BPP=1, monochrome, 0=black
@@ -316,7 +316,7 @@ struct tiff_info_s
   FAR const char *tmpfile1; /* Full path to first temporary file */
   FAR const char *tmpfile2; /* Full path to second temporary file */
 
-  uint8_t      colorfmt;    /* See FB_FMT_* definitions in include/nuttx/fb.h */
+  uint8_t      colorfmt;    /* See FB_FMT_* definitions in include/nuttx/video/fb.h */
   nxgl_coord_t rps;         /* TIFF RowsPerStrip */
   nxgl_coord_t imgwidth;    /* TIFF ImageWidth, Number of columns in the image */
   nxgl_coord_t imgheight;   /* TIFF ImageLength, Number of rows in the image */
@@ -349,7 +349,7 @@ struct tiff_info_s
   off_t        tmp2size;    /* Current size of tmpfile2 */
 
   /* Points to an internal constant structure of file offsets */
-  
+
   FAR const struct tiff_filefmt_s *filefmt;
 };
 

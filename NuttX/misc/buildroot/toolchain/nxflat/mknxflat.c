@@ -43,6 +43,8 @@
  * Included Files
  ***********************************************************************/
 
+#include "config.h"
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -51,7 +53,8 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <bfd.h>
+
+#include "bfd.h"
 
 #include "nxflat.h"
 #include "arch/arch.h"
@@ -514,7 +517,7 @@ static int get_file_token(FILE * in_stream)
   if (c == EOF)
     return EOF;
 
-  /* Add the token to the buffer. Copy characters until the buffer is full, or 
+  /* Add the token to the buffer. Copy characters until the buffer is full, or
    * a terminator is encountered. */
 
   for (i = 0; ((i < 1023) && !ISTERMINATOR(c)); i++, c = getc(in_stream))

@@ -47,7 +47,7 @@
 #include "chip.h"
 
 #ifdef CONFIG_LPC43_SPIFI
-#  include <nuttx/mtd.h>
+#  include <nuttx/mtd/mtd.h>
 #  include "lpc43_spifi.h"
 
 #  ifdef CONFIG_SPFI_NXFFS
@@ -103,7 +103,7 @@ static int nsh_spifi_initialize(void)
       return ret;
     }
 #else
-  /* Initialize to provide NXFFS on the MTD interface */1G
+  /* Initialize to provide NXFFS on the MTD interface */
 
   ret = nxffs_initialize(mtd);
   if (ret < 0)

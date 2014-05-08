@@ -306,7 +306,7 @@ static int user_main(int argc, char *argv[])
 #endif
 
   /* Top of test loop */
-  
+
 #if CONFIG_EXAMPLES_OSTEST_LOOPS > 1
   for (i = 0; i < CONFIG_EXAMPLES_OSTEST_LOOPS; i++)
 #elif CONFIG_EXAMPLES_OSTEST_LOOPS == 0
@@ -568,6 +568,6 @@ int ostest_main(int argc, FAR char *argv[])
       printf("ostest_main: Started user_main at PID=%d\n", result);
     }
 
-  printf("ostest_main: Exitting\n");
+  printf("ostest_main: Exiting\n");
   return 0;
 }

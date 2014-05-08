@@ -155,21 +155,21 @@
 #define STM32_APB2_TIM11_CLKIN  (2*STM32_PCLK2_FREQUENCY)
 
 /* Timer Frequencies, if APBx is set to 1, frequency is same to APBx
- * otherwise frequency is 2xAPBx. 
+ * otherwise frequency is 2xAPBx.
  * Note: TIM1,8 are on APB2, others on APB1
  */
 
 #define STM32_TIM18_FREQUENCY   STM32_HCLK_FREQUENCY
 #define STM32_TIM27_FREQUENCY   STM32_HCLK_FREQUENCY
 
-/* SDIO dividers.  Note that slower clocking is required when DMA is disabled 
+/* SDIO dividers.  Note that slower clocking is required when DMA is disabled
  * in order to avoid RX overrun/TX underrun errors due to delayed responses
  * to service FIFOs in interrupt driven mode.  These values have not been
  * tuned!!!
  *
  * SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(118+2)=400 KHz
  */
-  
+
 #define SDIO_INIT_CLKDIV        (118 << SDIO_CLKCR_CLKDIV_SHIFT)
 
 /* DMA ON:  SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(1+2)=16 MHz
@@ -177,9 +177,9 @@
  */
 
 #ifdef CONFIG_SDIO_DMA
-#  define SDIO_MMCXFR_CLKDIV    (1 << SDIO_CLKCR_CLKDIV_SHIFT) 
+#  define SDIO_MMCXFR_CLKDIV    (1 << SDIO_CLKCR_CLKDIV_SHIFT)
 #else
-#  define SDIO_MMCXFR_CLKDIV    (2 << SDIO_CLKCR_CLKDIV_SHIFT) 
+#  define SDIO_MMCXFR_CLKDIV    (2 << SDIO_CLKCR_CLKDIV_SHIFT)
 #endif
 
 /* DMA ON:  SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(1+2)=16 MHz
@@ -420,8 +420,8 @@
  *
  * Mapping to STM32 GPIO pins:
  *
- *   PD0   = FSMC_D2 & CAN1_RX   
- *   PD1   = FSMC_D3 & CAN1_TX   
+ *   PD0   = FSMC_D2 & CAN1_RX
+ *   PD1   = FSMC_D3 & CAN1_TX
  *   PB13  = ULPI_D6 & CAN2_TX
  *   PB5   = ULPI_D7 & CAN2_RX
  */
@@ -438,7 +438,7 @@
  * - PB6  is I2C1_SCL
  * - PB9  is I2C1_SDA
  */
- 
+
 #define GPIO_I2C1_SCL       GPIO_I2C1_SCL_1
 #define GPIO_I2C1_SDA       GPIO_I2C1_SDA_2
 
@@ -480,7 +480,7 @@ extern "C" {
  *
  ************************************************************************************/
 
-EXTERN void stm32_boardinitialize(void);
+void stm32_boardinitialize(void);
 
 /************************************************************************************
  * Name:  stm32_ledinit, stm32_setled, and stm32_setleds
@@ -493,40 +493,9 @@ EXTERN void stm32_boardinitialize(void);
  ************************************************************************************/
 
 #ifndef CONFIG_ARCH_LEDS
-EXTERN void stm32_ledinit(void);
-EXTERN void stm32_setled(int led, bool ledon);
-EXTERN void stm32_setleds(uint8_t ledset);
-#endif
-
-/************************************************************************************
- * Button support.
- *
- * Description:
- *   up_buttoninit() must be called to initialize button resources.  After
- *   that, up_buttons() may be called to collect the current state of all
- *   buttons or up_irqbutton() may be called to register button interrupt
- *   handlers.
- *
- *   After up_buttoninit() has been called, up_buttons() may be called to
- *   collect the state of all buttons.  up_buttons() returns an 8-bit bit set
- *   with each bit associated with a button.  See the BUTTON_*_BIT
- *   definitions in board.h for the meaning of each bit.
- *
- *   up_irqbutton() may be called to register an interrupt handler that will
- *   be called when a button is depressed or released.  The ID value is a
- *   button enumeration value that uniquely identifies a button resource. See the
- *   BUTTON_* definitions in board.h for the meaning of enumeration
- *   value.  The previous interrupt handler address is returned (so that it may
- *   restored, if so desired).
- *
- ************************************************************************************/
-
-#ifdef CONFIG_ARCH_BUTTONS
-EXTERN void up_buttoninit(void);
-EXTERN uint8_t up_buttons(void);
-#ifdef CONFIG_ARCH_IRQBUTTONS
-EXTERN xcpt_t up_irqbutton(int id, xcpt_t irqhandler);
-#endif
+void stm32_ledinit(void);
+void stm32_setled(int led, bool ledon);
+void stm32_setleds(uint8_t ledset);
 #endif
 
 /************************************************************************************
@@ -541,7 +510,7 @@ EXTERN xcpt_t up_irqbutton(int id, xcpt_t irqhandler);
  ************************************************************************************/
 
 #ifdef CONFIG_STM32_FSMC
-EXTERN void stm3240g_lcdclear(uint16_t color);
+void stm3240g_lcdclear(uint16_t color);
 #endif
 
 #undef EXTERN

@@ -418,7 +418,7 @@ static int stm32_keepalive(FAR struct watchdog_lowerhalf_s *lower)
   irqstate_t flags;
 
   wdvdbg("Entry\n");
- 
+
   /* Reload the IWDG timer */
 
   flags = irqsave();
@@ -600,7 +600,7 @@ static int stm32_settimeout(FAR struct watchdog_lowerhalf_s *lower,
    * So we want:
    *  timeout = 1000 * reload / Fiwdg
    */
- 
+
   priv->timeout = (1000 * (uint32_t)reload) / fiwdg;
 
   /* Save setup values for later use */
@@ -619,7 +619,7 @@ static int stm32_settimeout(FAR struct watchdog_lowerhalf_s *lower,
   /* If CONFIG_STM32_IWDG_DEFERREDSETUP is selected, then perform the register
    * configuration only if the timer has been started.
    */
- 
+
 #ifdef CONFIG_STM32_IWDG_DEFERREDSETUP
   if (priv->started)
 #endif
@@ -641,7 +641,7 @@ static int stm32_settimeout(FAR struct watchdog_lowerhalf_s *lower,
  * Name: stm32_iwdginitialize
  *
  * Description:
- *   Initialize the IWDG watchdog time.  The watchdog timer is intialized and
+ *   Initialize the IWDG watchdog time.  The watchdog timer is initialized and
  *   registers as 'devpath.  The initial state of the watchdog time is
  *   disabled.
  *
@@ -673,7 +673,7 @@ void stm32_iwdginitialize(FAR const char *devpath, uint32_t lsifreq)
 
   /* Make sure that the LSI ocsillator is enabled.  NOTE:  The LSI oscillator
    * is enabled here but is not disabled by this file (because this file does
-   * not know the the global usage of the oscillator.  Any clock management
+   * not know the global usage of the oscillator.  Any clock management
    * logic (say, as part of a power management scheme) needs handle other
    * LSI controls outside of this file.
    */

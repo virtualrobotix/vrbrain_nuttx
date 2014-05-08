@@ -113,7 +113,7 @@ static void sem_timeout(int argc, uint32_t pid)
   if (wtcb && wtcb->task_state == TSTATE_WAIT_SEM)
     {
       /* Cancel the semaphore wait */
- 
+
       sem_waitirq(wtcb, ETIMEDOUT);
     }
 
@@ -185,7 +185,7 @@ int sem_timedwait(FAR sem_t *sem, FAR const struct timespec *abstime)
 #endif
 
   /* Create a watchdog.  We will not actually need this watchdog
-   * unless the the semaphore is unavailable, but we will reserve it up
+   * unless the semaphore is unavailable, but we will reserve it up
    * front before we enter the following critical section.
    */
 
@@ -252,7 +252,7 @@ int sem_timedwait(FAR sem_t *sem, FAR const struct timespec *abstime)
 
   /* Start the watchdog */
 
-  err = OK; 
+  err = OK;
   wd_start(rtcb->waitdog, ticks, (wdentry_t)sem_timeout, 1, getpid());
 
   /* Now perform the blocking wait */

@@ -12,7 +12,6 @@ README
     - Instantiating "Canned" Configurations
     - NuttX Configuration Tool
     - Incompatibilities with Older Configurations
-    - Converting Older Configurations to use the Configuration Tool
     - NuttX Configuration Tool under DOS
   o Toolchains
     - Cross-Development Toolchains
@@ -20,7 +19,7 @@ README
   o Shells
   o Building NuttX
     - Building
-    - Re-building 
+    - Re-building
     - Build Targets and Options
     - Native Windows Build
     - Installing GNUWin32
@@ -43,11 +42,11 @@ Installing Cygwin
   for you.
 
      NOTE: NuttX can also be installed and built on a native Windows
-     system, but with some loss of tool functionality (see the
+     system, but with some potential tool-related issues (see the
      discussion "Native Windows Build" below).
 
   Some Cygwin installation tips:
-  
+
   1. Install at C:\cygwin
 
   2. Install EVERYTHING:  "Only the minimal base packages from the
@@ -58,7 +57,7 @@ Installing Cygwin
      provide you with the opportunity to install every Cygwin package.
      Be advised that this will download and install hundreds of megabytes
      to your computer."
-     
+
      If you use the "default" installation, you will be missing many
      of the Cygwin utilities that you will need to build NuttX.  The
      build will fail in numerous places because of missing packages.
@@ -100,10 +99,10 @@ Semi-Optional apps/ Package
   should exactly match the version of the NuttX tarball).  Again, you
   might want to rename the directory to simply apps/ to match what
   you read in the documentation
-  
+
   After unpacking the apps tarball, you will have two directories side
   by side like this:
-  
+
              |
         +----+----+
         |         |
@@ -128,7 +127,7 @@ Installation Directories with Spaces in the Path
 
   I work around spaces in the home directory name, by creating a
   new directory that does not contain any spaces, such as /home/nuttx.
-  Then I install NuttX in /home/nuttx and always build from 
+  Then I install NuttX in /home/nuttx and always build from
   /home/nuttx/nuttx-code.
 
 Downloading from Repositories
@@ -191,7 +190,7 @@ Notes about Header Files
     header file then you should also define CONFIG_ARCH_MATH_H=y in your
     NuttX Configuration file.  If CONFIG_ARCH_MATH_H is selected, then the
     top-level Makefile will copy the stub math.h header file from
-    include/nuttx/matn.h to include/math.h where it will become the system
+    include/nuttx/math.h to include/math.h where it will become the system
     math.h header file.  The stub math.h header file does nothing other
     than to include that archicture-specific math.h header file as the
     system math.h header file.
@@ -254,14 +253,6 @@ additional file to the directory the NuttX application package (APPSDIR)):
     included in the build and what is not.  This file is also used
     to generate a C configuration header at include/nuttx/config.h.
 
-  Copy configs/<board-name>/<config-dir>/appconfig to ${APPSDIR}/.config
-
-    The appconfig file describes the applications that need to be
-    built in the appliction directory (APPSDIR).  Not all configurations
-    have an appconfig file.  This file is deprecated and will not be
-    used with new defconfig files produced with the kconfig-mconf
-    configuration tool.
-
 General information about configuring NuttX can be found in:
 
   ${TOPDIR}/configs/README.txt
@@ -291,8 +282,8 @@ NuttX Configuration Tool
   This automated tool is based on the kconfig-frontends application
   available at http://ymorin.is-a-geek.org/projects/kconfig-frontends
   (A snapshot of this tool is also available at ../misc/tools).  This
-  application provides a tool called 'mconf' that is used by the NuttX
-  top-level Makefile.  The following make target is provided:
+  application provides a tool called 'kconfig-mconf' that is used by
+  the NuttX top-level Makefile.  The following make target is provided:
 
     make menuconfig
 
@@ -300,7 +291,7 @@ NuttX Configuration Tool
 
   WARNING:  Never do 'make menuconfig' on a configuration that has
   not been converted to use the kconfig-frontends tools!  This will
-  damage your configuration (see 
+  damage your configuration (see
   http://www.nuttx.org/doku.php?id=wiki:howtos:convertconfig).
 
   The 'menuconfig' make target depends on two things:
@@ -314,20 +305,26 @@ NuttX Configuration Tool
      NOTE: For a description of the syntax of this configuration file,
      see ../misc/tools/kconfig-language.txt.
 
-  2. The 'mconf' tool.  'mconf' is part of the kconfig-frontends
-     package.  You can download that package from the website
-     http://ymorin.is-a-geek.org/projects/kconfig-frontends or you
-     can use the snapshot in ../misc/tools.
+  2. The 'kconfig-mconf' tool.  'kconfig-mconf' is part of the
+     kconfig-frontends package.  You can download that package from
+     the website http://ymorin.is-a-geek.org/projects/kconfig-frontends
+     or you can use the snapshot in ../misc/tools.
 
-     Building may be as simple as 'configure; make; make install'
-     but there may be some build complexities, especially if you
-     are building under Cygwin.  See the more detailed build
-     instructions at ../misc/tools/README.txt
+     Building kconfig-frontends under Linux may be as simple as
+     'configure; make; make install' but there may be some build
+     complexities, especially if you are building under Cygwin.  See
+     the more detailed build instructions at ../misc/tools/README.txt
 
-     The 'make install' step will, by default, install the 'mconf'
+     The 'make install' step will, by default, install the 'kconfig-mconf'
      tool at /usr/local/bin/mconf.  Where ever you choose to
-     install 'mconf', make certain that your PATH variable includes
+     install 'kconfig-mconf', make certain that your PATH variable includes
      a path to that installation directory.
+
+     The kconfig-frontends tools will not build in a native Windows
+     environment directly "out-of-the-box".  For the Windows native
+     case, you should should the modified version of kconfig-frontends
+     that can be found at
+     http://uvc.de/posts/linux-kernel-configuration-tool-mconf-under-windows.html
 
   The basic configuration order is "bottom-up":
 
@@ -340,6 +337,17 @@ NuttX Configuration Tool
 
   This is pretty straight forward for creating new configurations
   but may be less intuitive for modifying existing configurations.
+
+  If you have an environment that suppots the Qt or GTK graphical systems
+  (probably KDE or gnome, respectively), then you can also build the
+  graphical kconfig-frontends, kconfig-qconf and kconfig-gconf.  In
+  these case, you can start the graphical configurator with either:
+
+    make qconfig
+
+  or
+
+    make gconfig
 
 Refreshing Configurations with 'make oldconfig'
 -----------------------------------------------
@@ -362,109 +370,39 @@ Incompatibilities with Older Configurations
 
   ***** WARNING *****
 
-  The old legacy, manual configurations and the new kconfig-frontends
-  configurations are not 100% compatible.  Old legacy configurations
-  can *not* be used with the kconfig-frontends tool:  If you run
-  'make menuconfig' with a legacy configuration the resulting
+  The current NuttX build system supports *only* the new configuration
+  files generated using the kconfig-frontends tools.  The older, legacy,
+  manual configurations and the new kconfig-frontends configurations are
+  not compatible.  Old legacy configurations can *not* be used with the kconfig-frontends tool and, hence, cannot be used with recent releases
+  of NuttX:
+
+  If you run 'make menuconfig' with a legacy configuration the resulting
   configuration will probably not be functional.
 
   Q: How can I tell if a configuration is a new kconfig-frontends
      configuration or an older, manual configuration?
 
-  A: a) New kcondfig-frontends configurations will have this setting
-        within the defconfig/.config file":
+  A: Only old, manual configurations will have an appconfig file
 
-          CONFIG_NUTTX_NEWCONFIG=y
-
-     b) Only old, manual configurations will have an appconfig file
-
-Converting Older Configurations to use the Configuration Tool
--------------------------------------------------------------
 
   Q: How can I convert a older, manual configuration into a new,
      kconfig-frontends toolchain.
 
-  A: 1) Look at the appconfig file:  Each application path there
-        will now have to have an enabling setting.  For example,
-        if the old appconfig file had:
-
-          CONFIGURED_APPS = examples/ostest
-
-        Then the new configuration will need:
-
-          CONFIG_EXAMPLES_OSTEST=y
-
-        The appconfig file can then be deleted because it will not
-        be needed after the conversion.
-
-     2) Build the cmpconfig utility at tools:
-
-          cd tools
-          make -f Makefile.host cmpconfig
-
-     3) Perform these steps repeatedly until you are convinced that
-        the configurations are the same:
-
-        a) Repeat the following until you have account for all of the differences:
-
-             cp configs/<board>/<condfiguration>/defconfig .config
-             make menuconfig  (Just exit and save the new .config file)
-             tools/cmpconfig configs/<board>/<condfiguration>/defconfig .config | grep file1
- 
-           The final grep will show settings in the old defconfig file that
-           do not appear in the new .config file (or have a different value
-           in the new .config file).  In the new configuration, you will
-           probably have to enable certain groups of features.  Such
-           hierarachical enabling options were not part of the older
-           configuration.
-
-        b) Then make sure these all make sense:
-
-             tools/cmpconfig configs/<board>/<condfiguration>/defconfig .config | grep file2
-
-           The final grep will show settings in the new .config file that
-           do not appear in the older defconfig file (or have a different value
-           in the new .config file).  Here you should see only the new
-           hierarachical enabling options (such as CONFIG_SPI or CONFIG_MMCSD)
-           plus some other internal configuration settings (like CONFIG_ARCH_HAVE_UART0).
-           You will have to convince yourself that these new settings all make sense.
-
-     4) Finally, update the configuration:
-
-          cp .config configs/<board>/<condfiguration>/defconfig
-          rm configs/<board>/<condfiguration>/appconfig
-
-        NOTE:  You should comment out the line containing the CONFIG_APPS_DIR
-        in the new defconfig file.  Why?  Because the application directory
-        may reside at a different location when the configuration is installed
-        at some later time.
-
-          # CONFIG_APPS_DIR="../apps"
-
-     5) The updated configuration can then be instantiated in the normal
-        fashion:
-
-          cd tools
-          ./configure.sh <board>/<condfiguration>
-
-        (or configure.bat for the case of the Windows native build).
-
-        NOTE: If CONFIG_APPS_DIR is not defined in the defconfig file,
-        the configure.sh script will find and add the new, correct path to
-        the application directory (CONFIG_APPS_DIR) when it copies the
-        defconfig file to the .config file.  This is the setting that was
-        commented out in step 4.
+  A: Refer to http://www.nuttx.org/doku.php?id=wiki:howtos:convertconfig
 
 NuttX Configuration Tool under DOS
 ----------------------------------
 
   Recent versions of NuttX support building NuttX from a native Windows
   console window (see "Native Windows Build" below).  But kconfig-frontends
-  is a Linux tool.  There have been some successes building a Windows
-  native version of the kconfig-frontends tool, but that is not ready
-  for prime time.
+  is a Linux tool.  At one time this was a problem for Windows users, but
+  now there is a specially modified version of the kconfig-frontends tools
+  that can be used:
+  http://uvc.de/posts/linux-kernel-configuration-tool-mconf-under-windows.html
 
-  At this point, there are only a few options for the Windows user:
+  It is also possible to use the version of kconfig-frontends built
+  under Cygwin outside of the Cygwin "sandbox" in a native Windows
+  environment:
 
   1. You can run the configuration tool using Cygwin.  However, the
      Cygwin Makefile.win will complain so to do this will, you have
@@ -477,7 +415,7 @@ NuttX Configuration Tool under DOS
      And of course, after you use the configuration tool you need to
      restore CONFIG_WINDOWS_NATIVE=y and the correct CONFIG_APPS_DIR.
 
-  2) You can, with some effort, run the the Cygwin kconfig-mconf tool
+  2) You can, with some effort, run the Cygwin kconfig-mconf tool
      directly in the Windows console window.  In this case, you do not
      have to modify the .config file, but there are other complexities:
 
@@ -486,7 +424,7 @@ NuttX Configuration Tool under DOS
 
           kconfig-mconf Kconfig
 
-         There is a Windows bacht file at tools/kconfig.bat that automates
+         There is a Windows batch file at tools/kconfig.bat that automates
          these steps:
 
          tools/kconfig menuconfig
@@ -495,7 +433,7 @@ NuttX Configuration Tool under DOS
           the Cygwin kconfig-mconf running in the Windows console.  The
           following change to the top-level Kconfig file seems to work
           around these problems:
-  
+
           config APPSDIR
               string
           -   option env="APPSDIR"
@@ -605,7 +543,7 @@ Building
   arguments on the make command.  Read ${TOPDIR}/configs/<board-name>/README.txt
   to see if that applies to your target.
 
-Re-building 
+Re-building
 -----------
 
   Re-building is normally simple -- just type make again.
@@ -623,9 +561,9 @@ Re-building
   build is still using the version of the file in the copied directory, not
   your modified file! To work around this annoying behavior, do the
   following when you re-build:
-   
+
      make clean_context all
-   
+
   This 'make' command will remove of the copied directories, re-copy them,
   then make NuttX.
 
@@ -743,11 +681,9 @@ Native Windows Build
   the you not install the optional MSYS components as there may be conflicts.
 
   This capability should still be considered a work in progress because:
- 
+
   (1) It has not been verfied on all targets and tools, and
-  (2) it still lacks some of the creature-comforts of the more mature environments
-      (like 'make menuconfig' support.  See the section "NuttX Configuration Tool
-      under DOS" above).
+  (2) it still lacks some of the creature-comforts of the more mature environments.
 
    There is an alternative to the setenv.sh script available for the Windows
    native environment: tools/configure.bat.  See tools/README.txt for additional
@@ -791,7 +727,7 @@ Installing GNUWin32
   5. After running GetGNUWin32-0.x.x.exe, you will have a new directory
      <this-directory>/GetGNUWin32
 
-  Note the the GNUWin32 installer didn't install GNUWin32.  Instead, it
+  Note that the GNUWin32 installer didn't install GNUWin32.  Instead, it
   installed another, smarter downloader.  That downloader is the GNUWin32
   package management tool developed by the Open SSL project.
 
@@ -883,7 +819,7 @@ Window Native Toolchain Issues
      If you are building natively on Windows, then no such conflict exists
      and the best selection is:
 
-       MKDEP                = $(TOPDIR)/tools/mkdeps.exe 
+       MKDEP                = $(TOPDIR)/tools/mkdeps.exe
 
 General Pre-built Toolchain Issues
 
@@ -898,7 +834,7 @@ General Pre-built Toolchain Issues
   then you may incounter these:
 
   4. Header Files.  Most pre-built toolchains will build with a foreign C
-     library (usually newlib, but maybe uClibc or glibc if you are using a 
+     library (usually newlib, but maybe uClibc or glibc if you are using a
      Linux toolchain).  This means that the header files from the foreign
      C library will be built into the toolchain.  So if you "include <stdio.h>",
      you will get the stdio.h from the incompatible, foreign C library and
@@ -906,7 +842,7 @@ General Pre-built Toolchain Issues
 
      This can cause really confusion in the buildds and you must always be
      sure the -nostdinc is included in the CFLAGS.  That will assure that
-     you take the include files only from 
+     you take the include files only from
 
   5. Libraries.  What was said above header files applies to libraries.
      You do not want to include code from the libraries of any foreign
@@ -959,17 +895,10 @@ nuttx
  |   |- arm/
  |   |   `- src
  |   |       `- lpc214x/README.txt
- |   |- avr/
- |   |   `- README.txt
  |   |- sh/
  |   |   |- include/
- |   |   |   |-m16c/README.txt
- |   |   |   |-sh1/README.txt
  |   |   |   `-README.txt
  |   |   |- src/
- |   |   |   |-common/README.txt
- |   |   |   |-m16c/README.txt
- |   |   |   |-sh1/README.txt
  |   |   |   `-README.txt
  |   |- x86/
  |   |   |- include/
@@ -981,16 +910,22 @@ nuttx
  |   |       |- z80/README.txt
  |   |       `- z180/README.txt, z180_mmu.txt
  |   `- README.txt
+ |- audio/
+ |   `-README.txt
  |- configs/
+ |   |- 16z/
+ |   |   `- README.txt
  |   |- amber/
+ |   |   `- README.txt
+ |   |- arduino-due/
  |   |   `- README.txt
  |   |- avr32dev1/
  |   |   `- README.txt
  |   |- c5471evm/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- cloudctrl
+ |   |   `- README.txt
+ |   |- compal_e86
  |   |   `- README.txt
  |   |- compal_e88
  |   |   `- README.txt
@@ -1003,8 +938,6 @@ nuttx
  |   |- ea3152/
  |   |   `- README.txt
  |   |- eagle100/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- ekk-lm3s9b96/
  |   |   `- README.txt
@@ -1024,37 +957,26 @@ nuttx
  |   |-  freedom-kl25z/
  |   |   `- README.txt
  |   |-  hymini-stm32v/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- kwikstik-k40/
  |   |   `- README.txt
  |   |- lincoln60/
  |   |   `- README.txt
  |   |- lm3s6432-s2e/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- lm3s6965-ek/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- lm3s8962-ek/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- lpc4330-xplorer/
  |   |   `- README.txt
  |   |- lpcxpresso-lpc1768/
  |   |   `- README.txt
- |   |- m68332evb/
- |   |   |- include/README.txt
- |   |   `- src/README.txt
+ |   |- maple/
+ |   |   `- README.txt
  |   |- mbed/
  |   |   `- README.txt
  |   |- mcu123-lpc214x/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- micropendous3/
  |   |   `- README.txt
@@ -1063,15 +985,11 @@ nuttx
  |   |- mirtoo/
  |   |   `- README.txt
  |   |- mx1ads/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- ne63badge/
  |   |   `- README.txt
  |   |- ntosd-dm320/
  |   |   |- doc/README.txt
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- nucleus2g/
  |   |   `- README.txt
@@ -1080,17 +998,20 @@ nuttx
  |   |- olimex-lpc1766stk/
  |   |   `- README.txt
  |   |- olimex-lpc2378/
- |   |   |- include/README.txt
+ |   |   `- README.txt
+ |   |- olimex-lpc-h3131/
+ |   |   `- README.txt
+ |   |- olimex-stm32-p207/
  |   |   `- README.txt
  |   |- olimex-strp711/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- open1788/
  |   |   `- README.txt
  |   |- p112/
  |   |   `- README.txt
  |   |- pcblogic-pic32mx/
+ |   |   `- README.txt
+ |   |- pcduino-a10/
  |   |   `- README.txt
  |   |- pic32-starterkit/
  |   |   `- README.txt
@@ -1099,37 +1020,33 @@ nuttx
  |   |- pirelli_dpl10/
  |   |   `- README.txt
  |   |- pjrc-8051/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- qemu-i486/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- rgmp/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
+ |   |   `- README.txt
+ |   |- sama5d3x-ek/
+ |   |   `- README.txt
+ |   |- samd20-xplained/
  |   |   `- README.txt
  |   |- sam3u-ek/
+ |   |   `- README.txt
+ |   |- sam4e-ek/
  |   |   `- README.txt
  |   |- sam4l-xplained/
  |   |   `- README.txt
  |   |- sam4s-xplained/
  |   |   `- README.txt
  |   |- sim/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- shenzhou/
  |   |   `- README.txt
  |   |- skp16c26/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
+ |   |   `- README.txt
+ |   |- spark/
  |   |   `- README.txt
  |   |- stm3210e-eval/
- |   |   |- include/README.txt
  |   |   |- RIDE/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- stm3220g-eval/
  |   |   `- README.txt
@@ -1143,35 +1060,36 @@ nuttx
  |   |   `- README.txt
  |   |- stm32f4discovery/
  |   |   `- README.txt
+ |   |- stm32f429i-disco/
+ |   |   `- README.txt
  |   |- stm32ldiscovery/
+ |   |   `- README.txt
+ |   |- stm32vldiscovery/
  |   |   `- README.txt
  |   |- sure-pic32mx/
  |   |   `- README.txt
  |   |- teensy/
+ |   |   `- README.txt
+ |   |- tm4c123g-launchpad/
  |   |   `- README.txt
  |   |- twr-k60n512/
  |   |   `- README.txt
  |   |- ubw32/
  |   |   `- README.txt
  |   |- us7032evb1/
- |   |   |- bin/README.txt
- |   |   |- include/README.txt
- |   |   |- src/README.txt
+ |   |   `- README.txt
+ |   |- viewtool-stm32f107/
  |   |   `- README.txt
  |   |- vsn/
  |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- xtrs/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- z16f2800100zcog/
  |   |   |- ostest/README.txt
  |   |   |- pashello/README.txt
  |   |   `- README.txt
  |   |- z80sim/
- |   |   |- include/README.txt
- |   |   |- src/README.txt
  |   |   `- README.txt
  |   |- z8encore000zco/
  |   |   |- ostest/README.txt
@@ -1187,21 +1105,31 @@ nuttx
  |- drivers/
  |   |- lcd/
  |   |   `- README.txt
+ |   |- mtd/
+ |   |   `- README.txt
  |   |- sercomm/
  |   |   `- README.txt
  |   |- syslog/
  |   |   `- README.txt
  |   `- README.txt
  |- fs/
+ |   |- binfs/
+ |   |   `- README.txt
  |   |- mmap/
  |   |   `- README.txt
- |   `- nxffs/
+ |   |- nxffs/
+ |   |   `- README.txt
+ |   |- smartfs/
+ |   |   `- README.txt
+ |   `- procfs/
  |       `- README.txt
  |- graphics/
  |   `- README.txt
  |- lib/
  |   `- README.txt
  |- libc/
+ |   `- README.txt
+ |- libnx/
  |   `- README.txt
  |- libxx/
  |   `- README.txt
@@ -1240,9 +1168,19 @@ apps
  |- NxWidgets/
  |   `- README.txt
  |- system/
+ |   |- cdcacm
+ |   |  `- README.txt
  |   |- i2c
  |   |  `- README.txt
- |   `- install
+ |   |- inifile
+ |   |  `- README.txt
+ |   |- install
+ |   |  `- README.txt
+ |   |- nxplayer
+ |   |  `- README.txt
+ |   |- usbmsc
+ |   |  `- README.txt
+ |   `- zmodem
  |      `- README.txt
  `- README.txt
 

@@ -39,7 +39,7 @@
 /****************************************************************************
  * Included Files
  ****************************************************************************/
- 
+
 #include <nuttx/config.h>
 
 #include <stdint.h>
@@ -59,7 +59,7 @@
 /****************************************************************************
  * Implementation Classes
  ****************************************************************************/
- 
+
 #if defined(__cplusplus)
 
 namespace NXWidgets
@@ -95,7 +95,7 @@ namespace NXWidgets
      * serializes the multi-threaded accesses to the display.
      */
 
-#ifdef CONFIG_NX_MULTIUSER
+#if defined(CONFIG_NX_MULTIUSER) && defined(CONFIG_NXWIDGET_SERVERINIT)
     static int server(int argc, char *argv[]);
 #endif
 

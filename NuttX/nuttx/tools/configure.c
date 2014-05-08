@@ -58,6 +58,10 @@
 
 #define BUFFER_SIZE 1024
 
+#ifdef WIN32
+#  define strndup(x, y) strdup(x)
+#endif
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -83,11 +87,9 @@ static char       *g_verstring     = "0.0"; /* Version String */
 
 static char       *g_srcdefconfig  = NULL;  /* Source defconfig file */
 static char       *g_srcmakedefs   = NULL;  /* Source Make.defs file */
-static char       *g_srcappconfig  = NULL ; /* Source appconfig file (optional) */
 static char       *g_srcsetenvsh   = NULL;  /* Source setenv.sh file (optional) */
 static char       *g_srcsetenvbat  = NULL;  /* Source setenv.bat file (optional) */
 
-static bool        g_newconfig     = false; /* True: New style configuration */
 static bool        g_winnative     = false; /* True: Windows native configuration */
 static bool        g_needapppath   = true;  /* Need to add app path to the .config file */
 
@@ -196,7 +198,7 @@ static void parse_args(int argc, char **argv)
             fprintf(stderr, "ERROR: Missing option argument, option: %c\n", optopt);
             show_usage(argv[0], EXIT_FAILURE);
 
-           break;
+          default:
             fprintf(stderr, "ERROR: Unexpected option: %c\n", ch);
             show_usage(argv[0], EXIT_FAILURE);
         }
@@ -599,15 +601,6 @@ static void check_configuration(void)
 {
   struct variable_s *var;
 
-  /* Check if this the new style configuration based on kconfig-fontends */
-
-  var = find_variable("CONFIG_NUTTX_NEWCONFIG", g_configvars);
-  if (var && var->val && strcmp("y", var->val) == 0)
-    {
-      debug("check_configuration: New style configuration\n");
-      g_newconfig = true;
-    }
-
   /* Check if this is a Windows native configuration */
 
   var = find_variable("CONFIG_WINDOWS_NATIVE", g_configvars);
@@ -630,7 +623,7 @@ static void check_configuration(void)
     }
 
   g_srcdefconfig = strdup(g_buffer);
-  
+
   snprintf(g_buffer, BUFFER_SIZE, "%s%cMake.defs", g_configpath, g_delim);
   debug("check_configuration: Checking %s\n", g_buffer);
   if (!verify_file(g_buffer))
@@ -664,23 +657,6 @@ static void check_configuration(void)
         {
           g_srcsetenvsh = strdup(g_buffer);
         }
-    }
-
-  /* Old style configurations MUST provide an appconfig file */
-
-  if (!g_newconfig)
-    {
-      snprintf(g_buffer, BUFFER_SIZE, "%s%cappconfig", g_configpath, g_delim);
-      debug("check_configuration: Checking %s\n", g_buffer);
-      if (!verify_file(g_buffer))
-        {
-          fprintf(stderr, "ERROR: Configuration corrupted in %s\n", g_configpath);
-          fprintf(stderr, "       Required appconfig file not found.\n");
-          enumerate_configs();
-          exit(EXIT_FAILURE);
-        }
-
-      g_srcappconfig = strdup(g_buffer);
     }
 }
 
@@ -789,7 +765,7 @@ static void configure(void)
       debug("configure: Copying from %s to %s\n", g_srcsetenvsh, g_buffer);
       copy_file(g_srcsetenvsh, g_buffer, 0755);
     }
-  
+
   /* Copy the setenv.bat file if have one and need one */
 
   if (g_srcsetenvbat)
@@ -797,15 +773,6 @@ static void configure(void)
       snprintf(g_buffer, BUFFER_SIZE, "%s%csetenv.bat", g_topdir, g_delim);
       debug("configure: Copying from %s to %s\n", g_srcsetenvbat, g_buffer);
       copy_file(g_srcsetenvbat, g_buffer, 0644);
-    }
-
-  /* Copy the appconfig file to ../apps/.config if have one and need one */
-
-  if (g_srcappconfig)
-    {
-      snprintf(g_buffer, BUFFER_SIZE, "%s%c.config", g_apppath, g_delim);
-      debug("configure: Copying from %s to %s\n", g_srcappconfig, g_buffer);
-      copy_file(g_srcappconfig, g_buffer, 0644);
     }
 
   /* If we did not use the CONFIG_APPS_DIR that was in the defconfig config file,
@@ -841,7 +808,7 @@ static void configure(void)
         }
 
       /* Open the file for appending */
- 
+
       stream = fopen(destconfig, "a");
       if (!stream)
         {

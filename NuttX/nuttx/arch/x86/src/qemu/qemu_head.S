@@ -44,7 +44,7 @@
 /****************************************************************************
  * Pre-processor definitions
  ****************************************************************************/
- 
+
 /* Memory Map: _sbss is the start of the BSS region (see ld.script) _ebss is
  * the end of the BSS regsion (see ld.script). The idle task stack starts at
  * the end of BSS and is of size CONFIG_IDLETHREAD_STACKSIZE.  The IDLE thread
@@ -141,7 +141,7 @@ hang:
 
 	.type	idle_stack, @object
 	.comm   idle_stack, CONFIG_IDLETHREAD_STACKSIZE, 32
-	.size	idle_stack, . - idle_stack
+	.size	idle_stack, CONFIG_IDLETHREAD_STACKSIZE
 
 /****************************************************************************
  * .rodata

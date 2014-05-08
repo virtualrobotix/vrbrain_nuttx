@@ -1,7 +1,7 @@
 /****************************************************************************
  * arch/arm/src/common/up_checkstack.c
  *
- *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011, 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@
 #include <nuttx/arch.h> 
 
 #include "os_internal.h"
+#include "up_internal.h"
 
 #if defined(CONFIG_DEBUG) && defined(CONFIG_DEBUG_STACK)
 
@@ -90,7 +91,7 @@ size_t up_check_tcbstack(FAR struct tcb_s *tcb)
    */
 
   for (ptr = (FAR uint32_t *)tcb->stack_alloc_ptr, mark = tcb->adj_stack_size/4;
-       *ptr == 0xDEADBEEF && mark > 0;
+       *ptr == STACK_COLOR && mark > 0;
        ptr++, mark--);
 
   /* If the stack is completely used, then this might mean that the stack
@@ -114,7 +115,7 @@ size_t up_check_tcbstack(FAR struct tcb_s *tcb)
           for (j = 0; j < 64; j++)
             {
               int ch;
-              if (*ptr++ == 0xDEADBEEF)
+              if (*ptr++ == STACK_COLOR)
                 {
                   ch = '.';
                 }
@@ -134,14 +135,19 @@ size_t up_check_tcbstack(FAR struct tcb_s *tcb)
   return mark*4;
 }
 
+ssize_t up_check_tcbstack_remain(FAR struct tcb_s *tcb)
+{
+  return (ssize_t)tcb->adj_stack_size - (ssize_t)up_check_tcbstack(tcb);
+}
+
 size_t up_check_stack(void)
 {
   return up_check_tcbstack((FAR struct tcb_s*)g_readytorun.head);
 }
 
-size_t up_check_stack_remain(void)
+ssize_t up_check_stack_remain(void)
 {
-  return ((FAR struct tcb_s*)g_readytorun.head)->adj_stack_size - up_check_tcbstack((FAR struct tcb_s*)g_readytorun.head);
+  return up_check_tcbstack_remain((FAR struct tcb_s*)g_readytorun.head);
 }
 
 #endif /* CONFIG_DEBUG && CONFIG_DEBUG_STACK */

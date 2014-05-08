@@ -46,7 +46,7 @@ ifeq ($(WINTOOL),y)
   ARCHXXINCLUDES = -I. -isystem "${shell cygpath -w $(TOPDIR)/include}" -isystem "${shell cygpath -w $(TOPDIR)/include/cxx}"
   ARCHSCRIPT = -T "${shell cygpath -w $(TOPDIR)/configs/$(CONFIG_ARCH_BOARD)/nettest/ld.script}"
 else
-  # Linux/Cygwin-native toolchain 
+  # Linux/Cygwin-native toolchain
   MKDEP = $(TOPDIR)/tools/mkdeps.sh
   ARCHINCLUDES = -I. -isystem $(TOPDIR)/include
   ARCHXXINCLUDES = -I. -isystem $(TOPDIR)/include -isystem $(TOPDIR)/include/cxx
@@ -69,8 +69,10 @@ ARCHCCMAJOR = ${shell echo $(ARCHCCVERSION) | cut -d'.' -f1}
 
 ifeq ($(CONFIG_DEBUG_SYMBOLS),y)
   ARCHOPTIMIZATION = -g
-else
-  ARCHOPTIMIZATION = $(MAXOPTIMIZATION) -fno-strict-aliasing -fno-strength-reduce -fomit-frame-pointer
+endif
+
+ifneq ($(CONFIG_DEBUG_NOOPT),y)
+  ARCHOPTIMIZATION += $(MAXOPTIMIZATION) -fno-strict-aliasing -fno-strength-reduce -fomit-frame-pointer
 endif
 
 ifeq ($(ARCHCCMAJOR),4)
@@ -105,10 +107,9 @@ OBJEXT			= .o
 LIBEXT			= .a
 EXEEXT			=
 
-#[blf] The `ea3131' had this, but despite using buildroot, neuros doesn't...
-###	ifneq ($(CONFIG_LPC313X_BUILDROOT),y)	### change to ...DM320...
-###	  LDFLAGS += -nostartfiles -nodefaultlibs
-###	endif
+ifneq ($(CONFIG_ARM_TOOLCHAIN_BUILDROOT),y)
+  LDFLAGS += -nostartfiles -nodefaultlibs
+endif
 ifeq ($(CONFIG_DEBUG_SYMBOLS),y)
   LDFLAGS		+= -g
 endif

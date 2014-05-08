@@ -90,7 +90,7 @@ struct nxbe_fill_s
  *   rect - The location to be copied
  *   plane - Specifies the color plane to get from.
  *   dest - The location to copy the memory region
- *   deststride - The width, in bytes, the the dest memory
+ *   deststride - The width, in bytes, of the dest memory
  *
  * Return:
  *   None
@@ -104,7 +104,7 @@ void nxbe_getrectangle(FAR struct nxbe_window_s *wnd,
   struct nxgl_rect_s remaining;
 
 #ifdef CONFIG_DEBUG
-  if (!wnd || !rect || ! rect || plane >= wnd->be->vinfo.nplanes)
+  if (!wnd || !rect || !dest || plane >= wnd->be->vinfo.nplanes)
     {
       gvdbg("Invalid parameters\n");
       return;

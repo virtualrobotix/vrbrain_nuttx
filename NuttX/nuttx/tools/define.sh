@@ -41,7 +41,7 @@ wintool=n
 usage="USAGE: $progname [-w] [-d] [-h] <compiler-path> <def1>[=val1] [<def2>[=val2] [<def3>[=val3] ...]]"
 advice="Try '$progname -h' for more information"
 
-while [ ! -z "$1" ]; do 
+while [ ! -z "$1" ]; do
 	case $1 in
 	-d )
 		set -x
@@ -170,9 +170,13 @@ unset response
 for vardef in $varlist; do
 
 	varname=`echo $vardef | cut -d'=' -f1`
-	varvalue=`echo $vardef | cut -d'=' -f2`
+	if [ "X$varname" != "X$vardef" ]; then
+		varvalue=`echo $vardef | cut -d'=' -f2`
+	else
+		unset varvalue
+	fi
 
-    # Handle the output depending on if there is a value for the variable or not
+	# Handle the output depending on if there is a value for the variable or not
 
 	if [ -z "$varvalue" ]; then
 

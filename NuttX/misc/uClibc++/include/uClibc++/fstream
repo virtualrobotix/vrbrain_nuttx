@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __STD_HEADER_FSTREAM 
+#ifndef __STD_HEADER_FSTREAM
 #define __STD_HEADER_FSTREAM 1
 
 #include<basic_definitions>
@@ -176,15 +176,10 @@ namespace std
         fp = fopen(s, "w+b");
       }
 
+      // Check for a failure to open the file
+
       if (fp == 0)
       {
-        return 0;
-      }
-
-      if (ferror(fp))
-      {
-        fclose(fp);
-        fp = 0;
         return 0;
       }
 
@@ -272,9 +267,14 @@ namespace std
 
         charT c;
         int retval;
+
+        // Read one element of size sizeof(charT)
+
         retval = fread(&c, sizeof(charT), 1, fp);
 
-        if (retval == 0 || feof(fp) || ferror(fp))
+        // retval will be less than 1 only if an error or end-of-file is encountered
+
+        if (retval <= 0)
         {
           return traits::eof();
         }
@@ -312,24 +312,19 @@ namespace std
 
       // Fill rest of buffer
 
-      retval = fread(basic_streambuf<charT,traits>::egptr() - 
+      retval = fread(basic_streambuf<charT,traits>::egptr() -
         basic_streambuf<charT,traits>::gptr() + basic_streambuf<charT,traits>::eback(),
         sizeof(charT),
         offset,
         fp);
 
-      // Clear problems where we didn't read in enough characters
-
-      if (EAGAIN == errno)
-      {
-        clearerr(fp);
-      }
-
       // Restore file descriptor clase
 
       fcntl(fileno(fp), F_SETFL, fcntl_flags);
 
-      // Now we are going to make sure that we read in at least one character.  The hard way.
+      // fread() will return a value < offset if an error or end-of-file
+      // occurred.  If nothing was read, make sure that we read in at least
+      // one character.  The hard way.
 
       if (retval == 0)
       {
@@ -339,7 +334,9 @@ namespace std
 
         fcntl(fileno(fp), F_SETFL, fcntl_flags & ~O_NONBLOCK);
 
-        retval = fread(basic_streambuf<charT,traits>::egptr() - 
+        // Read one element of size sizeof(charT)
+
+        retval = fread(basic_streambuf<charT,traits>::egptr() -
           basic_streambuf<charT,traits>::gptr() + basic_streambuf<charT,traits>::eback(),
           sizeof(charT),
           1,
@@ -350,7 +347,7 @@ namespace std
         fcntl(fileno(fp), F_SETFL, fcntl_flags);
       }
 
-      if (retval !=offset)
+      if (retval != offset)
       {
         // Slide buffer forward again
 
@@ -363,7 +360,9 @@ namespace std
 
       basic_streambuf<charT,traits>::mgnext -= retval;
 
-      if ((retval <= 0 && feof(fp)) || ferror(fp))
+      // retval will be less than 1 only if an error or end-of-file is encountered
+
+      if (retval <= 0)
       {
         return traits::eof();
       }
@@ -385,7 +384,7 @@ namespace std
 
     virtual _UCXXEXPORT int_type pbackfail(int_type c = traits::eof())
     {
-      if (is_open() == false || 
+      if (is_open() == false ||
         basic_streambuf<charT,traits>::gptr() == basic_streambuf<charT,traits>::eback())
       {
         return traits::eof();
@@ -514,7 +513,7 @@ namespace std
         pbuffer = 0;
         gbuffer = 0;
       }
-      else if (basic_streambuf<charT,traits>::gptr() !=0 && 
+      else if (basic_streambuf<charT,traits>::gptr() !=0 &&
         basic_streambuf<charT,traits>::gptr()==basic_streambuf<charT,traits>::egptr())
       {
         delete [] pbuffer;
@@ -524,7 +523,7 @@ namespace std
       return this;
     }
 
-    virtual _UCXXEXPORT pos_type seekoff(off_type off, ios_base::seekdir way, 
+    virtual _UCXXEXPORT pos_type seekoff(off_type off, ios_base::seekdir way,
       ios_base::openmode = ios_base::in | ios_base::out)
     {
       if (is_open() == false)

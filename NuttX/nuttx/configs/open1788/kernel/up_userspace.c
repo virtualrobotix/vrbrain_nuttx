@@ -88,7 +88,7 @@ extern uint32_t _ebss;            /* End+1 of .bss */
 
 int CONFIG_USER_ENTRYPOINT(int argc, char *argv[]);
 
-const struct userspace_s userspace __attribute__ ((section (".userspace"))) = 
+const struct userspace_s userspace __attribute__ ((section (".userspace"))) =
 {
   /* General memory map */
 
@@ -131,7 +131,7 @@ const struct userspace_s userspace __attribute__ ((section (".userspace"))) =
   /* User-space work queue support (declared in include/nuttx/wqueue.h) */
 
 #if defined(CONFIG_SCHED_WORKQUEUE) && defined(CONFIG_SCHED_USRWORK)
-  .work_usrstart    = work_usrstart;
+  .work_usrstart    = work_usrstart,
 #endif
 };
 
@@ -139,4 +139,4 @@ const struct userspace_s userspace __attribute__ ((section (".userspace"))) =
  * Public Functions
  ****************************************************************************/
 
- #endif /* CONFIG_NUTTX_KERNEL && !__KERNEL__ */
+#endif /* CONFIG_NUTTX_KERNEL && !__KERNEL__ */

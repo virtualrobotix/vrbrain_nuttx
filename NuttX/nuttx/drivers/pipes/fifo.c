@@ -1,7 +1,7 @@
 /****************************************************************************
  * drivers/pipes/fifo.c
  *
- *   Copyright (C) 2008-2009 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2008-2009, 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,8 @@
 #include <nuttx/config.h>
 
 #include <sys/types.h>
+#include <sys/stat.h>
+
 #include <stdint.h>
 #include <nuttx/fs/fs.h>
 #include <errno.h>
@@ -91,7 +93,7 @@ static const struct file_operations fifo_fops =
  * Description:
  *   mkfifo() makes a FIFO device driver file with name 'pathname.'  Unlike
  *   Linux, a NuttX FIFO is not a special file type but simply a device driver
- *   instance.  'mode' specifies the FIFO's permissions. 
+ *   instance.  'mode' specifies the FIFO's permissions.
  *
  *   Once the FIFO has been created by mkfifo(), any thread can open it for
  *   reading or writing, in the same way as an ordinary file. However, it must
@@ -118,7 +120,7 @@ int mkfifo(FAR const char *pathname, mode_t mode)
 {
   struct pipe_dev_s *dev;
   int ret;
- 
+
   /* Allocate and initialize a new device structure instance */
 
   dev = pipecommon_allocdev();

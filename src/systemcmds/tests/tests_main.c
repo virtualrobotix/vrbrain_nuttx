@@ -52,7 +52,7 @@
 
 #include <arch/board/board.h>
 
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 
 #include <systemlib/perf_counter.h>
 
@@ -114,7 +114,9 @@ const struct {
 	{"file2",		test_file2,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mixer",		test_mixer,	OPT_NOJIGTEST | OPT_NOALLTEST},
 #endif
+#if !defined(CONFIG_ARCH_BOARD_VRHERO_V10)
 	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#endif
 #if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"conv",		test_conv,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mount",		test_mount,	OPT_NOJIGTEST | OPT_NOALLTEST},
@@ -125,7 +127,7 @@ const struct {
 	{"mathlib",		test_mathlib,	0},
 #endif
 #endif
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V4) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V5)
+#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
 	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
 #endif
 	{"help",		test_help,	OPT_NOALLTEST | OPT_NOHELP | OPT_NOJIGTEST},

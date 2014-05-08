@@ -40,6 +40,7 @@
 #include <nuttx/config.h>
 
 #include <sys/types.h>
+#include <sys/ioctl.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -175,7 +176,7 @@ static void parse_args(FAR struct adc_state_s *adc, int argc, FAR char **argv)
   long value;
   int index;
   int nargs;
- 
+
   for (index = 1; index < argc; )
     {
       ptr = argv[index];
@@ -208,7 +209,7 @@ static void parse_args(FAR struct adc_state_s *adc, int argc, FAR char **argv)
           case 'h':
             adc_help(adc);
             exit(0);
-        
+
           default:
             message("Unsupported option: %s\n", ptr);
             adc_help(adc);
@@ -310,7 +311,18 @@ int adc_main(int argc, char *argv[])
 
     msgflush();
 
-    /* Read CONFIG_EXAMPLES_ADC_GROUPSIZE samples */
+#ifdef CONFIG_EXAMPLES_ADC_SWTRIG
+    /* Issue the software trigger to start ADC conversion */
+
+    ret = ioctl(fd, ANIOC_TRIGGER, 0);
+    if (ret < 0)
+      {
+        int errcode = errno;
+        message("adc_main: ANIOC_TRIGGER ioctl failed: %d\n", errcode);
+      }
+#endif
+
+    /* Read up to CONFIG_EXAMPLES_ADC_GROUPSIZE samples */
 
     readsize = CONFIG_EXAMPLES_ADC_GROUPSIZE * sizeof(struct adc_msg_s);
     nbytes = read(fd, sample, readsize);
@@ -351,7 +363,7 @@ int adc_main(int argc, char *argv[])
             for (i = 0; i < nsamples ; i++)
               {
                 message("%d: channel: %d value: %d\n",
-                         i, sample[i].am_channel, sample[i].am_data);
+                        i+1, sample[i].am_channel, sample[i].am_data);
               }
           }
       }

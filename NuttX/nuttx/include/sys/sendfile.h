@@ -78,7 +78,7 @@ extern "C" {
  *   to perform a copy.  It serves a purpose in systems where there is
  *   a penalty for copies to between user and kernal space, but really
  *   nothing in NuttX but provide some Linux compatible (and adding
- *   another 'almost standard' interface). 
+ *   another 'almost standard' interface).
  *
  *   NOTE: This interface is *not* specified in POSIX.1-2001, or other
  *   standards.  The implementation here is very similar to the Linux
@@ -113,7 +113,7 @@ extern "C" {
  *
  ************************************************************************/
 
-EXTERN ssize_t sendfile (int outfd, int infd, FAR off_t *offset, size_t count);
+ssize_t sendfile(int outfd, int infd, FAR off_t *offset, size_t count);
 
 #undef EXTERN
 #if defined(__cplusplus)

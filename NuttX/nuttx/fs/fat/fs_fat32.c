@@ -1,7 +1,7 @@
 /****************************************************************************
  * fs/fat/fs_fat32.c
  *
- *   Copyright (C) 2007-2009, 2011-2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2009, 2011-2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * References:
@@ -228,9 +228,9 @@ static int fat_open(FAR struct file *filep, const char *relpath,
           goto errout_with_semaphore;
         }
 
-#ifdef CONFIG_FILE_MODE
-#  warning "Missing check for privileges based on inode->i_mode"
-#endif
+      /* TODO: if CONFIG_FILE_MODE=y, need check for privileges based on
+       * inode->i_mode
+       */
 
       /* Check if the caller has sufficient privileges to open the file */
 
@@ -265,7 +265,7 @@ static int fat_open(FAR struct file *filep, const char *relpath,
    * directory path was found, but the file was not found in the
    * final directory.
    */
- 
+
   else if (ret == -ENOENT)
     {
       /* The file does not exist.  Were we asked to create it? */
@@ -287,7 +287,7 @@ static int fat_open(FAR struct file *filep, const char *relpath,
         }
 
       /* Fall through to finish the file open operation */
-      
+
       direntry = &fs->fs_buffer[dirinfo.fd_seq.ds_offset];
     }
 
@@ -355,7 +355,7 @@ static int fat_open(FAR struct file *filep, const char *relpath,
   fs->fs_head = ff->ff_next;
 
   fat_semgive(fs);
- 
+
   /* In write/append mode, we need to set the file pointer to the end of the file */
 
   if ((oflags & (O_APPEND|O_WRONLY)) == (O_APPEND|O_WRONLY))
@@ -391,7 +391,7 @@ static int fat_close(FAR struct file *filep)
   struct inode         *inode;
   struct fat_file_s    *ff;
   struct fat_mountpt_s *fs;
-  int                   ret = OK;
+  int                   ret;
 
   /* Sanity checks */
 
@@ -540,7 +540,9 @@ static ssize_t fat_read(FAR struct file *filep, char *buffer, size_t buflen)
           ff->ff_sectorsincluster = fs->fs_fatsecperclus;
         }
 
+#ifdef CONFIG_FAT_DMAMEMORY /* Warning avoidance */
 fat_read_restart:
+#endif
 
       /* Check if the user has provided a buffer large enough to
        * hold one or more complete sectors -AND- the read is
@@ -578,7 +580,7 @@ fat_read_restart:
               /* The low-level driver may return -EFAULT in the case where
                * the transfer cannot be performed due to DMA constraints.
                * It is probable that the buffer is completely un-DMA-able,
-               * so force indirect transfers via the sector buffer and 
+               * so force indirect transfers via the sector buffer and
                * restart the operation.
                */
 
@@ -752,8 +754,8 @@ static ssize_t fat_write(FAR struct file *filep, const char *buffer,
 
   while (buflen > 0)
     {
-      /* Check if the user has provided a buffer large enough to
-       * hold one or more complete sectors.
+      /* Check if the current write stream has incremented to the next
+       * cluster boundary
        */
 
       if (ff->ff_sectorsincluster < 1)
@@ -784,7 +786,13 @@ static ssize_t fat_write(FAR struct file *filep, const char *buffer,
           ff->ff_currentsector    = fat_cluster2sector(fs, cluster);
         }
 
+#ifdef CONFIG_FAT_DMAMEMORY /* Warning avoidance */
 fat_write_restart:
+#endif
+
+      /* Check if the user has provided a buffer large enough to
+       * hold one or more complete sectors.
+       */
 
       nsectors = buflen / fs->fs_hwsectorsize;
       if (nsectors > 0 && sectorindex == 0 && !force_indirect)
@@ -818,7 +826,7 @@ fat_write_restart:
               /* The low-level driver may return -EFAULT in the case where
                * the transfer cannot be performed due to DMA constraints.
                * It is probable that the buffer is completely un-DMA-able,
-               * so force indirect transfers via the sector buffer and 
+               * so force indirect transfers via the sector buffer and
                * restart the operation.
                */
 
@@ -852,12 +860,11 @@ fat_write_restart:
            * - If the write is aligned to the beginning of the sector and
            *   extends beyond the end of the file, i.e. sectorindex == 0 and
            *   file pos + buflen >= file size.
-           *
            */
 
-          if ((sectorindex == 0) && 
-              ((buflen >= fs->fs_hwsectorsize) || ((filep->f_pos + buflen) >= ff->ff_size)))
-            { 
+          if ((sectorindex == 0) && ((buflen >= fs->fs_hwsectorsize) ||
+              ((filep->f_pos + buflen) >= ff->ff_size)))
+            {
                /* Flush unwritten data in the sector cache. */
 
                ret = fat_ffcacheflush(fs, ff);
@@ -888,9 +895,9 @@ fat_write_restart:
           writesize = fs->fs_hwsectorsize - sectorindex;
           if (writesize > buflen)
             {
-             /* We will not write to the end of the buffer.  Set
-              * write size to the size of the user buffer.
-              */
+              /* We will not write to the end of the buffer.  Set
+               * write size to the size of the user buffer.
+               */
 
               writesize = buflen;
             }
@@ -1485,7 +1492,7 @@ static int fat_opendir(struct inode *mountpt, const char *relpath, struct fs_dir
     {
        /* The entry is a directory (but not the root directory) */
 
-      dir->u.fat.fd_startcluster = 
+      dir->u.fat.fd_startcluster =
           ((uint32_t)DIR_GETFSTCLUSTHI(direntry) << 16) |
                    DIR_GETFSTCLUSTLO(direntry);
       dir->u.fat.fd_currcluster  = dir->u.fat.fd_startcluster;
@@ -1498,7 +1505,7 @@ static int fat_opendir(struct inode *mountpt, const char *relpath, struct fs_dir
 
 errout_with_semaphore:
   fat_semgive(fs);
-  return ERROR;
+  return ret;
 }
 
 /****************************************************************************
@@ -1516,7 +1523,7 @@ static int fat_readdir(struct inode *mountpt, struct fs_dirent_s *dir)
   uint8_t               ch;
   uint8_t               attribute;
   bool                  found;
-  int                   ret = OK;
+  int                   ret;
 
   /* Sanity checks */
 
@@ -1539,7 +1546,7 @@ static int fat_readdir(struct inode *mountpt, struct fs_dirent_s *dir)
 
   dir->fd_dir.d_name[0] = '\0';
   found = false;
- 
+
   while (dir->u.fat.fd_currsector && !found)
     {
       ret = fat_fscacheread(fs, dir->u.fat.fd_currsector);
@@ -1588,12 +1595,12 @@ static int fat_readdir(struct inode *mountpt, struct fs_dirent_s *dir)
             {
               /* The name was successfully extracted.  Re-read the
                * attributes:  If this is long directory entry, then the
-               * attributes that we need will be the the final, short file
+               * attributes that we need will be the final, short file
                * name entry and not in the directory entry where we started
                * looking for the file name.  We can be assured that, on
                * success,  fat_dirname2path() will leave the short file name
                * entry in the cache regardless of the kind of directory
-               * entry.  We simply have to re-read it to cover the the long
+               * entry.  We simply have to re-read it to cover the long
                * file name case.
                */
 
@@ -1937,11 +1944,8 @@ static int fat_unlink(struct inode *mountpt, const char *relpath)
        * open reference to the file is closed.
        */
 
-#ifdef CONFIG_CPP_HAVE_WARNING
-#  warning "Need to defer deleting cluster chain if the file is open"
-#endif
-
       /* Remove the file */
+      /* TODO: Need to defer deleting cluster chain if the file is open. */
 
       ret = fat_remove(fs, relpath, false);
     }
@@ -2055,7 +2059,7 @@ static int fat_mkdir(struct inode *mountpt, const char *relpath, mode_t mode)
       goto errout_with_semaphore;
     }
 
-  /* Flush any existing, dirty data in fs_buffer (because we need 
+  /* Flush any existing, dirty data in fs_buffer (because we need
    * it to create the directory entries.
    */
 
@@ -2115,10 +2119,6 @@ static int fat_mkdir(struct inode *mountpt, const char *relpath, mode_t mode)
   DIR_PUTFSTCLUSTLO(direntry, dircluster);
 
   parentcluster = dirinfo.dir.fd_startcluster;
-  /*
-    parent cluster for .. is set to 0 on all FAT types (including
-    FAT32). Tested on Windows8 and Linux
-   */
   if (parentcluster == fs->fs_rootbase)
     {
       parentcluster = 0;
@@ -2202,11 +2202,8 @@ int fat_rmdir(struct inode *mountpt, const char *relpath)
        * open reference to the directory is closed.
        */
 
-#ifdef CONFIG_CPP_HAVE_WARNING
-#  warning "Need to defer deleting cluster chain if the directory is open"
-#endif
-
       /* Remove the directory */
+      /* TODO: Need to defer deleting cluster chain if the file is open. */
 
       ret = fat_remove(fs, relpath, true);
     }
@@ -2344,7 +2341,7 @@ int fat_rename(struct inode *mountpt, const char *oldrelpath,
     {
       goto errout_with_semaphore;
     }
-  
+
   /* Write the old entry to disk and update FSINFO if necessary */
 
   ret = fat_updatefsinfo(fs);

@@ -293,7 +293,7 @@ static inline void up_enablebreaks(struct up_dev_s *priv, bool enable)
 
 static int up_setup(struct uart_dev_s *dev)
 {
-#ifndef CONFIG_SUPPRESS_LPC214X_UART_CONFIG
+#ifndef CONFIG_SUPPRESS_UART_CONFIG
   struct up_dev_s *priv = (struct up_dev_s*)dev->priv;
   uint16_t baud;
   uint8_t lcr;
@@ -742,7 +742,7 @@ static bool up_txempty(struct uart_dev_s *dev)
  * Name: up_serialinit
  *
  * Description:
- *   Performs the low level UART initialization early in 
+ *   Performs the low level UART initialization early in
  *   debug so that the serial console will be available
  *   during bootup.  This must be called before up_serialinit.
  *

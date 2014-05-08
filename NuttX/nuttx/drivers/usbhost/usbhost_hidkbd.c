@@ -1,7 +1,7 @@
 /****************************************************************************
  * drivers/usbhost/usbhost_hidkbd.c
  *
- *   Copyright (C) 2011-2012 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -120,7 +120,7 @@
 /* The default is to support scancode mapping for the standard 104 key
  * keyboard.  Setting CONFIG_HIDKBD_RAWSCANCODES will disable all scancode
  * mapping; Setting CONFIG_HIDKBD_ALLSCANCODES will enable mapping of all
- * scancodes; 
+ * scancodes;
  */
 
 #ifndef CONFIG_HIDKBD_RAWSCANCODES
@@ -201,7 +201,7 @@ struct usbhost_state_s
   struct usbhost_driver_s *drvr;
 
   /* The remainder of the fields are provide o the keyboard class driver */
-  
+
   char                    devchar;      /* Character identifying the /dev/kbd[n] device */
   volatile bool           disconnected; /* TRUE: Device has been disconnected */
   volatile bool           polling;      /* TRUE: Poll thread is running */
@@ -321,7 +321,7 @@ static inline int usbhost_tdalloc(FAR struct usbhost_state_s *priv);
 static inline int usbhost_tdfree(FAR struct usbhost_state_s *priv);
 
 /* struct usbhost_registry_s methods */
- 
+
 static struct usbhost_class_s *usbhost_create(FAR struct usbhost_driver_s *drvr,
                                               FAR const struct usbhost_id_s *id);
 
@@ -349,12 +349,12 @@ static int usbhost_poll(FAR struct file *filep, FAR struct pollfd *fds,
  * Private Data
  ****************************************************************************/
 
-/* This structure provides the registry entry ID informatino that will  be 
+/* This structure provides the registry entry ID information that will  be
  * used to associate the USB host keyboard class driver to a connected USB
  * device.
  */
 
-static const const struct usbhost_id_s g_id =
+static const const struct usbhost_id_s g_hidkbd_id =
 {
   USB_CLASS_HID,            /* base     */
   USBHID_SUBCLASS_BOOTIF,   /* subclass */
@@ -365,15 +365,15 @@ static const const struct usbhost_id_s g_id =
 
 /* This is the USB host storage class's registry entry */
 
-static struct usbhost_registry_s g_skeleton =
+static struct usbhost_registry_s g_hidkbd =
 {
   NULL,                    /* flink     */
   usbhost_create,          /* create    */
   1,                       /* nids      */
-  &g_id                    /* id[]      */
+  &g_hidkbd_id             /* id[]      */
 };
 
-static const struct file_operations usbhost_fops =
+static const struct file_operations g_hidkbd_fops =
 {
   usbhost_open,            /* open      */
   usbhost_close,           /* close     */
@@ -607,7 +607,7 @@ static void usbhost_takesem(sem_t *sem)
 
   while (sem_wait(sem) != 0)
     {
-      /* The only case that an error should occr here is if the wait was
+      /* The only case that an error should occur here is if the wait was
        * awakened by a signal.
        */
 
@@ -744,7 +744,7 @@ static inline void usbhost_mkdevname(FAR struct usbhost_state_s *priv, char *dev
  * Name: usbhost_destroy
  *
  * Description:
- *   The USB device has been disconnected and the refernce count on the USB
+ *   The USB device has been disconnected and the reference count on the USB
  *   host class instance has gone to 1.. Time to destroy the USB host class
  *   instance.
  *
@@ -763,7 +763,7 @@ static void usbhost_destroy(FAR void *arg)
 
   DEBUGASSERT(priv != NULL);
   uvdbg("crefs: %d\n", priv->crefs);
- 
+
   /* Unregister the driver */
 
   uvdbg("Unregister driver\n");
@@ -867,8 +867,8 @@ static void usbhost_putbuffer(FAR struct usbhost_state_s *priv,
  * Name: usbhost_putstream
  *
  * Description:
- *   A wrapper for usbhost_putc that is compatibile with the lib_outstream_s
- *   putc methos.
+ *   A wrapper for usbhost_putc that is compatible with the lib_outstream_s
+ *   putc methods.
  *
  * Input Parameters:
  *   stream - The struct lib_outstream_s reference
@@ -942,7 +942,7 @@ static inline uint8_t usbhost_mapscancode(uint8_t scancode, uint8_t modifier)
  * Input Parameters:
  *   priv - Driver internal state
  *   scancode - Scan code to be mapped.
- *   modifier - Ctrl,Alt,Shift,GUI modifier bits
+ *   modifier - Ctrl, Alt, Shift, GUI modifier bits
  *
  * Returned Values:
  *   None
@@ -1026,12 +1026,12 @@ static int usbhost_kbdpoll(int argc, char *argv[])
 
   priv = g_priv;
   DEBUGASSERT(priv != NULL);
- 
+
   priv->polling = true;
   priv->crefs++;
   usbhost_givesem(&g_syncsem);
   sleep(1);
-  
+
   /* Loop here until the device is disconnected */
 
   uvdbg("Entering poll loop\n");
@@ -1149,7 +1149,7 @@ static int usbhost_kbdpoll(int argc, char *argv[])
                         {
                           keycode &= 0x1f;
                         }
- 
+
                       /* Copy the next keyboard character into the user
                        * buffer.
                        */
@@ -1242,13 +1242,13 @@ static int usbhost_kbdpoll(int argc, char *argv[])
    * we can destroy it now.  Otherwise, we have to wait until the all
    * of the file descriptors are closed.
    */
- 
+
   udbg("Keyboard removed, polling halted\n");
   priv->polling = false;
   if (--priv->crefs < 2)
     {
       /* Destroy the instance (while we hold the semaphore!) */
- 
+
       usbhost_destroy(priv);
     }
   else
@@ -1272,7 +1272,8 @@ static int usbhost_kbdpoll(int argc, char *argv[])
  *
  * Input Parameters:
  *   priv - The USB host class instance.
- *   configdesc - A pointer to a uint8_t buffer container the configuration descripor.
+ *   configdesc - A pointer to a uint8_t buffer container the configuration
+ *     descriptor.
  *   desclen - The length in bytes of the configuration descriptor.
  *   funcaddr - The USB address of the function containing the endpoint that EP0
  *     controls
@@ -1299,10 +1300,15 @@ static inline int usbhost_cfgdesc(FAR struct usbhost_state_s *priv,
   bool done = false;
   int ret;
 
-  DEBUGASSERT(priv != NULL && 
+  DEBUGASSERT(priv != NULL &&
               configdesc != NULL &&
               desclen >= sizeof(struct usb_cfgdesc_s));
-  
+
+  /* Keep the compiler from complaining about uninitialized variables */
+
+  memset(&epindesc, 0, sizeof(struct usbhost_epdesc_s));
+  memset(&epoutdesc, 0, sizeof(struct usbhost_epdesc_s));
+
   /* Verify that we were passed a configuration descriptor */
 
   cfgdesc = (FAR struct usb_cfgdesc_s *)configdesc;
@@ -1322,7 +1328,7 @@ static inline int usbhost_cfgdesc(FAR struct usbhost_state_s *priv,
   configdesc += cfgdesc->len;
   remaining  -= cfgdesc->len;
 
-  /* Loop where there are more dscriptors to examine */
+  /* Loop where there are more descriptors to examine */
 
   while (remaining >= sizeof(struct usb_desc_s) && !done)
     {
@@ -1338,7 +1344,7 @@ static inline int usbhost_cfgdesc(FAR struct usbhost_state_s *priv,
         case USB_DESC_TYPE_INTERFACE:
           {
             FAR struct usb_ifdesc_s *ifdesc = (FAR struct usb_ifdesc_s *)configdesc;
- 
+
             uvdbg("Interface descriptor\n");
             DEBUGASSERT(remaining >= USB_SIZEOF_IFDESC);
 
@@ -1395,10 +1401,13 @@ static inline int usbhost_cfgdesc(FAR struct usbhost_state_s *priv,
 
                     if ((found & USBHOST_EPOUTFOUND) != 0)
                       {
-                        /* Oops.. more than one endpoint.  We don't know what to do with this. */
+                        /* Oops.. more than one endpoint.  We don't know what
+                         * to do with this.
+                         */
 
                         return -EINVAL;
                       }
+
                     found |= USBHOST_EPOUTFOUND;
 
                     /* Save the interrupt OUT endpoint information */
@@ -1420,16 +1429,17 @@ static inline int usbhost_cfgdesc(FAR struct usbhost_state_s *priv,
 
                     if ((found & USBHOST_EPINFOUND) != 0)
                       {
-                        /* Oops.. more than one endpint.  We don't know what
+                        /* Oops.. more than one endpoint.  We don't know what
                          * to do with this.
                          */
 
                         return -EINVAL;
                       }
+
                     found |= USBHOST_EPINFOUND;
 
                     /* Save the interrupt IN endpoint information */
-                    
+
                     epindesc.addr         = epdesc->addr & USB_EP_ADDR_NUMBER_MASK;
                     epindesc.in           = 1;
                     epindesc.funcaddr     = funcaddr;
@@ -1460,13 +1470,13 @@ static inline int usbhost_cfgdesc(FAR struct usbhost_state_s *priv,
         }
 
       /* Increment the address of the next descriptor */
- 
+
       configdesc += desc->len;
       remaining  -= desc->len;
     }
 
   /* Sanity checking... did we find all of things that we need? */
-    
+
   if ((found & USBHOST_RQDFOUND) != USBHOST_RQDFOUND)
     {
       ulldbg("ERROR: Found IF:%s EPIN:%s\n",
@@ -1568,11 +1578,11 @@ static inline int usbhost_devinit(FAR struct usbhost_state_s *priv)
   g_priv = priv;
 
 #ifndef CONFIG_CUSTOM_STACK
-  priv->pollpid = task_create("usbhost", CONFIG_HIDKBD_DEFPRIO,
+  priv->pollpid = task_create("kbdpoll", CONFIG_HIDKBD_DEFPRIO,
                               CONFIG_HIDKBD_STACKSIZE,
                               (main_t)usbhost_kbdpoll, (FAR char * const *)NULL);
 #else
-  priv->pollpid = task_create("usbhost", CONFIG_HIDKBD_DEFPRIO,
+  priv->pollpid = task_create("kbdpoll", CONFIG_HIDKBD_DEFPRIO,
                               (main_t)usbhost_kbdpoll, (FAR char * const *)NULL);
 #endif
   if (priv->pollpid == ERROR)
@@ -1593,10 +1603,10 @@ static inline int usbhost_devinit(FAR struct usbhost_state_s *priv)
 
   uvdbg("Register driver\n");
   usbhost_mkdevname(priv, devname);
-  ret = register_driver(devname, &usbhost_fops, 0666, priv);
+  ret = register_driver(devname, &g_hidkbd_fops, 0666, priv);
 
   /* We now have to be concerned about asynchronous modification of crefs
-   * because the driver has been registerd.
+   * because the driver has been registered.
    */
 
 errout:
@@ -1703,7 +1713,7 @@ static void usbhost_putle32(uint8_t *dest, uint32_t val)
  *   priv - A reference to the class instance.
  *
  * Returned Values:
- *   On sucess, zero (OK) is returned.  On failure, an negated errno value
+ *   On success, zero (OK) is returned.  On failure, an negated errno value
  *   is returned to indicate the nature of the failure.
  *
  ****************************************************************************/
@@ -1724,7 +1734,7 @@ static inline int usbhost_tdalloc(FAR struct usbhost_state_s *priv)
  *   priv - A reference to the class instance.
  *
  * Returned Values:
- *   On sucess, zero (OK) is returned.  On failure, an negated errno value
+ *   On success, zero (OK) is returned.  On failure, an negated errno value
  *   is returned to indicate the nature of the failure.
  *
  ****************************************************************************/
@@ -1741,6 +1751,7 @@ static inline int usbhost_tdfree(FAR struct usbhost_state_s *priv)
       priv->tbuffer = NULL;
       priv->tbuflen = 0;
     }
+
   return result;
 }
 
@@ -1752,7 +1763,7 @@ static inline int usbhost_tdfree(FAR struct usbhost_state_s *priv)
  * Name: usbhost_create
  *
  * Description:
- *   This function implements the create() method of struct usbhost_registry_s. 
+ *   This function implements the create() method of struct usbhost_registry_s.
  *   The create() method is a callback into the class implementation.  It is
  *   used to (1) create a new instance of the USB host class state and to (2)
  *   bind a USB host driver "session" to the class instance.  Use of this
@@ -1798,7 +1809,9 @@ static FAR struct usbhost_class_s *usbhost_create(FAR struct usbhost_driver_s *d
           priv->class.connect      = usbhost_connect;
           priv->class.disconnected = usbhost_disconnected;
 
-          /* The initial reference count is 1... One reference is held by the driver */
+          /* The initial reference count is 1... One reference is held by
+           * the driver.
+           */
 
           priv->crefs              = 1;
 
@@ -1812,7 +1825,7 @@ static FAR struct usbhost_class_s *usbhost_create(FAR struct usbhost_driver_s *d
           priv->drvr               = drvr;
 
           /* Return the instance of the USB keyboard class driver */
- 
+
           return &priv->class;
         }
     }
@@ -1823,6 +1836,7 @@ static FAR struct usbhost_class_s *usbhost_create(FAR struct usbhost_driver_s *d
     {
       usbhost_freeclass(priv);
     }
+
   return NULL;
 }
 
@@ -1840,7 +1854,8 @@ static FAR struct usbhost_class_s *usbhost_create(FAR struct usbhost_driver_s *d
  *
  * Input Parameters:
  *   class - The USB host class entry previously obtained from a call to create().
- *   configdesc - A pointer to a uint8_t buffer container the configuration descripor.
+ *   configdesc - A pointer to a uint8_t buffer container the configuration
+ *     descriptor.
  *   desclen - The length in bytes of the configuration descriptor.
  *   funcaddr - The USB address of the function containing the endpoint that EP0
  *     controls
@@ -1867,7 +1882,7 @@ static int usbhost_connect(FAR struct usbhost_class_s *class,
   FAR struct usbhost_state_s *priv = (FAR struct usbhost_state_s *)class;
   int ret;
 
-  DEBUGASSERT(priv != NULL && 
+  DEBUGASSERT(priv != NULL &&
               configdesc != NULL &&
               desclen >= sizeof(struct usb_cfgdesc_s));
 
@@ -1888,15 +1903,15 @@ static int usbhost_connect(FAR struct usbhost_class_s *class,
           udbg("usbhost_devinit() failed: %d\n", ret);
         }
     }
- 
+
   /* ERROR handling:  Do nothing. If we return and error during connection,
    * the driver is required to call the DISCONNECT method.  Possibilities:
    *
    * - Failure occurred before the kbdpoll task was started successfully.
    *   In this case, the disconnection will have to be handled on the worker
    *   task.
-   * - Failure occured after the kbdpoll task was started succesffuly.  In
-   *   this case, the disconnetion can be performed on the kbdpoll thread.
+   * - Failure occurred after the kbdpoll task was started successfully.  In
+   *   this case, the disconnection can be performed on the kbdpoll thread.
    */
 
   return ret;
@@ -1952,13 +1967,13 @@ static int usbhost_disconnected(struct usbhost_class_s *class)
    * - Failure occurred before the kbdpoll task was started successfully.
    *   In this case, the disconnection will have to be handled on the worker
    *   task.
-   * - Failure occured after the kbdpoll task was started succesffuly.  In
-   *   this case, the disconnetion can be performed on the kbdpoll thread.
+   * - Failure occurred after the kbdpoll task was started successfully.  In
+   *   this case, the disconnection can be performed on the kbdpoll thread.
    */
 
   if (priv->polling)
     {
-      /* The polling task is still alive. Signal the keyboard polling task. 
+      /* The polling task is still alive. Signal the keyboard polling task.
        * When that task wakes up, it will decrement the reference count and,
        * perhaps, destroy the class instance.  Then it will exit.
        */
@@ -2064,7 +2079,7 @@ static int usbhost_close(FAR struct file *filep)
   /* Is this the last reference (other than the one held by the USB host
    * controller driver)
    */
- 
+
   if (priv->crefs <= 1)
     {
       irqstate_t flags;
@@ -2089,16 +2104,17 @@ static int usbhost_close(FAR struct file *filep)
       if (priv->disconnected)
         {
           /* Destroy the class instance (we can't use priv after this; we can't
-           * 'give' the semapore)
+           * 'give' the semaphore)
            */
 
           usbhost_destroy(priv);
           irqrestore(flags);
           return OK;
         }
+
       irqrestore(flags);
     }
- 
+
   usbhost_givesem(&priv->exclsem);
   return OK;
 }
@@ -2136,7 +2152,7 @@ static ssize_t usbhost_read(FAR struct file *filep, FAR char *buffer, size_t len
   if (priv->disconnected)
     {
       /* No... the driver is no longer bound to the class.  That means that
-       * the USB keybaord is no longer connected.  Refuse any further attempts
+       * the USB keyboard is no longer connected.  Refuse any further attempts
        * to access the driver.
        */
 
@@ -2177,7 +2193,7 @@ static ssize_t usbhost_read(FAR struct file *filep, FAR char *buffer, size_t len
         }
 
       /* Read data from our internal buffer of received characters */
- 
+
       for (tail  = priv->tailndx, nbytes = 0;
            tail != priv->headndx && nbytes < len;
            nbytes++)
@@ -2193,9 +2209,10 @@ static ssize_t usbhost_read(FAR struct file *filep, FAR char *buffer, size_t len
                tail = 0;
              }
         }
+
       ret = nbytes;
 
-      /* Update the tail index (pehaps marking the buffer empty) */
+      /* Update the tail index (perhaps marking the buffer empty) */
 
       priv->tailndx = tail;
     }
@@ -2213,7 +2230,8 @@ errout:
  *
  ****************************************************************************/
 
-static ssize_t usbhost_write(FAR struct file *filep, FAR const char *buffer, size_t len)
+static ssize_t usbhost_write(FAR struct file *filep, FAR const char *buffer,
+                             size_t len)
 {
   /* We won't try to write to the keyboard */
 
@@ -2254,7 +2272,7 @@ static int usbhost_poll(FAR struct file *filep, FAR struct pollfd *fds,
   if (priv->disconnected)
     {
       /* No... the driver is no longer bound to the class.  That means that
-       * the USB keybaord is no longer connected.  Refuse any further attempts
+       * the USB keyboard is no longer connected.  Refuse any further attempts
        * to access the driver.
        */
 
@@ -2262,7 +2280,7 @@ static int usbhost_poll(FAR struct file *filep, FAR struct pollfd *fds,
     }
   else if (setup)
     {
-      /* This is a request to set up the poll.  Find an availableslot for
+      /* This is a request to set up the poll.  Find an available slot for
        * the poll structure reference
        */
 
@@ -2345,9 +2363,7 @@ int usbhost_kbdinit(void)
 
   /* Advertise our availability to support (certain) devices */
 
-  return usbhost_registerclass(&g_skeleton);
+  return usbhost_registerclass(&g_hidkbd);
 }
 
 #endif /* CONFIG_USBHOST)&& !CONFIG_USBHOST_INT_DISABLE && CONFIG_NFILE_DESCRIPTORS */
-
-

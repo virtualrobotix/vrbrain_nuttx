@@ -44,7 +44,7 @@
 #include <stdbool.h>
 #include <debug.h>
 
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <arch/board/board.h>
 #include <avr/io.h>
 
@@ -82,7 +82,7 @@
 #define TEENSY_WP (1 << 5)
 
 /* The following enable debug output from this file (needs CONFIG_DEBUG too).
- * 
+ *
  * CONFIG_SPI_DEBUG - Define to enable basic SSP debug
  * CONFIG_SPI_VERBOSE - Define to enable verbose SSP debug
  */
@@ -144,7 +144,7 @@ void weak_function at90usb_spiinitialize(void)
  * Description:
  *   The external functions, avr_spiselect and avr_spistatus  must be provided by
  *   board-specific logic.  They are implementations of the select and status methods
- *   of the SPI interface defined by struct spi_ops_s (see include/nuttx/spi.h). All
+ *   of the SPI interface defined by struct spi_ops_s (see include/nuttx/spi/spi.h). All
  *   other methods (including up_spiinitialize()) are provided by common AVR logic.
  *   To use this common SPI logic on your board:
  *
@@ -189,7 +189,7 @@ uint8_t avr_spistatus(FAR struct spi_dev_s *dev, enum spi_dev_e devid)
     {
       ret |= SPI_STATUS_PRESENT;
     }
-  
+
   if ((regval & TEENSY_WP) == 0)
     {
       ret |= SPI_STATUS_WRPROTECTED;

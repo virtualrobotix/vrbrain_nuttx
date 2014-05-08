@@ -96,11 +96,11 @@
  */
 
 #define GPIO_PULL_SHIFT            (20)       /* Bits 20-21: Pull-up/down resistor control */
-#define GPIO_PULL_MASK             (3 << GPIO_FUNC_SHIFT)
-#  define GPIO_PULL_NONE           (0 << GPIO_FUNC_SHIFT)
-#  define GPIO_PULL_UP             (1 << GPIO_FUNC_SHIFT)
-#  define GPIO_PULL_DOWN           (2 << GPIO_FUNC_SHIFT)
-#  define GPIO_PULL_BUSKEEPER      (3 << GPIO_FUNC_SHIFT)
+#define GPIO_PULL_MASK             (3 << GPIO_PULL_SHIFT)
+#  define GPIO_PULL_NONE           (0 << GPIO_PULL_SHIFT)
+#  define GPIO_PULL_UP             (1 << GPIO_PULL_SHIFT)
+#  define GPIO_PULL_DOWN           (2 << GPIO_PULL_SHIFT)
+#  define GPIO_PULL_BUSKEEPER      (3 << GPIO_PULL_SHIFT)
 
 /* Peripheral Function
  *
@@ -218,7 +218,7 @@
  *   GPIO Input:  .... .... .... II.. .... ....
  *   GPIO Output: .... .... .... .... .... ....
  *   Peripheral:  .... .... .... II.. .... ....
- */ 
+ */
 
 #define GPIO_INT_SHIFT             (10)       /* Bits 10-11: Interrupting input control */
 #define GPIO_INT_MASK              (3 << GPIO_INT_SHIFT)

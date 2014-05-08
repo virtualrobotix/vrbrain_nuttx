@@ -71,7 +71,7 @@
       * initialization suppressed?
       */
 
-#    if defined(USE_EARLYSERIALINIT) || defined(CONFIG_SUPPRESS_LPC31_UART_CONFIG)
+#    if defined(USE_EARLYSERIALINIT) || defined(CONFIG_SUPPRESS_UART_CONFIG)
 #      undef NEED_LOWSETUP
 #    else
 #      define NEED_LOWSETUP 1
@@ -113,7 +113,7 @@ static inline void up_waittxready(void)
   for (tmp = 1000 ; tmp > 0 ; tmp--)
     {
       /* Check if the tranmitter holding register (THR) is empty */
- 
+
       if ((getreg32(LPC31_UART_LSR) & UART_LSR_THRE) != 0)
         {
           /* The THR is empty, return */
@@ -169,7 +169,7 @@ static inline void up_configbaud(void)
    */
 
   /* Get UART block clock divided by 16 */
-  
+
   qtrclk = lpc31_clkfreq(CLKID_UARTUCLK, DOMAINID_UART) >> 4;
 
   /* Try every valid multiplier, tmulval (or until a perfect

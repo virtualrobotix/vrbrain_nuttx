@@ -148,7 +148,7 @@ nxcon_allocglyph(FAR struct nxcon_state_s *priv)
   /* If we get here, the glyph cache is full.  We replace the least used
    * glyph with the one we need now. (luglyph can't be NULL).
    */
-   
+
   luusecnt = luglyph->usecnt;
   nxcon_freeglyph(luglyph);
 
@@ -159,7 +159,7 @@ nxcon_allocglyph(FAR struct nxcon_state_s *priv)
   if (luusecnt > 1)
     {
        uint8_t decr = luusecnt - 1;
- 
+
        for (i = 0; i < priv->maxglyphs; i++)
         {
           /* Is this glyph in use? */
@@ -257,7 +257,7 @@ nxcon_renderglyph(FAR struct nxcon_state_s *priv,
        */
 
 #if CONFIG_NXCONSOLE_BPP < 8
-      pixel  = priv->wcolor[0];
+      pixel  = priv->wndo.wcolor[0];
 
 #  if CONFIG_NXCONSOLE_BPP == 1
 
@@ -512,7 +512,7 @@ int nxcon_backspace(FAR struct nxcon_state_s *priv)
       ret = nxcon_hidechar(priv, bm);
 
       /* The current position to the location where the last character was */
-    
+
       priv->fpos.x = bm->pos.x;
       priv->fpos.y = bm->pos.y;
 

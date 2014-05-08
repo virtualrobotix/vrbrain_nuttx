@@ -121,7 +121,7 @@
 #define SAM_PIO_PCRHR_OFFSET       0x0164 /* Parallel Capture Reception Holding Register */
                                           /* 0x0168-0x018c: Reserved for PDC registers */
 
-/* PIO register adresses ****************************************************************/
+/* PIO register addresses ***************************************************************/
 
 #define PIOA                       (0)
 #define PIOB                       (1)
@@ -359,6 +359,7 @@
 #define PIO_WPMR_WPEN              (1 << 0)  /* Bit 0:  Write Protect Enable */
 #define PIO_WPMR_WPKEY_SHIFT       (8)       /* Bits 8-31: Write Protect KEY */
 #define PIO_WPMR_WPKEY_MASK        (0xffffff << PIO_WPMR_WPKEY_SHIFT)
+#  define PIO_WPMR_WPKEY           (0x50494f << PIO_WPMR_WPKEY_SHIFT)
 
 /* PIO Write Protect Status Register */
 

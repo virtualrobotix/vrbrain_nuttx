@@ -53,7 +53,7 @@
 #ifdef CONFIG_NX_LCDDRIVER
 #  include <nuttx/lcd/lcd.h>
 #else
-#  include <nuttx/fb.h>
+#  include <nuttx/video/fb.h>
 #endif
 
 #include <nuttx/arch.h>
@@ -254,7 +254,7 @@ int nxlines_main(int argc, char *argv[])
   message("nxlines_main: Screen resolution (%d,%d)\n", g_nxlines.xres, g_nxlines.yres);
 
   /* Now, say perform the lines (these test does not return so the remaining
-   * logic is cosmetic). 
+   * logic is cosmetic).
    */
 
   nxlines_test(g_nxlines.hbkgd);

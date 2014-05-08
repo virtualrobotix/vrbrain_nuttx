@@ -5,6 +5,11 @@
  *   Copyright (C) 2012-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
+ *   Modifications:
+ *
+ *      - 10/08/2013: David Sidrane <david_s5@nscdg.com>
+ *           - Modified to support SST25VF016B
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -53,8 +58,8 @@
 
 #include <nuttx/kmalloc.h>
 #include <nuttx/fs/ioctl.h>
-#include <nuttx/spi.h>
-#include <nuttx/mtd.h>
+#include <nuttx/spi/spi.h>
+#include <nuttx/mtd/mtd.h>
 
 /************************************************************************************
  * Pre-processor Definitions
@@ -76,17 +81,6 @@
 #ifndef CONFIG_SST25_SPIFREQUENCY
 #  define CONFIG_SST25_SPIFREQUENCY 20000000
 #endif
-
-/* There is a  bug in the current code when using the higher speed AAI write sequence.
- * The nature of the bug is that the WRDI instruction is not working.  At the end
- * of the AAI sequence, the status register continues to report that the SST25 is
- * write enabled (WEL bit) and in AAI mode (AAI bit).  This *must* be fixed in any
- * production code if you want to have proper write performance.
- */
-
-#warning "REVISIT"
-#undef  CONFIG_SST25_SLOWWRITE
-#define CONFIG_SST25_SLOWWRITE 1
 
 /* SST25 Instructions ***************************************************************/
 /*      Command                    Value      Description               Addr   Data */
@@ -115,13 +109,15 @@
 /* Read ID (RDID) register values */
 
 #define SST25_MANUFACTURER          0xbf  /* SST manufacturer ID */
+#define SST25_VF016_DEVID           0x25  /* SSTVF016B device ID */
 #define SST25_VF032_DEVID           0x20  /* SSTVF032B device ID */
 
 /* JEDEC Read ID register values */
 
 #define SST25_JEDEC_MANUFACTURER    0xbf  /* SST manufacturer ID */
 #define SST25_JEDEC_MEMORY_TYPE     0x25  /* SST25 memory type */
-#define SST25_JEDEC_MEMORY_CAPACITY 0x4a  /* SST25VF032B memory capacity */
+#define SST25_JEDEC_VF032_CAPACITY  0x4a  /* SST25VF032B memory capacity */
+#define SST25_JEDEC_VF016_CAPACITY  0x41  /* SST25VF016B memory capacity */
 
 /* Status register bit definitions */
 
@@ -148,8 +144,12 @@
 /* SST25VF520 capacity is 2Mbit   (256Kbit x 8)  = 256Kb (32Kb x 8) */
 /* SST25VF540 capacity is 4Mbit   (512Kbit x 8)  = 512Kb (64Kb x 8) */
 /* SST25VF080 capacity is 8Mbit   (1024Kbit x 8) =   1Mb (128Kb x 8) */
-/* SST25VF016 capacity is 16Mbit  (2048Kbit x 8) =   2Mb (256Kb x 8) */
 /* Not yet supported */
+
+/* SST25VF016 capacity is 16Mbit  (2048Kbit x 8) =   2Mb (256Kb x 8) */
+
+#define SST25_VF016_SECTOR_SHIFT  12          /* Sector size 1 << 12 = 4Kb */
+#define SST25_VF016_NSECTORS      512        /* 512 sectors x 4096 bytes/sector = 2Mb */
 
 /* SST25VF032 capacity is 32Mbit  (4096Kbit x 8) =   4Mb (512kb x 8) */
 
@@ -214,11 +214,14 @@ static void sst25_lock(FAR struct spi_dev_s *dev);
 static inline void sst25_unlock(FAR struct spi_dev_s *dev);
 static inline int sst25_readid(FAR struct sst25_dev_s *priv);
 #ifndef CONFIG_SST25_READONLY
-static void sst25_unprotect(FAR struct spi_dev_s *dev);
+static void sst25_unprotect(FAR struct sst25_dev_s *priv);
 #endif
 static uint8_t sst25_waitwritecomplete(FAR struct sst25_dev_s *priv);
+static inline void sst25_cmd(struct sst25_dev_s *priv, uint8_t cmd);
 static inline void sst25_wren(FAR struct sst25_dev_s *priv);
+#if !defined(CONFIG_SST25_SLOWWRITE) && !defined(CONFIG_SST25_READONLY)
 static inline void sst25_wrdi(FAR struct sst25_dev_s *priv);
+#endif
 static void sst25_sectorerase(FAR struct sst25_dev_s *priv, off_t offset);
 static inline int sst25_chiperase(FAR struct sst25_dev_s *priv);
 static void sst25_byteread(FAR struct sst25_dev_s *priv, FAR uint8_t *buffer,
@@ -329,19 +332,30 @@ static inline int sst25_readid(struct sst25_dev_s *priv)
 
   /* Check for a valid manufacturer and memory type */
 
-  if (manufacturer == SST25_JEDEC_MANUFACTURER && memory == SST25_JEDEC_MEMORY_TYPE)
+  if (manufacturer == SST25_JEDEC_MANUFACTURER &&
+      memory == SST25_JEDEC_MEMORY_TYPE)
     {
-      /* Okay.. is it a FLASH capacity that we understand?  This should be extended
-       * support other members of the SST25 family.
+      /* Okay.. is it a FLASH capacity that we understand?  This should be
+       * extended support other members of the SST25 family.  If so, save
+       * the FLASH geometry.
        */
 
-      if (capacity == SST25_JEDEC_MEMORY_CAPACITY)
+      switch (capacity)
         {
-           /* Save the FLASH geometry */
+           case SST25_JEDEC_VF032_CAPACITY:
+              priv->sectorshift = SST25_VF032_SECTOR_SHIFT;
+              priv->nsectors    = SST25_VF032_NSECTORS;
+              return OK;
 
-           priv->sectorshift = SST25_VF032_SECTOR_SHIFT;
-           priv->nsectors    = SST25_VF032_NSECTORS;
-           return OK;
+           case SST25_JEDEC_VF016_CAPACITY:
+              priv->sectorshift = SST25_VF016_SECTOR_SHIFT;
+              priv->nsectors    = SST25_VF016_NSECTORS;
+              return OK;
+
+            /* Support for this part is not implemented yet */
+
+            default:
+              break;
         }
     }
 
@@ -353,30 +367,23 @@ static inline int sst25_readid(struct sst25_dev_s *priv)
  ************************************************************************************/
 
 #ifndef CONFIG_SST25_READONLY
-static void sst25_unprotect(FAR struct spi_dev_s *dev)
+static void sst25_unprotect(struct sst25_dev_s *priv)
 {
-  /* Select this FLASH part */
-
-  SPI_SELECT(dev, SPIDEV_FLASH, true);
-
   /* Send "Write enable status (EWSR)" */
 
-  SPI_SEND(dev, SST25_EWSR);
+  sst25_cmd(priv, SST25_EWSR);
 
-  /* Re-select this FLASH part (This might not be necessary... but is it shown in
-   * the timing diagrams)
-   */
+  /* Send "Write enable status (WRSR)" */
 
-  SPI_SELECT(dev, SPIDEV_FLASH, false);
-  SPI_SELECT(dev, SPIDEV_FLASH, true);
+  SPI_SELECT(priv->dev, SPIDEV_FLASH, true);
 
-  /* Send "Write enable status (EWSR)" */
+  SPI_SEND(priv->dev, SST25_WRSR);
 
-  SPI_SEND(dev, SST25_WRSR);
+  /* Followed by the new status value */
 
-  /* Following by the new status value */
+  SPI_SEND(priv->dev, 0);
 
-  SPI_SEND(dev, 0);
+  SPI_SELECT(priv->dev, SPIDEV_FLASH, false);
 }
 #endif
 
@@ -399,7 +406,7 @@ static uint8_t sst25_waitwritecomplete(struct sst25_dev_s *priv)
   /* Send "Read Status Register (RDSR)" command */
 
   (void)SPI_SEND(priv->dev, SST25_RDSR);
-  
+
   /* Loop as long as the memory is busy with a write cycle */
 
   do
@@ -457,42 +464,47 @@ static uint8_t sst25_waitwritecomplete(struct sst25_dev_s *priv)
 }
 
 /************************************************************************************
- * Name:  sst25_wren
+ * Name:  sst25_cmd
  ************************************************************************************/
 
-static inline void sst25_wren(struct sst25_dev_s *priv)
+static inline void sst25_cmd(struct sst25_dev_s *priv, uint8_t cmd)
 {
   /* Select this FLASH part */
 
   SPI_SELECT(priv->dev, SPIDEV_FLASH, true);
 
-  /* Send "Write Enable (WREN)" command */
+  /* Send command */
 
-  (void)SPI_SEND(priv->dev, SST25_WREN);
-  
+  (void)SPI_SEND(priv->dev, cmd);
+
   /* Deselect the FLASH */
 
   SPI_SELECT(priv->dev, SPIDEV_FLASH, false);
 }
 
 /************************************************************************************
+ * Name:  sst25_wren
+ ************************************************************************************/
+
+static inline void sst25_wren(struct sst25_dev_s *priv)
+{
+  /* Send "Write Enable (WREN)" command */
+
+  sst25_cmd(priv, SST25_WREN);
+}
+
+/************************************************************************************
  * Name:  sst25_wrdi
  ************************************************************************************/
 
+#if !defined(CONFIG_SST25_SLOWWRITE) && !defined(CONFIG_SST25_READONLY)
 static inline void sst25_wrdi(struct sst25_dev_s *priv)
 {
-  /* Select this FLASH part */
-
-  SPI_SELECT(priv->dev, SPIDEV_FLASH, true);
-
   /* Send "Write Disable (WRDI)" command */
 
-  (void)SPI_SEND(priv->dev, SST25_WRDI);
-  
-  /* Deselect the FLASH */
-
-  SPI_SELECT(priv->dev, SPIDEV_FLASH, false);
+  sst25_cmd(priv, SST25_WRDI);
 }
+#endif
 
 /************************************************************************************
  * Name:  sst25_sectorerase
@@ -549,17 +561,10 @@ static inline int sst25_chiperase(struct sst25_dev_s *priv)
 
   sst25_wren(priv);
 
-  /* Select this FLASH part */
-
-  SPI_SELECT(priv->dev, SPIDEV_FLASH, true);
-
   /* Send the "Chip Erase (CE)" instruction */
 
-  (void)SPI_SEND(priv->dev, SST25_CE);
+  sst25_cmd(priv, SST25_CE);
 
-  /* Deselect the FLASH */
-
-  SPI_SELECT(priv->dev, SPIDEV_FLASH, false);
   fvdbg("Return: OK\n");
   return OK;
 }
@@ -642,7 +647,7 @@ static void sst25_bytewrite(struct sst25_dev_s *priv, FAR const uint8_t *buffer,
           /* Enable write access to the FLASH */
 
           sst25_wren(priv);
-  
+
           /* Select this FLASH part */
 
           SPI_SELECT(priv->dev, SPIDEV_FLASH, true);
@@ -660,7 +665,7 @@ static void sst25_bytewrite(struct sst25_dev_s *priv, FAR const uint8_t *buffer,
           /* Then write the single byte */
 
           (void)SPI_SEND(priv->dev, *buffer);
-  
+
           /* Deselect the FLASH and setup for the next pass through the loop */
 
           SPI_SELECT(priv->dev, SPIDEV_FLASH, false);
@@ -708,7 +713,7 @@ static void sst25_wordwrite(struct sst25_dev_s *priv, FAR const uint8_t *buffer,
       /* If there are no further non-erased bytes in the user buffer, then
        * we are finished.
        */
- 
+
       if (nwords <= 0)
         {
           return;
@@ -722,7 +727,7 @@ static void sst25_wordwrite(struct sst25_dev_s *priv, FAR const uint8_t *buffer,
       /* Enable write access to the FLASH */
 
       sst25_wren(priv);
-  
+
       /* Select this FLASH part */
 
       SPI_SELECT(priv->dev, SPIDEV_FLASH, true);
@@ -740,10 +745,15 @@ static void sst25_wordwrite(struct sst25_dev_s *priv, FAR const uint8_t *buffer,
       /* Then write one 16-bit word */
 
       SPI_SNDBLOCK(priv->dev, buffer, 2);
-  
+
       /* Deselect the FLASH: Chip Select high */
 
       SPI_SELECT(priv->dev, SPIDEV_FLASH, false);
+
+      /* Wait for the preceding write to complete. */
+
+      status = sst25_waitwritecomplete(priv);
+      DEBUGASSERT((status & (SST25_SR_WEL|SST25_SR_BP_MASK|SST25_SR_AAI)) == (SST25_SR_WEL|SST25_SR_AAI));
 
       /* Decrement the word count and advance the write position */
 
@@ -760,10 +770,6 @@ static void sst25_wordwrite(struct sst25_dev_s *priv, FAR const uint8_t *buffer,
              (buffer[0] != SST25_ERASED_STATE ||
               buffer[1] != SST25_ERASED_STATE))
         {
-          /* Wait for the preceding write to complete. */
-
-          status = sst25_waitwritecomplete(priv);
-          DEBUGASSERT((status & (SST25_SR_WEL|SST25_SR_BP_MASK|SST25_SR_AAI)) == (SST25_SR_WEL|SST25_SR_AAI));
 
           /* Select this FLASH part */
 
@@ -780,6 +786,11 @@ static void sst25_wordwrite(struct sst25_dev_s *priv, FAR const uint8_t *buffer,
           /* Deselect the FLASH: Chip Select high */
 
           SPI_SELECT(priv->dev, SPIDEV_FLASH, false);
+
+          /* Wait for the preceding write to complete. */
+
+          status = sst25_waitwritecomplete(priv);
+          DEBUGASSERT((status & (SST25_SR_WEL|SST25_SR_BP_MASK|SST25_SR_AAI)) == (SST25_SR_WEL|SST25_SR_AAI));
 
           /* Decrement the word count and advance the write position */
 
@@ -837,7 +848,7 @@ static FAR uint8_t *sst25_cacheread(struct sst25_dev_s *priv, off_t sector)
   off_t esectno;
   int   shift;
   int   index;
- 
+
   /* Convert from the 512 byte sector to the erase sector size of the device.  For
    * exmample, if the actual erase sector size if 4Kb (1 << 12), then we first
    * shift to the right by 3 to get the sector number in 4096 increments.
@@ -1130,7 +1141,7 @@ static int sst25_ioctl(FAR struct mtd_dev_s *dev, int cmd, unsigned long arg)
 #ifdef CONFIG_SST25_SECTOR512
               geo->blocksize    = (1 << SST25_SECTOR_SHIFT);
               geo->erasesize    = (1 << SST25_SECTOR_SHIFT);
-              geo->neraseblocks = priv->nsectors << (priv->sectorshift - );
+              geo->neraseblocks = priv->nsectors << (priv->sectorshift - 9);
 #else
               geo->blocksize    = (1 << priv->sectorshift);
               geo->erasesize    = (1 << priv->sectorshift);
@@ -1153,7 +1164,7 @@ static int sst25_ioctl(FAR struct mtd_dev_s *dev, int cmd, unsigned long arg)
             sst25_unlock(priv->dev);
         }
         break;
- 
+
       case MTDIOC_XIPBASE:
       default:
         ret = -ENOTTY; /* Bad command */
@@ -1223,10 +1234,10 @@ FAR struct mtd_dev_s *sst25_initialize(FAR struct spi_dev_s *dev)
         }
       else
         {
-          /* Make sure the the FLASH is unprotected so that we can write into it */
+          /* Make sure that the FLASH is unprotected so that we can write into it */
 
 #ifndef CONFIG_SST25_READONLY
-          sst25_unprotect(priv->dev);
+          sst25_unprotect(priv);
 #endif
 
 #ifdef CONFIG_SST25_SECTOR512        /* Simulate a 512 byte sector */
@@ -1244,6 +1255,12 @@ FAR struct mtd_dev_s *sst25_initialize(FAR struct spi_dev_s *dev)
 #endif
         }
     }
+
+  /* Register the MTD with the procfs system if enabled */
+
+#ifdef CONFIG_MTD_REGISTRATION
+  mtd_register(&priv->mtd, "sst25");
+#endif
 
   /* Return the implementation-specific state structure as the MTD device */
 

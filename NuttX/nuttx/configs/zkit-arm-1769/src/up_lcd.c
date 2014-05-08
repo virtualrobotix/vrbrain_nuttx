@@ -1,6 +1,5 @@
 /****************************************************************************
  * configs/zkit-arm-1769/src/up_lcd.c
- * arch/arm/src/board/up_lcd.c
  *
  *   Copyright (C) 2013 Zilogic Systems. All rights reserved.
  *   Author: Manikandan <code@zilogic.com>
@@ -50,7 +49,7 @@
 #include <debug.h>
 #include <errno.h>
 
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <nuttx/lcd/lcd.h>
 #include <nuttx/lcd/st7567.h>
 #include <nuttx/arch.h>
@@ -147,7 +146,7 @@ FAR struct lcd_dev_s *up_lcdgetdev(int lcddev)
       (void)dev->setpower(dev, CONFIG_LCD_MAXPOWER);
       return dev;
     }
- 
+
   return NULL;
 }
 
@@ -167,7 +166,7 @@ void up_lcduninitialize(void)
  *   Set or clear the SD1329 D/Cn bit to select data (true) or command
  *   (false).  This function must be provided by platform-specific logic.
  *   This is an implementation of the cmddata method of the SPI
- *   interface defined by struct spi_ops_s (see include/nuttx/spi.h).
+ *   interface defined by struct spi_ops_s (see include/nuttx/spi/spi.h).
  *
  * Input Parameters:
  *
@@ -196,4 +195,4 @@ int lpc17_ssp0cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd)
   return -ENODEV;
 }
 
-#endif /* CONFIG_ARCH_LCDS */
+#endif /* CONFIG_NX_LCDDRIVER */

@@ -56,8 +56,8 @@
  */
 
 #if defined(CONFIG_ARCH_LEDS) && defined(LED_IDLE)
-#  define BEGIN_IDLE() up_ledon(LED_IDLE)
-#  define END_IDLE()   up_ledoff(LED_IDLE)
+#  define BEGIN_IDLE() board_led_on(LED_IDLE)
+#  define END_IDLE()   board_led_off(LED_IDLE)
 #else
 #  define BEGIN_IDLE()
 #  define END_IDLE()
@@ -86,7 +86,7 @@ static void up_idlepm(void)
   enum pm_state_e newstate;
   irqstate_t flags;
   int ret;
-  
+
   /* Decide, which power saving level can be obtained */
 
   newstate = pm_checkstate();

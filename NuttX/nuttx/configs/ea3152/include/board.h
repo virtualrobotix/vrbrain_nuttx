@@ -66,7 +66,7 @@
 #define BOARD_HPLL0_SELI   8                  /* SELI bandwidth selection */
 #define BOARD_HPLL0_SELP   31                 /* SELP bandwidth selection */
 #define BOARD_HPLL0_MODE   0                  /* PLL mode */
-#define BOARD_HPLL0_FREQ   406425600          /* Frequency of the PLL in MHz */ 
+#define BOARD_HPLL0_FREQ   406425600          /* Frequency of the PLL in MHz */
 
 /* HPLL1 configuration */
 
@@ -78,12 +78,12 @@
 #define BOARD_HPLL1_SELI   16                 /* SELI bandwidth selection */
 #define BOARD_HPLL1_SELP   8                  /* SELP bandwidth selection */
 #define BOARD_HPLL1_MODE   0                  /* PLL mode */
-#define BOARD_HPLL1_FREQ  180000000           /* Frequency of the PLL in MHz */ 
+#define BOARD_HPLL1_FREQ  180000000           /* Frequency of the PLL in MHz */
 
 /* The following 3 bitsets determine which clocks will be enabled at initialization
  * time.
  */
- 
+
 #define BOARD_CLKS_0_31 \
  (_RBIT(CLKID_APB0CLK,0)|_RBIT(CLKID_APB1CLK,0)|_RBIT(CLKID_APB2CLK,0)|\
   _RBIT(CLKID_APB3CLK,0)|_RBIT(CLKID_APB4CLK,0)|_RBIT(CLKID_AHB2INTCCLK,0)|\
@@ -140,23 +140,7 @@ extern "C" {
  *
  ************************************************************************************/
 
-EXTERN void lpc31_boardinitialize(void);
-
-/************************************************************************************
- * Button support.
- *
- * Description:
- *   up_buttoninit() must be called to initialize button resources.  After that,
- *   up_buttons() may be called to collect the state of all buttons.  up_buttons()
- *   returns an 8-bit bit set with each bit associated with a button.  See the
- *   BUTTON_* definitions above for the meaning of each bit.
- *
- ************************************************************************************/
-
-#ifdef CONFIG_ARCH_BUTTONS
-EXTERN void up_buttoninit(void);
-EXTERN uint8_t up_buttons(void);
-#endif
+void lpc31_boardinitialize(void);
 
 #undef EXTERN
 #if defined(__cplusplus)

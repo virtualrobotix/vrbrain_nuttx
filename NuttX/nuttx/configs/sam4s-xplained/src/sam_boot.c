@@ -67,9 +67,15 @@
 
 void sam_boardinitialize(void)
 {
-  /* Configure on-board LEDs if LED support has been selected. */
+#ifdef CONFIG_SAM34_EXTSRAM0
+  /* Configure and enable SRAM on board the SAM4S Xplained */
+
+  sam_sram_initialize();
+#endif
 
 #ifdef CONFIG_ARCH_LEDS
-  up_ledinit();
+  /* Configure on-board LEDs if LED support has been selected. */
+
+  board_led_initialize();
 #endif
 }

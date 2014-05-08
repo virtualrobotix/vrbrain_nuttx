@@ -49,18 +49,17 @@ GNU Toolchain Options
 
   Most testing has been conducted using the CodeSourcery toolchain for Windows and
   that is the default toolchain in most configurations (FPU-related testing has
-  been performed with the Atolloc toolchain for windows.  To use the Atollic,
+  been performed with the Atollic toolchain for windows.  To use the Atollic,
   devkitARM, Raisonance GNU, or NuttX buildroot toolchain, you simply need to
   add one of the following configuration options to your .config (or defconfig)
   file:
 
-    CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
-    CONFIG_STM32_CODESOURCERYL=y  : CodeSourcery under Linux
-    CONFIG_STM32_ATOLLIC_LITE=y   : The free, "Lite" version of Atollic toolchain under Windows
-    CONFIG_STM32_ATOLLIC_PRO=y    : The paid, "Pro" version of Atollic toolchain under Windows
-    CONFIG_STM32_DEVKITARM=y      : devkitARM under Windows
-    CONFIG_STM32_RAISONANCE=y     : Raisonance RIDE7 under Windows
-    CONFIG_STM32_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin (default)
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y  : CodeSourcery under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYL=y  : CodeSourcery under Linux
+    CONFIG_ARMV7M_TOOLCHAIN_ATOLLIC=y        : The Atollic toolchain under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_DEVKITARM=y      : devkitARM under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_RAISONANCE=y     : Raisonance RIDE7 under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin (default)
 
   If you change the default toolchain, then you may also have to modify the PATH in
   the setenv.h file if your make cannot find the tools.
@@ -115,7 +114,7 @@ GNU Toolchain Options
   The Atollic "Lite" Toolchain
   ----------------------------
   The free, "Lite" version of the Atollic toolchain does not support C++ nor
-  does it support ar, nm, objdump, or objdcopy. If you use the Atollic "Lite"
+  does it support ar, nm, objdump, or objcopy. If you use the Atollic "Lite"
   toolchain, you will have to set:
 
     CONFIG_HAVE_CXX=n
@@ -162,7 +161,7 @@ IDEs
   2) Start the NuttX build at least one time from the Cygwin command line
      before trying to create your project.  This is necessary to create
      certain auto-generated files and directories that will be needed.
-  3) Set up include pathes:  You will need include/, arch/arm/src/stm32,
+  3) Set up include paths:  You will need include/, arch/arm/src/stm32,
      arch/arm/src/common, arch/arm/src/armv7-m, and sched/.
   4) All assembly files need to have the definition option -D __ASSEMBLY__
      on the command line.
@@ -242,7 +241,7 @@ NXFLAT Toolchain
   tools -- just the NXFLAT tools.  The buildroot with the NXFLAT tools can
   be downloaded from the NuttX SourceForge download site
   (https://sourceforge.net/projects/nuttx/files/).
- 
+
   This GNU toolchain builds and executes in the Linux or Cygwin environment.
 
   1. You must have already configured Nuttx in <some-dir>/nuttx.
@@ -304,7 +303,7 @@ events as follows:
   * If LED1, LED2, LED3 are statically on, then NuttX probably failed to boot
     and these LEDs will give you some indication of where the failure was
  ** The normal state is LED3 ON and LED1 faintly glowing.  This faint glow
-    is because of timer interupts that result in the LED being illuminated
+    is because of timer interrupts that result in the LED being illuminated
     on a small proportion of the time.
 *** LED2 may also flicker normally if signals are processed.
 
@@ -331,7 +330,7 @@ the LCD).
 
   ACCESS:
 
-    Daughterboard Extension Connector, CN3, pin 32
+    Daughter board Extension Connector, CN3, pin 32
     Ground is available on CN3, pin1
 
   NOTE: TIM4 hardware will not support pulse counting.
@@ -433,29 +432,14 @@ There are two version of the FPU support built into the STM32 port.
 CFLAGS
 ------
 
-Only the Atollic toolchain has built-in support for the Cortex-M4 FPU.  You will see
+Only recent GCC toolchains have built-in support for the Cortex-M4 FPU.  You will see
 the following lines in each Make.defs file:
 
-  ifeq ($(CONFIG_STM32_ATOLLIC_LITE),y)
-    # Atollic toolchain under Windows
-    ...
   ifeq ($(CONFIG_ARCH_FPU),y)
     ARCHCPUFLAGS = -mcpu=cortex-m4 -mthumb -march=armv7e-m -mfpu=fpv4-sp-d16 -mfloat-abi=hard
   else
     ARCHCPUFLAGS = -mcpu=cortex-m3 -mthumb -mfloat-abi=soft
   endif
-  endif
-
-If you are using a toolchain other than the Atollic toolchain, then to use the FPU
-you will also have to modify the CFLAGS to enable compiler support for the ARMv7-M
-FPU.  As of this writing, there are not many GCC toolchains that will support the
-ARMv7-M FPU.
-
-As a minimum you will need to add CFLAG options to (1) enable hardware floating point
-code generation, and to (2) select the FPU implementation.  You might try the same
-options as used with the Atollic toolchain in the Make.defs file:
-
-  ARCHCPUFLAGS = -mcpu=cortex-m4 -mthumb -march=armv7e-m -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 
 Configuration Changes
 ---------------------
@@ -463,22 +447,20 @@ Configuration Changes
 Below are all of the configuration changes that I had to make to configs/stm3240g-eval/nsh2
 in order to successfully build NuttX using the Atollic toolchain WITH FPU support:
 
-  -CONFIG_ARCH_FPU=n              : Enable FPU support
+  -CONFIG_ARCH_FPU=n                       : Enable FPU support
   +CONFIG_ARCH_FPU=y
 
-  -CONFIG_STM32_CODESOURCERYW=y   : Disable the CodeSourcery toolchain
-  +CONFIG_STM32_CODESOURCERYW=n
+  -CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y : Disable the CodeSourcery toolchain
+  +CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=n
 
-  -CONFIG_STM32_ATOLLIC_LITE=n   : Enable *one* the Atollic toolchains
-   CONFIG_STM32_ATOLLIC_PRO=n
-  -CONFIG_STM32_ATOLLIC_LITE=y   : The "Lite" version, OR
-   CONFIG_STM32_ATOLLIC_PRO=y    : The "Pro" version (not both)
+  -CONFIG_ARMV7M_TOOLCHAIN_ATOLLIC=n       : Enable the Atollic toolchain
+  +CONFIG_ARMV7M_TOOLCHAIN_ATOLLIC=y       :
 
-  -CONFIG_INTELHEX_BINARY=y       : Suppress generation FLASH download formats
-  +CONFIG_INTELHEX_BINARY=n       : (Only necessary with the "Lite" version)
+  -CONFIG_INTELHEX_BINARY=y                : Suppress generation FLASH download formats
+  +CONFIG_INTELHEX_BINARY=n                : (Only necessary with the "Lite" version)
 
-  -CONFIG_HAVE_CXX=y              : Suppress generation of C++ code
-  +CONFIG_HAVE_CXX=n              : (Only necessary with the "Lite" version)
+  -CONFIG_HAVE_CXX=y                       : Suppress generation of C++ code
+  +CONFIG_HAVE_CXX=n                       : (Only necessary with the "Lite" version)
 
 See the section above on Toolchains, NOTE 2, for explanations for some of
 the configuration settings.  Some of the usual settings are just not supported
@@ -627,13 +609,13 @@ STM3240G-EVAL-specific Configuration Options
     CONFIG_ENDIAN_BIG - define if big endian (default is little
        endian)
 
-    CONFIG_DRAM_SIZE - Describes the installed DRAM (SRAM in this case):
+    CONFIG_RAM_SIZE - Describes the installed DRAM (SRAM in this case):
 
-       CONFIG_DRAM_SIZE=0x00010000 (64Kb)
+       CONFIG_RAM_SIZE=0x00010000 (64Kb)
 
-    CONFIG_DRAM_START - The start address of installed DRAM
+    CONFIG_RAM_START - The start address of installed DRAM
 
-       CONFIG_DRAM_START=0x20000000
+       CONFIG_RAM_START=0x20000000
 
     CONFIG_STM32_CCMEXCLUDE - Exclude CCM SRAM from the HEAP
 
@@ -670,7 +652,7 @@ STM3240G-EVAL-specific Configuration Options
 
     CONFIG_ARCH_CALIBRATION - Enables some build in instrumentation that
        cause a 100 second delay during boot-up.  This 100 second delay
-       serves no purpose other than it allows you to calibratre
+       serves no purpose other than it allows you to calibrate
        CONFIG_ARCH_LOOPSPERMSEC.  You simply use a stop watch to measure
        the 100 second delay then adjust CONFIG_ARCH_LOOPSPERMSEC until
        the delay actually is 100 seconds.
@@ -805,7 +787,7 @@ STM3240G-EVAL-specific Configuration Options
     CONFIG_STM32_MII_MCO1 - Use MCO1 to clock the MII interface
     CONFIG_STM32_MII_MCO2 - Use MCO2 to clock the MII interface
     CONFIG_STM32_RMII - Support Ethernet RMII interface
-    CONFIG_STM32_AUTONEG - Use PHY autonegotion to determine speed and mode
+    CONFIG_STM32_AUTONEG - Use PHY autonegotiation to determine speed and mode
     CONFIG_STM32_ETHFD - If CONFIG_STM32_AUTONEG is not defined, then this
       may be defined to select full duplex mode. Default: half-duplex
     CONFIG_STM32_ETH100MBPS - If CONFIG_STM32_AUTONEG is not defined, then this
@@ -873,7 +855,7 @@ STM3240G-EVAL-specific Configuration Options
       In this orientation, the top of the display is to the right
       of the buttons (if the board is held so that the buttons are at the
       botton of the board).
-    CONFIG_LCD_RDSHIFT - When reading 16-bit gram data, there appears
+    CONFIG_STM3240G_LCD_RDSHIFT - When reading 16-bit gram data, there appears
       to be a shift in the returned data.  This value fixes the offset.
       Default 5.
 
@@ -881,20 +863,20 @@ STM3240G-EVAL-specific Configuration Options
     ID value.  However, code size can be reduced by suppressing support for
     individual LCDs using:
 
-    CONFIG_STM32_ILI9320_DISABLE (includes ILI9321)
-    CONFIG_STM32_ILI9325_DISABLE
+    CONFIG_STM3240G_ILI9320_DISABLE (includes ILI9321)
+    CONFIG_STM3240G_ILI9325_DISABLE
 
   STM32 USB OTG FS Host Driver Support
 
   Pre-requisites
- 
+
    CONFIG_USBHOST         - Enable USB host support
    CONFIG_STM32_OTGFS     - Enable the STM32 USB OTG FS block
    CONFIG_STM32_SYSCFG    - Needed
    CONFIG_SCHED_WORKQUEUE - Worker thread support is required
- 
+
   Options:
- 
+
    CONFIG_STM32_OTGFS_RXFIFO_SIZE - Size of the RX FIFO in 32-bit words.
      Default 128 (512 bytes)
    CONFIG_STM32_OTGFS_NPTXFIFO_SIZE - Size of the non-periodic Tx FIFO
@@ -927,11 +909,27 @@ Where <subdir> is one of the following:
 
     This builds the DCHP server using the apps/examples/dhcpd application
     (for execution from FLASH.) See apps/examples/README.txt for information
-    about the dhcpd example.  The server address is 10.0.0.1 and it serves
-    IP addresses in the range 10.0.0.2 through 10.0.0.17 (all of which, of
-    course, are configurable).
+    about the dhcpd example.
 
-    CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
+    NOTES:
+
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. The server address is 10.0.0.1 and it serves IP addresses in the range
+       10.0.0.2 through 10.0.0.17 (all of which, of course, are configurable).
+
+    3. Default build environment (also easily reconfigured):
+
+      CONFIG_HOST_WINDOWS=y
+      CONFIG_WINDOWS_CYGWIN=y
+      CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y
 
   discover:
   --------
@@ -946,47 +944,187 @@ Where <subdir> is one of the following:
     Configuration settings that you may need to change for your
     environment:
 
-      CONFIG_STM32_CODESOURCERYL=y      - CodeSourcery for Linux
-      CONFIG_EXAMPLES_DISCOVER_DHCPC=y  - DHCP Client
-      CONFIG_EXAMPLES_DISCOVER_IPADDR   - (not defined)
-      CONFIG_EXAMPLES_DISCOVER_DRIPADDR - Router IP address
+      CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYL=y - CodeSourcery for Linux
+      CONFIG_EXAMPLES_DISCOVER_DHCPC=y        - DHCP Client
+      CONFIG_EXAMPLES_DISCOVER_IPADDR         - (not defined)
+      CONFIG_EXAMPLES_DISCOVER_DRIPADDR       - Router IP address
 
     NOTE:  This configuration uses to the kconfig-mconf configuration tool to
     control the configuration.  See the section entitled "NuttX Configuration
     Tool" in the top-level README.txt file.
 
+  knxwm:
+  -----
+    [WARNING:  This is a work in progress].
+
+    This is identical to the nxwm configuration below except that NuttX
+    is built as a kernel-mode, monolithic module and the user applications
+    are built separately.  Is is recommended to use a special make command;
+    not just 'make' but make with the following two arguments:
+
+        make pass1 pass2
+
+    In the normal case (just 'make'), make will attempt to build both user-
+    and kernel-mode blobs more or less interleaved.  This actual works!
+    However, for me it is very confusing so I prefer the above make command:
+    Make the user-space binaries first (pass1), then make the kernel-space
+    binaries (pass2)
+
+    NOTES:
+
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configuration using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. This is the default platform/toolchain in the configuration:
+
+       CONFIG_HOST_WINDOWS=y                   : Windows
+       CONFIG_WINDOWS_CYGWIN=y                 : Cygwin environment on Windows
+       CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y     : NuttX EABI buildroot toolchain
+       CONFIG_CXX_NEWLONG=y                    : size_t is long (maybe?)
+
+       This is easily changed by modifying the configuration.
+
+       NOTE:  When I used a recent CodeSourcery toolchain, then toolchain
+       generated an illegal blx to an even address when calling into one
+       of the EABI math libraries.  I don't know why this happened or if
+       the probably is repeatable with other CodeSourcery versions.  You
+       can try for yourself setting:
+
+       CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y : CodeSourcery under Windows
+       CONFIG_CXX_NEWLONG=n                    : size_t is unsigned int (maybe?)
+
+    3. In addition to the the kernel mode build, this NxWM configuration
+       differences from the nxwm configuration in that:
+
+       a. Networking is disabled.  There are issues with some of the network-
+          related NSH commands and with Telnet in the kernel build (see the
+          top-level TODO file).  Without these NSH commands, there is no use
+          for networking in this configuration.
+
+       b. The NxConsole windows are disabled. There are also issues with the
+          NxConsole build now (see the top-level TODO file).
+
+       c. The initialization sequence is quite different:  NX and the
+          touchscreen are initialized in kernel mode by logic in this src/
+          directory before the NxWM application is started.
+
+    4. At the end of the build, there will be several files in the top-level
+       NuttX build directory:
+
+       PASS1:
+         nuttx_user.elf    - The pass1 user-space ELF file
+         nuttx_user.hex    - The pass1 Intel HEX format file (selected in defconfig)
+         User.map          - Symbols in the user-space ELF file
+
+       PASS2:
+         nuttx             - The pass2 kernel-space ELF file
+         nuttx.hex         - The pass2 Intel HEX file (selected in defconfig)
+         System.map        - Symbols in the kernel-space ELF file
+
+    5. Combining .hex files.  If you plan to use the STM32 ST-Link Utility to
+       load the .hex files into FLASH, then you need to combine the two hex
+       files into a single .hex file.  Here is how you can do that.
+
+       a. The 'tail' of the nuttx.hex file should look something like this
+          (with my comments added):
+
+            $ tail nuttx.hex
+            # 00, data records
+            ...
+            :10 9DC0 00 01000000000800006400020100001F0004
+            :10 9DD0 00 3B005A0078009700B500D400F300110151
+            :08 9DE0 00 30014E016D0100008D
+            # 05, Start Linear Address Record
+            :04 0000 05 0800 0419 D2
+            # 01, End Of File record
+            :00 0000 01 FF
+
+          Use an editor such as vi to remove the 05 and 01 records.
+
+       b. The 'head' of the nuttx_user.hex file should look something like
+          this (again with my comments added):
+
+            $ head nuttx_user.hex
+            # 04, Extended Linear Address Record
+            :02 0000 04 0801 F1
+            # 00, data records
+            :10 8000 00 BD89 01084C800108C8110208D01102087E
+            :10 8010 00 0010 00201C1000201C1000203C16002026
+            :10 8020 00 4D80 01085D80010869800108ED83010829
+            ...
+
+          Nothing needs to be done here.  The nuttx_user.hex file should
+          be fine.
+
+       c. Combine the edited nuttx.hex and un-edited nuttx_user.hex
+          file to produce a single combined hex file:
+
+          $ cat nuttx.hex nuttx_user.hex >combined.hex
+
+       Then use the combined.hex file with the STM32 ST-Link tool.  If
+       you do this a lot, you will probably want to invest a little time
+       to develop a tool to automate these steps.
+
   nettest:
   -------
 
     This configuration directory may be used to verify networking performance
-    using the STM32's Ethernet controller. It uses apps/examples/nettest to excercise the
+    using the STM32's Ethernet controller. It uses apps/examples/nettest to exercise the
     TCP/IP network.
 
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y                : CodeSourcery under Windows
     CONFIG_EXAMPLES_NETTEST_SERVER=n                       : Target is configured as the client
     CONFIG_EXAMPLES_NETTEST_PERFORMANCE=y                  : Only network performance is verified.
     CONFIG_EXAMPLES_NETTEST_IPADDR=(10<<24|0<<16|0<<8|2)   : Target side is IP: 10.0.0.2
     CONFIG_EXAMPLES_NETTEST_DRIPADDR=(10<<24|0<<16|0<<8|1) : Host side is IP: 10.0.0.1
     CONFIG_EXAMPLES_NETTEST_CLIENTIP=(10<<24|0<<16|0<<8|1) : Server address used by which ever is client.
 
+    NOTES:
+
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
   nsh:
   ---
     Configures the NuttShell (nsh) located at apps/examples/nsh.  The
     Configuration enables both the serial and telnet NSH interfaces.
 
-    CONFIG_STM32_CODESOURCERYW=y              : CodeSourcery under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y   : CodeSourcery under Windows
     CONFIG_NSH_DHCPC=n                        : DHCP is disabled
     CONFIG_NSH_IPADDR=(10<<24|0<<16|0<<8|2)   : Target IP address 10.0.0.2
     CONFIG_NSH_DRIPADDR=(10<<24|0<<16|0<<8|1) : Host IP address 10.0.0.1
 
     NOTES:
-    1. This example assumes that a network is connected.  During its
+
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. This example assumes that a network is connected.  During its
        initialization, it will try to negotiate the link speed.  If you have
        no network connected when you reset the board, there will be a long
        delay (maybe 30 seconds?) before anything happens.  That is the timeout
        before the networking finally gives up and decides that no network is
        available.
 
-    2. This example supports the ADC test (apps/examples/adc) but this must
+    3. This example supports the ADC test (apps/examples/adc) but this must
        be manually enabled by selecting:
 
        CONFIG_ADC=y             : Enable the generic ADC infrastructure
@@ -1002,7 +1140,7 @@ Where <subdir> is one of the following:
 
        CONFIG_DEBUG_ANALOG
 
-    3. This example supports the PWM test (apps/examples/pwm) but this must
+    4. This example supports the PWM test (apps/examples/pwm) but this must
        be manually enabled by selecting eeither
 
        CONFIG_PWM=y                : Enable the generic PWM infrastructure
@@ -1031,7 +1169,7 @@ Where <subdir> is one of the following:
 
        CONFIG_DEBUG_PWM
 
-    4. This example supports the CAN loopback test (apps/examples/can) but this
+    5. This example supports the CAN loopback test (apps/examples/can) but this
        must be manually enabled by selecting:
 
        CONFIG_CAN=y             : Enable the generic CAN infrastructure
@@ -1046,25 +1184,25 @@ Where <subdir> is one of the following:
        CONFIG_DEBUG_CAN
        CONFIG_CAN_REGDEBUG
 
-    5. This example can support an FTP client.  In order to build in FTP client
-       support simply uncomment the following lines in the appconfig file (before
-       configuring) or in the apps/.config file (after configuring):
+    6. This example can support an FTP client.  In order to build in FTP client
+       support simply uncomment the following lines in the defconfig file (before
+       configuring) or in the .config file (after configuring):
 
-       #CONFIGURED_APPS += netutils/ftpc
-       #CONFIGURED_APPS += examples/ftpc
+       CONFIG_NETUTILS_FTPC=y
+       CONFIG_EXAMPLES_FTPC=y
 
-    6. This example can support an FTP server.  In order to build in FTP server
-       support simply uncomment the following lines in the appconfig file (before
-       configuring) or in the apps/.config file (after configuring):
+    7. This example can support an FTP server.  In order to build in FTP server
+       support simply add the following lines in the defconfig file (before
+       configuring) or in the .config file (after configuring):
 
-       #CONFIGURED_APPS += netutils/ftpd
-       #CONFIGURED_APPS += examples/ftpd
+       CONFIG_NETUTILS_FTPD=y
+       CONFIG_EXAMPLES_FTPD=y
 
        And enable poll() support in the NuttX configuration file:
 
        CONFIG_DISABLE_POLL=n
 
-    7. This example supports the watchdog timer test (apps/examples/watchdog)
+    8. This example supports the watchdog timer test (apps/examples/watchdog)
        but this must be manually enabled by selecting:
 
        CONFIG_WATCHDOG=y         : Enables watchdog timer driver support
@@ -1080,43 +1218,40 @@ Where <subdir> is one of the following:
 
        The IWDG timer has a range of about 35 seconds and should not be an issue.
 
-    7. Adding LCD and graphics support:
-
-       appconfig (apps/.config):  Enable the application configurations that you
-       want to use.  Asexamples:
-
-       CONFIGURED_APPS += examples/nx       : Pick one or more
-       CONFIGURED_APPS += examples/nxhello  :
-       CONFIGURED_APPS += examples/nximage  :
-       CONFIGURED_APPS += examples/nxlines  :
+    9. Adding LCD and graphics support:
 
        defconfig (nuttx/.config):
 
-       CONFIG_STM32_FSMC=y                  : FSMC support is required for the LCD
-       CONFIG_NX=y                          : Enable graphics suppport
-       CONFIG_MM_REGIONS=3                  : When FSMC is enabled, so is the on-board SRAM memory region
+       CONFIG_EXAMPLES_nx=y      : Pick one or more
+       CONFIG_EXAMPLES_nxhello=y :
+       CONFIG_EXAMPLES_nximage   :
+       CONFIG_EXAMPLES_nxlines              :
 
-    8. USB OTG FS Device or Host Support
- 
-       CONFIG_USBDEV          - Enable USB device support, OR
-       CONFIG_USBHOST         - Enable USB host support
-       CONFIG_STM32_OTGFS     - Enable the STM32 USB OTG FS block
-       CONFIG_STM32_SYSCFG    - Needed
-       CONFIG_SCHED_WORKQUEUE - Worker thread support is required
+       CONFIG_STM32_FSMC=y       : FSMC support is required for the LCD
+       CONFIG_NX=y               : Enable graphics suppport
+       CONFIG_MM_REGIONS=3       : When FSMC is enabled, so is the on-board SRAM memory region
 
-    9. USB OTG FS Host Support.  The following changes will enable support for
-       a USB host on the STM32F4Discovery, including support for a mass storage
-       class driver:
+    10. USB OTG FS Device or Host Support
 
-       CONFIG_USBDEV=n          - Make sure tht USB device support is disabled
-       CONFIG_USBHOST=y         - Enable USB host support
-       CONFIG_STM32_OTGFS=y     - Enable the STM32 USB OTG FS block
-       CONFIG_STM32_SYSCFG=y    - Needed for all USB OTF FS support
-       CONFIG_SCHED_WORKQUEUE=y - Worker thread support is required for the mass
+       CONFIG_USBDEV             : Enable USB device support, OR
+       CONFIG_USBHOST            : Enable USB host support
+       CONFIG_STM32_OTGFS        : Enable the STM32 USB OTG FS block
+       CONFIG_STM32_SYSCFG       : Needed
+       CONFIG_SCHED_WORKQUEUE    : Worker thread support is required
+
+    11. USB OTG FS Host Support.  The following changes will enable support for
+        a USB host on the STM32F4Discovery, including support for a mass storage
+        class driver:
+
+        CONFIG_USBDEV=n          : Make sure tht USB device support is disabled
+        CONFIG_USBHOST=y         : Enable USB host support
+        CONFIG_STM32_OTGFS=y     : Enable the STM32 USB OTG FS block
+        CONFIG_STM32_SYSCFG=y    : Needed for all USB OTF FS support
+        CONFIG_SCHED_WORKQUEUE=y : Worker thread support is required for the mass
                                   storage class driver.
-       CONFIG_NSH_ARCHINIT=y    - Architecture specific USB initialization
+        CONFIG_NSH_ARCHINIT=y    : Architecture specific USB initialization
                                   is needed for NSH
-       CONFIG_FS_FAT=y          - Needed by the USB host mass storage class.
+        CONFIG_FS_FAT=y          : Needed by the USB host mass storage class.
 
        With those changes, you can use NSH with a FLASH pen driver as shown
        belong.  Here NSH is started with nothing in the USB host slot:
@@ -1163,16 +1298,16 @@ Where <subdir> is one of the following:
 
        nsh> umount /mnt/stuff
 
-    11. By default, this configuration supports /dev/random using the STM32's
+    12. By default, this configuration supports /dev/random using the STM32's
         RNG hardware.  This can be disabled as follows:
 
         -CONFIG_STM32_RNG=y
         +CONFIG_STM32_RNG=n
- 
+
         -CONFIG_DEV_RANDOM=y
         +CONFIG_DEV_RANDOM=n
 
-    12. This configuration requires that jumper JP22 be set to enable RS-232
+    13. This configuration requires that jumper JP22 be set to enable RS-232
        operation.
 
   nsh2:
@@ -1210,19 +1345,29 @@ Where <subdir> is one of the following:
     curious.
 
     NOTES:
-    1. See the notes for the nsh configuration.  Most also apply to the nsh2
+
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. See the notes for the nsh configuration.  Most also apply to the nsh2
        configuration.  Like the nsh configuration, this configuration can
        be modified to support a variety of additional tests.
 
-    2. RS-232 is disabled, but Telnet is still available for use as a console.
+    3. RS-232 is disabled, but Telnet is still available for use as a console.
        Since RS-232 and SDIO use the same pins (one controlled by JP22), RS232
        and SDIO cannot be used concurrently.
 
-    3. This configuration requires that jumper JP22 be set to enable SDIO
+    4. This configuration requires that jumper JP22 be set to enable SDIO
        operation.  To enable MicroSD Card, which shares same I/Os with RS-232,
        JP22 is not fitted.
 
-    4. In order to use SDIO without overruns, DMA must be used.  The STM32 F4
+    5. In order to use SDIO without overruns, DMA must be used.  The STM32 F4
        has 192Kb of SRAM in two banks:  112Kb of "system" SRAM located at
        0x2000:0000 and 64Kb of "CCM" SRAM located at 0x1000:0000. It appears
        that you cannot perform DMA from CCM SRAM.  The work around that I have now
@@ -1234,7 +1379,7 @@ Where <subdir> is one of the following:
        Then DMA works fine. The downside is, of course, is that we lose 64Kb
        of precious SRAM.
 
-    5. Another SDIO/DMA issue.  This one is probably a software bug.  This is
+    6. Another SDIO/DMA issue.  This one is probably a software bug.  This is
        the bug as stated in the TODO list:
 
        "If you use a large I/O buffer to access the file system, then the
@@ -1245,7 +1390,7 @@ Where <subdir> is one of the following:
        For this reason, CONFIG_MMCSD_MULTIBLOCK_DISABLE=y appears in the defconfig
        file.
 
-    6. Another DMA-related concern.  I see this statement in the reference
+    7. Another DMA-related concern.  I see this statement in the reference
        manual:  "The burst configuration has to be selected in order to respect
        the AHB protocol, where bursts must not cross the 1 KB address boundary
        because the minimum address space that can be allocated to a single slave
@@ -1261,27 +1406,43 @@ Where <subdir> is one of the following:
     from the others, however, in that it uses the NxConsole driver to host
     the NSH shell.
 
-    Some of the differences in this configuration and the normal nsh configuration
-    include these settings in the defconfig file:
+    NOTES:
 
-    These select NX Multi-User mode:
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
 
-      CONFG_NX_MULTIUSER=y
-      CONFIG_DISABLE_MQUEUE=n
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
 
-    The following definition in the defconfig file to enables the NxConsole
-    driver:
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
 
-      CONFIG_NXCONSOLE=y
+    2. Some of the differences in this configuration and the normal nsh
+       configuration include these settings in the defconfig file:
 
-    The appconfig file selects examples/nxconsole instead of examples/nsh:
+       These select NX Multi-User mode:
 
-      CONFIGURED_APPS += examples/nxconsole
+         CONFG_NX_MULTIUSER=y
+         CONFIG_DISABLE_MQUEUE=n
 
-    Other configuration settings:
+       The following definition in the defconfig file to enables the NxConsole
+       driver:
 
-      CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
-      CONFIG_LCD_LANDSCAPE=y        : 320x240 landscape
+         CONFIG_NXCONSOLE=y
+
+       And this selects examples/nxconsole instead of examples/nsh:
+
+         CONFIG_EXAMPLES_NXCONSOLE=y
+
+       LCD Orientation:
+
+         CONFIG_LCD_LANDSCAPE=y        : 320x240 landscape
+
+    3. Default build environment (also easily reconfigured):
+
+         CONFIG_HOST_WINDOWS=y                    : Windows
+         CONFIG_WINDOWS_CYGWIN=y                  : With Cygwin
+         CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y  : CodeSourcery under Windows
 
   nxwm
   ----
@@ -1301,7 +1462,7 @@ Where <subdir> is one of the following:
     Here is the quick summary of the build steps (Assuming that all of
     the required packages are available in a directory ~/nuttx-code):
 
-    1. Intall the nxwm configuration
+    1. Install the nxwm configuration
 
        $ cd ~/nuttx-code/nuttx/tools
        $ ./configure.sh stm3240g-eval/nxwm
@@ -1338,42 +1499,6 @@ Where <subdir> is one of the following:
        $ cd ~/nuttx-code/nuttx
        $ make
 
-  ostest:
-  ------
-    This configuration directory, performs a simple OS test using
-    examples/ostest.  By default, this project assumes that you are
-    using the DFU bootloader.
-
-      CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
-
-    If you use the Atollic toolchain, then the FPU test can be enabled in the
-    examples/ostest by adding the following your NuttX configuration file:
-
-     -CONFIG_ARCH_FPU=n              : Enable FPU support
-     +CONFIG_ARCH_FPU=y
-
-     -CONFIG_STM32_CODESOURCERYW=y   : Disable the CodeSourcery toolchain
-     +CONFIG_STM32_CODESOURCERYW=n
-
-     -CONFIG_STM32_ATOLLIC_LITE=n   : Enable *one* the Atollic toolchains
-      CONFIG_STM32_ATOLLIC_PRO=n
-     -CONFIG_STM32_ATOLLIC_LITE=y   : The "Lite" version, OR
-      CONFIG_STM32_ATOLLIC_PRO=n    : The "Pro" version (only one)
-
-     -CONFIG_INTELHEX_BINARY=y       : Suppress generation FLASH download formats
-     +CONFIG_INTELHEX_BINARY=n       : (Only necessary with the "Lite" version)
-
-     -CONFIG_HAVE_CXX=y              : Suppress generation of C++ code
-     +CONFIG_HAVE_CXX=n              : (Only necessary with the "Lite" version)
-
-     -CONFIG_SCHED_WAITPID=y         : Enable the waitpid() API needed by the FPU test
-     +CONFIG_SCHED_WAITPID=n
-
-    The FPU test also needs to know the size of the FPU registers save area in
-    bytes (see arch/arm/include/armv7-m/irq_lazyfpu.h):
-
-     +CONFIG_EXAMPLES_OSTEST_FPUSIZE=(4*33)
-
   telnetd:
   --------
 
@@ -1383,6 +1508,23 @@ Where <subdir> is one of the following:
     use NSH, then you don't care about this.  This test is good for
     testing the Telnet daemon only because it works in a simpler
     environment than does the nsh configuration.
+
+    NOTES:
+
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. Default build environment (easily reconfigured):
+
+      CONFIG_HOST_WINDOWS=y
+      CONFIG_WINDOWS_CYGWIN=y
+      CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y
 
   xmlrpc
   ------

@@ -67,13 +67,16 @@
  * Description:
  *   Inform the application holding the UDP socket of a change in state.
  *
+ * Returned Value:
+ *   OK if packet has been processed, otherwise ERROR.
+ *
  * Assumptions:
  *   This function is called at the interrupt level with interrupts disabled.
  *
  ****************************************************************************/
 
-void uip_udpcallback(struct uip_driver_s *dev, struct uip_udp_conn *conn,
-                     uint16_t flags)
+uint16_t uip_udpcallback(struct uip_driver_s *dev, struct uip_udp_conn *conn,
+                         uint16_t flags)
 {
   nllvdbg("flags: %04x\n", flags);
 
@@ -85,6 +88,8 @@ void uip_udpcallback(struct uip_driver_s *dev, struct uip_udp_conn *conn,
 
       flags = uip_callbackexecute(dev, conn, flags, conn->list);
     }
+
+  return flags;
 }
 
 #endif /* CONFIG_NET && CONFIG_NET_UDP */

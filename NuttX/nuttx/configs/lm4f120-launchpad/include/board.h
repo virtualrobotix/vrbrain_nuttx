@@ -1,8 +1,7 @@
 /************************************************************************************
  * configs/lm4f120-launchpad/include/board.h
- * include/arch/board/board.h
  *
- *   Copyright (C) 2010 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,8 +33,8 @@
  *
  ************************************************************************************/
 
-#ifndef __ARCH_BOARD_BOARD_H
-#define __ARCH_BOARD_BOARD_H
+#ifndef __CONFIGS_LM4F120_LAUNCHPAD_INCLUDE_BOARD_H
+#define __CONFIGS_LM4F120_LAUNCHPAD_INCLUDE_BOARD_H
 
 /************************************************************************************
  * Included Files
@@ -66,7 +65,7 @@
  * of (400 / 1) / 5 = 80MHz (Using RCC2 and DIV400).
  */
 
-#define LM_SYSDIV            5
+#define TIVA_SYSDIV          5
 #define SYSCLK_FREQUENCY     80000000  /* 80MHz */
 
 /* Other RCC settings:
@@ -77,8 +76,8 @@
  * - No auto-clock gating reset
  */
 
-#define LM_RCC_VALUE (SYSCON_RCC_OSCSRC | SYSCON_RCC_XTAL | \
-                      SYSCON_RCC_USESYSDIV | SYSCON_RCC_SYSDIV(LM_SYSDIV))
+#define TIVA_RCC_VALUE (SYSCON_RCC_OSCSRC | SYSCON_RCC_XTAL | \
+                        SYSCON_RCC_USESYSDIV | SYSCON_RCC_SYSDIV(TIVA_SYSDIV))
 
 /* RCC2 settings
  *
@@ -99,13 +98,13 @@
  *   etc.
  */
 
-#if (LM_SYSDIV & 1) == 0
-#  define LM_RCC2_VALUE (SYSCON_RCC2_OSCSRC | SYSCON_RCC2_SYSDIV2LSB | \
-                         SYSCON_RCC2_SYSDIV_DIV400(LM_SYSDIV) | \
-                         SYSCON_RCC2_DIV400 | SYSCON_RCC2_USERCC2)
+#if (TIVA_SYSDIV & 1) == 0
+#  define TIVA_RCC2_VALUE (SYSCON_RCC2_OSCSRC | SYSCON_RCC2_SYSDIV2LSB | \
+                           SYSCON_RCC2_SYSDIV_DIV400(TIVA_SYSDIV) | \
+                           SYSCON_RCC2_DIV400 | SYSCON_RCC2_USERCC2)
 #else
-#  define LM_RCC2_VALUE (SYSCON_RCC2_OSCSRC | SYSCON_RCC2_SYSDIV_DIV400(LM_SYSDIV) | \
-                         SYSCON_RCC2_DIV400 | SYSCON_RCC2_USERCC2)
+#  define TIVA_RCC2_VALUE (SYSCON_RCC2_OSCSRC | SYSCON_RCC2_SYSDIV_DIV400(TIVA_SYSDIV) | \
+                           SYSCON_RCC2_DIV400 | SYSCON_RCC2_USERCC2)
 #endif
 
 /* LED definitions ******************************************************************/
@@ -192,7 +191,7 @@
 #ifndef __ASSEMBLY__
 
 /************************************************************************************
- * Name: lm_boardinitialize
+ * Name: tiva_boardinitialize
  *
  * Description:
  *   All Stellaris architectures must provide the following entry point.  This entry
@@ -201,7 +200,7 @@
  *
  ************************************************************************************/
 
-void lm_boardinitialize(void);
+void tiva_boardinitialize(void);
 
 /************************************************************************************
  * Name:  lm4f_ledinit, lm4f_setled, and lm4f_setleds
@@ -219,60 +218,5 @@ void lm4f_setled(int led, bool ledon);
 void lm4f_setleds(uint8_t ledset);
 #endif
 
-/************************************************************************************
- * Name: up_buttoninit
- *
- * Description:
- *   up_buttoninit() must be called to initialize button resources.  After that,
- *   up_buttons() may be called to collect the current state of all buttons or
- *   up_irqbutton() may be called to register button interrupt handlers.
- *
- ************************************************************************************/
-
-#ifdef CONFIG_ARCH_BUTTONS
-void up_buttoninit(void);
-
-/************************************************************************************
- * Name: up_buttons
- *
- * Description:
- *   up_buttoninit() must be called to initialize button resources.  After that,
- *   up_buttons() may be called to collect the current state of all buttons.
- *
- *   After up_buttoninit() has been called, up_buttons() may be called to collect
- *   the state of all buttons.  up_buttons() returns an 8-bit bit set with each bit
- *   associated with a button.  See the BOARD_BUTTON_*_BIT and BOARD_JOYSTICK_*_BIT
- *   definitions above for the meaning of each bit.
- *
- ************************************************************************************/
-
-uint8_t up_buttons(void);
-
-/************************************************************************************
- * Button support.
- *
- * Description:
- *   up_buttoninit() must be called to initialize button resources.  After that,
- *   up_irqbutton() may be called to register button interrupt handlers.
- *
- *   up_irqbutton() may be called to register an interrupt handler that will be called
- *   when a button is depressed or released.  The ID value is a button enumeration
- *   value that uniquely identifies a button resource. See the BOARD_BUTTON_* and
- *   BOARD_JOYSTICK_* definitions in above for the meaning of enumeration values
- *   The previous interrupt handler address is returned (so that it may restored, if
- *   so desired).
- *
- *   Note that up_irqbutton() also enables button interrupts.  Button interrupts
- *   will remain enabled after the interrupt handler is attached. Interrupts may
- *   be disabled (and detached) by calling up_irqbutton with irqhandler equal to
- *   NULL.
- *
- ************************************************************************************/
-
-#if defined(CONFIG_ARCH_IRQBUTTONS) && defined(CONFIG_GPIO_IRQ)
-xcpt_t up_irqbutton(int id, xcpt_t irqhandler);
-#endif
-#endif /* CONFIG_ARCH_BUTTONS */
-
 #endif /* __ASSEMBLY__ */
-#endif  /* __ARCH_BOARD_BOARD_H */
+#endif  /* __CONFIGS_LM4F120_LAUNCHPAD_INCLUDE_BOARD_H */

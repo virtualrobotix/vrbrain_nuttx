@@ -70,7 +70,7 @@
 static int inode_namelen(FAR const char *name)
 {
   const char *tmp = name;
-  while(*tmp && *tmp != '/') tmp++;
+  while (*tmp && *tmp != '/') tmp++;
   return tmp - name;
 }
 
@@ -80,7 +80,7 @@ static int inode_namelen(FAR const char *name)
 
 static void inode_namecpy(char *dest, const char *src)
 {
-  while(*src && *src != '/') *dest++ = *src++;
+  while (*src && *src != '/') *dest++ = *src++;
   *dest='\0';
 }
 
@@ -165,7 +165,7 @@ static void inode_insert(FAR struct inode *node,
 
 int inode_reserve(FAR const char *path, FAR struct inode **inode)
 {
-  const char       *name = path;
+  FAR const char   *name = path;
   FAR struct inode *left;
   FAR struct inode *parent;
 

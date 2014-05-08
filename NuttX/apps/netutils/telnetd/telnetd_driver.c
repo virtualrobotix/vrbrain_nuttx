@@ -121,7 +121,7 @@ struct telnetd_dev_s
 
 #ifdef CONFIG_TELNETD_DUMPBUFFER
 static inline void telnetd_dumpbuffer(FAR const char *msg,
-                 FAR const char *buffer, unsigned int nbytes)
+                 FAR const char *buffer, unsigned int nbytes);
 #else
 # define telnetd_dumpbuffer(msg,buffer,nbytes)
 #endif
@@ -136,7 +136,7 @@ static void    telnetd_sendopt(FAR struct telnetd_dev_s *priv, uint8_t option,
                  uint8_t value);
 
 /* Character driver methods */
- 
+
 static int     telnetd_open(FAR struct file *filep);
 static int     telnetd_close(FAR struct file *filep);
 static ssize_t telnetd_read(FAR struct file *, FAR char *, size_t);
@@ -181,7 +181,7 @@ static inline void telnetd_dumpbuffer(FAR const char *msg,
   /* CONFIG_DEBUG, CONFIG_DEBUG_VERBOSE, and CONFIG_DEBUG_NET have to be
   * defined or the following does nothing.
   */
-    
+
   nvdbgdumpbuffer(msg, (FAR const uint8_t*)buffer, nbytes);
 }
 #endif
@@ -215,7 +215,7 @@ static void telnetd_getchar(FAR struct telnetd_dev_s *priv, uint8_t ch,
  * Name: telnetd_receive
  *
  * Description:
- *   Process a received telenet buffer
+ *   Process a received Telnet buffer
  *
  ****************************************************************************/
 
@@ -500,12 +500,20 @@ static int telnetd_close(FAR struct file *filep)
         }
       else
         {
-          /* Unregister the character driver */
+          /* Un-register the character driver */
 
           ret = unregister_driver(devpath);
           if (ret < 0)
             {
-              nlldbg("Failed to unregister the driver %s: %d\n", ret);
+              /* NOTE: a return value of -EBUSY is not an error, it simply
+               * means that the Telnet driver is busy now and cannot be
+               * registered now because there are other sessions using the
+               * connection.  The driver will be properly unregistered when
+               * the final session terminates.
+               */
+
+              nlldbg("Failed to unregister the driver %s: %d\n",
+                     devpath, ret);
             }
 
           free(devpath);
@@ -733,7 +741,7 @@ static int telnetd_poll(FAR struct file *filep, FAR struct pollfd *fds,
  * Return:
  *   An allocated string represent the full path to the created driver.  The
  *   receiver of the string must de-allocate this memory when it is no longer
- *   needed.  NULL is returned on a failure. 
+ *   needed.  NULL is returned on a failure.
  *
  ****************************************************************************/
 

@@ -89,9 +89,9 @@ endif
 #
 # Built products
 #
-DESIRED_FIRMWARES 	 = $(foreach config,$(CONFIGS),$(IMAGE_DIR)$(config).vrbrain)
-STAGED_FIRMWARES	 = $(foreach config,$(KNOWN_CONFIGS),$(IMAGE_DIR)$(config).vrbrain)
-FIRMWARES		 = $(foreach config,$(KNOWN_CONFIGS),$(BUILD_DIR)$(config).build/firmware.vrbrain)
+DESIRED_FIRMWARES 	 = $(foreach config,$(CONFIGS),$(IMAGE_DIR)$(config).vrx)
+STAGED_FIRMWARES	 = $(foreach config,$(KNOWN_CONFIGS),$(IMAGE_DIR)$(config).vrx)
+FIRMWARES		 = $(foreach config,$(KNOWN_CONFIGS),$(BUILD_DIR)$(config).build/firmware.vrx)
 
 all:			$(DESIRED_FIRMWARES)
 
@@ -99,22 +99,22 @@ all:			$(DESIRED_FIRMWARES)
 # Copy FIRMWARES into the image directory.
 #
 # XXX copying the .bin files is a hack to work around the PX4IO uploader 
-#     not supporting .vrbrain files, and it should be deprecated onced that 
+#     not supporting .vrx files, and it should be deprecated onced that 
 #     is taken care of.
 #
-$(STAGED_FIRMWARES): $(IMAGE_DIR)%.vrbrain: $(BUILD_DIR)%.build/firmware.vrbrain
+$(STAGED_FIRMWARES): $(IMAGE_DIR)%.vrx: $(BUILD_DIR)%.build/firmware.vrx
 	@$(ECHO) %% Copying $@
 	$(Q) $(COPY) $< $@
-	$(Q) $(COPY) $(patsubst %.vrbrain,%.bin,$<) $(patsubst %.vrbrain,%.bin,$@)
-	$(Q) $(COPY) $(patsubst %.vrbrain,%.hex,$<) $(patsubst %.vrbrain,%.hex,$@)
+	$(Q) $(COPY) $(patsubst %.vrx,%.bin,$<) $(patsubst %.vrx,%.bin,$@)
+	$(Q) $(COPY) $(patsubst %.vrx,%.hex,$<) $(patsubst %.vrx,%.hex,$@)
 
 #
 # Generate FIRMWARES.
 #
 .PHONY: $(FIRMWARES)
-$(BUILD_DIR)%.build/firmware.vrbrain: config   = $(patsubst $(BUILD_DIR)%.build/firmware.vrbrain,%,$@)
-$(BUILD_DIR)%.build/firmware.vrbrain: work_dir = $(BUILD_DIR)$(config).build/
-$(FIRMWARES): $(BUILD_DIR)%.build/firmware.vrbrain:
+$(BUILD_DIR)%.build/firmware.vrx: config   = $(patsubst $(BUILD_DIR)%.build/firmware.vrx,%,$@)
+$(BUILD_DIR)%.build/firmware.vrx: work_dir = $(BUILD_DIR)$(config).build/
+$(FIRMWARES): $(BUILD_DIR)%.build/firmware.vrx:
 	@$(ECHO) %%%%
 	@$(ECHO) %%%% Building $(config) in $(work_dir)
 	@$(ECHO) %%%%
@@ -218,7 +218,7 @@ testbuild:
 .PHONY:	clean
 clean:
 	$(Q) $(RMDIR) $(BUILD_DIR)*.build
-	$(Q) $(REMOVE) $(IMAGE_DIR)*.vrbrain
+	$(Q) $(REMOVE) $(IMAGE_DIR)*.vrx
 
 .PHONY:	distclean
 distclean: clean

@@ -80,7 +80,7 @@
  *   Notify the device driver that new TX data is available.
  *
  * Parameters:
- *   raddr - Pointer to the remote address to send the data
+ *   raddr - The remote address to send the data
  *
  * Returned Value:
  *  None
@@ -90,11 +90,12 @@
  *
  ****************************************************************************/
 
-void netdev_txnotify(const uip_ipaddr_t *raddr)
+void netdev_txnotify(const uip_ipaddr_t raddr)
 {
   /* Find the device driver that serves the subnet of the remote address */
 
   struct uip_driver_s *dev = netdev_findbyaddr(raddr);
+
   if (dev && dev->d_txavail)
     {
       /* Notify the device driver that new TX data is available. */

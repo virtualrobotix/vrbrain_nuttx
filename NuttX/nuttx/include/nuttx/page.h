@@ -88,8 +88,8 @@
 
 /* CONFIG_PAGING_LOCKED_P/VBASE - May be defined to determine the base
  * address of the locked page regions (lowest in memory).  If neither
- * are defined, then this logic will be set the bases to CONFIG_DRAM_START
- * and CONFIG_DRAM_VSTART (i.e., it assumes that the base address of the
+ * are defined, then this logic will be set the bases to CONFIG_RAM_START
+ * and CONFIG_RAM_VSTART (i.e., it assumes that the base address of the
  * locked region is at the beginning of RAM).
  *
  * NOTE:  In some architectures, it may be necessary to take some memory
@@ -105,8 +105,8 @@
 #  define PG_LOCKED_PBASE          CONFIG_PAGING_LOCKED_PBASE
 #  define PG_LOCKED_VBASE          CONFIG_PAGING_LOCKED_VBASE
 #else
-#  define PG_LOCKED_PBASE          CONFIG_DRAM_START
-#  define PG_LOCKED_VBASE          CONFIG_DRAM_VSTART
+#  define PG_LOCKED_PBASE          CONFIG_RAM_START
+#  define PG_LOCKED_VBASE          CONFIG_RAM_VSTART
 #endif
 
 #define PG_LOCKED_PEND             (PG_LOCKED_PBASE + PG_LOCKED_SIZE)
@@ -118,8 +118,8 @@
 
 /* CONFIG_PAGING_NPPAGED - This is the number of physical pages available to
  *   support the paged text region.
- * CONFIG_PAGING_NVPAGED - This actual size of the paged text region (in
- *   pages).  This is also the number of virtual pages required to support
+ * CONFIG_PAGING_NVPAGED - This actual size of the virtual paged text region (in
+ *   pages).  This is also the number of virtual pages required to span
  *   the entire paged region. The on-demand paging  feature is intended to
  *   support only the case where the virtual paged text area is much larger
  *   the available physical pages.  Otherwise, why would you enable on-demand
@@ -172,10 +172,10 @@
  * from the end of RAM for page tables or other system usage.  The
  * configuration settings and linker directives must be cognizant of that:
  * CONFIG_PAGING_NDATA should be defined to prevent the data region from
- * extending all the way to the end of memory. 
+ * extending all the way to the end of memory.
  */
 
-#define PG_RAM_PAGES               (CONFIG_DRAM_SIZE >> PAGESHIFT)
+#define PG_RAM_PAGES               (CONFIG_RAM_SIZE >> PAGESHIFT)
 
 #ifdef CONFIG_PAGING_NDATA
 #  define PG_DATA_NPAGES           CONFIG_PAGING_NDATA
@@ -202,8 +202,8 @@
 
 /* CONFIG_PAGING_DEFPRIO - The default, minimum priority of the page fill
  *   worker thread.  The priority of the page fill work thread will be boosted
- *   boosted dynmically so that it matches the priority of the task on behalf
- *   of which it peforms the fill.  This defines the minimum priority that
+ *   boosted dynamically so that it matches the priority of the task on behalf
+ *   of which it performs the fill.  This defines the minimum priority that
  *   will be used. Default: 50.
  * CONFIG_PAGING_STACKSIZE - Defines the size of the allocated stack
  *   for the page fill worker thread. Default: 1024.
@@ -213,7 +213,7 @@
  *   transfer is completed. Default:  Undefined (non-blocking).
  * CONFIG_PAGING_WORKPERIOD - The page fill worker thread will wake periodically
  *   even if there is no mapping to do.  This selection controls that wake-up
- *   period (in microseconds).  This wake-up a failsafe that will handle any 
+ *   period (in microseconds).  This wake-up a failsafe that will handle any
  *   cases where a single is lost (that would really be a bug and shouldn't
  *   happen!) and also supports timeouts for case of non-blocking, asynchronous
  *   fills (see CONFIG_PAGING_TIMEOUT_TICKS).
@@ -253,7 +253,7 @@ extern "C"
  *
  *   1) Sanity checking.
  *      - ASSERT if the currently executing task is the page fill worker
- *        thread.  The page fill worker thread is how the the page fault
+ *        thread.  The page fill worker thread is how the page fault
  *        is resolved and all logic associated with the page fill worker
  *        must be "locked" and always present in memory.
  *   2) Block the currently executing task.
@@ -315,7 +315,7 @@ void pg_miss(void);
  * Public Functions -- Provided by architecture-specific logic to common
  *                     paging logic.
  ****************************************************************************/
- 
+
 /****************************************************************************
  * Name: up_checkmapping()
  *

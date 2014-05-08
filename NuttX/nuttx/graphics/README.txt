@@ -52,7 +52,21 @@ include/nuttx/nx/nxfont.h   -- Describe sthe NXFONT C interfaces
 Directories
 ^^^^^^^^^^^
 
+  The graphics capability consist both of components internal to the RTOS
+  and of user-callable interfaces.  In the NuttX kernel mode build there are
+  some components of the graphics subsystem are callable in user mode and other
+  components that are internal to the RTOS.  This directory, nuttx/graphics,
+  contains only those components that are internal to the RTOS.
+
+  User callable functions must, instead, be part of a library that can be
+  linked against user applications.  This user callable interfaces are
+  provided in sub-directories under nuttx/libnx.
+
+libnx/nx
+  Common callable interfaces that are, logically, part of both nxmu and nxsu.
+
 graphics/nxglib
+libnx/nxglib
   The NuttX tiny graphics library.  The directory contains generic utilities
   support operations on primitive graphics objects and logic to rasterize directly
   into a framebuffer.  It has no concept of windows (other than the one, framebuffer
@@ -71,7 +85,12 @@ graphics/nxsu
   single user front-end is selected when CONFIG_NX_MULTIUSER is not defined in the
   NuttX configuration file.
 
+  NOTE:  There is no nxsu sub-directory in nuttx/libnx.  That is because this
+  separation of interfaces is only required in the kernel build mode and
+  only the multi-user interfaces can be used with the kernel build.
+
 graphics/nxmu
+libnx/nxmu
   This is the NX multi user "front end".  When combined with the generic "back-end"
   (nxbe), it implements a multi-threaded, multi-user windowing system.  The files
   in this directory present the window APIs described in include/nuttx/nx/nx.h.  The
@@ -80,11 +99,11 @@ graphics/nxmu
   queue to serialize window operations from many threads. The multi-user front-end
   is selected when CONFIG_NX_MULTIUSER is defined in the NuttX configuration file.
 
-graphics/nxfonts
+libnx/nxfonts
   This is where the NXFONTS implementation resides.  This is a relatively low-
   level set of charset set/glyph management APIs.  See include/nuttx/nx/nxfonts.h
 
-graphics/nxtk
+libnx/nxtk
   This is where the NXTOOLKIT implementation resides.  This toolkit is built on
   top of NX and works with either the single-user or multi-user NX version. See
   include/nuttx/nx/nxtk.h
@@ -112,7 +131,7 @@ Installing New Fonts
   Create a new NuttX configuration variable.  For example, suppose
   you define the following variable:  CONFIG_NXFONT_MYFONT.  Then
   you would need to:
-  
+
     3. Define CONFIG_NXFONT_MYFONT=y in your NuttX configuration file.
 
   A font ID number has to be assigned for each new font.  The font ID
@@ -123,7 +142,7 @@ Installing New Fonts
 
     4. include/nuttx/nx/nxfonts.h. Add you new font as a possible system
        default font:
- 
+
        #if defined(CONFIG_NXFONT_SANS23X27)
        # define NXFONT_DEFAULT FONTID_SANS23X27
        #elif defined(CONFIG_NXFONT_MYFONT)
@@ -132,7 +151,7 @@ Installing New Fonts
 
        Then define the actual font ID.  Make sure that the font ID value
        is unique:
- 
+
        enum nx_fontid_e
        {
          FONTID_DEFAULT     = 0      /* The default font */
@@ -143,7 +162,7 @@ Installing New Fonts
          , FONTID_MYFONT    = 2      /* My shiny, new font */
        #endif
        ...
- 
+
   New Add the font to the NX build system.  There are several files that
   you have to modify to to this.  Look how the build system uses the
   font CONFIG_NXFONT_SANS23X27 for examaples:
@@ -210,7 +229,7 @@ Installing New Fonts
        font.  The lookup function is NXHANDLE nxf_getfonthandle(enum nx_fontid_e fontid).
        The new font information needs to be added to data structures used by
        that function:
- 
+
        #ifdef CONFIG_NXFONT_SANS23X27
        extern const struct nx_fontpackage_s g_sans23x27_package;
        #endif

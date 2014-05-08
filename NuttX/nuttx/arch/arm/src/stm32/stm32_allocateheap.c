@@ -63,7 +63,7 @@
  * following definitions must be provided to specify the size and
  * location of internal(system) SRAM:
  *
- * CONFIG_DRAM_END            : End address (+1) of SRAM (F1 family only, the
+ * CONFIG_RAM_END            : End address (+1) of SRAM (F1 family only, the
  *                            : F4 family uses the a priori end of SRAM)
  *
  * The F4 family also contains internal CCM SRAM.  This SRAM is different
@@ -93,14 +93,14 @@
 #endif
 
 /* The STM32L15xxx family has only internal SRAM.  The heap is in one contiguous
- * block starting at g_idle_topstack and extending through CONFIG_DRAM_END.
+ * block starting at g_idle_topstack and extending through CONFIG_RAM_END.
  */
 
 #if defined(CONFIG_STM32_STM32L15XX)
 
    /* Set the end of system SRAM */
 
-#  define SRAM1_END CONFIG_DRAM_END
+#  define SRAM1_END CONFIG_RAM_END
 
    /* There is no FSMC (Other EnergyLite STM32's do have an FSMC, but not the STM32L15X */
 
@@ -112,13 +112,13 @@
 #  define CONFIG_STM32_CCMEXCLUDE 1
 
    /* Only one memory region can be support (internal SRAM) */
- 
+
 #  if CONFIG_MM_REGIONS > 1
 #    error "CONFIG_MM_REGIONS > 1.  The STM32L15X has only one memory region."
 #  endif
 
 /* For the STM312F10xxx family, all internal SRAM is in one contiguous block
- * starting at g_idle_topstack and extending through CONFIG_DRAM_END (my apologies
+ * starting at g_idle_topstack and extending through CONFIG_RAM_END (my apologies
  * for the bad naming).  In addition, external FSMC SRAM may be available.
  */
 
@@ -126,7 +126,7 @@
 
    /* Set the end of system SRAM */
 
-#  define SRAM1_END CONFIG_DRAM_END
+#  define SRAM1_END CONFIG_RAM_END
 
    /* Check if external FSMC SRAM is provided */
 
@@ -160,7 +160,7 @@
 
    /* Set the end of system SRAM */
 
-#  define SRAM1_END CONFIG_DRAM_END
+#  define SRAM1_END CONFIG_RAM_END
 
    /* Set the range of CCM SRAM as well (although we may not use it) */
 
@@ -229,17 +229,17 @@
  *
  * 3)  64Kib of CCM SRAM beginning at address 0x1000:0000
  *
- * The STM32F427/437 parts have another 64KiB of System SRAM for a total of
- * 256KiB.
+ * The STM32F427/437/429/439 parts have another 64KiB of System SRAM for a total
+ * of 256KiB.
  *
  * 3)  64Kib of System SRAM beginning at address 0x2002:0000
  *
  * As determined by ld.script, g_heapbase lies in the 112KiB memory
  * region and that extends to 0x2001:0000.  But the  first and second memory
  * regions are contiguous and treated as one in this logic that extends to
- * 0x2002:0000 (or 0x2003:0000 for the F427/F437).
+ * 0x2002:0000 (or 0x2003:0000 for the F427/F437/F429/F439).
  *
- * As a complication, CCM SRAM cannot be used for DMA.  So, if STM32 DMA is enabled, 
+ * As a complication, CCM SRAM cannot be used for DMA.  So, if STM32 DMA is enabled,
  * CCM SRAM should probably be excluded from the heap or the application must take
  * extra care to ensure that DMA buffers are not allocated in CCM SRAM.
  *
@@ -257,7 +257,7 @@
 
    /* Set the end of system SRAM */
 
-#  if defined(CONFIG_STM32_STM32F427)
+#  if defined(CONFIG_STM32_STM32F427) || defined(CONFIG_STM32_STM32F429)
 #    define SRAM1_END 0x20030000
 #  else
 #    define SRAM1_END 0x20020000
@@ -347,7 +347,7 @@
 #      undef CONFIG_STM32_CCMEXCLUDE
 #      define CONFIG_STM32_CCMEXCLUDE 1
 #    endif
-   
+
 #  elif !defined(CONFIG_STM32_CCMEXCLUDE)
 
    /* Configuration 2: FSMC SRAM is not used, but CCM SRAM is requested.  DMA
@@ -392,6 +392,23 @@
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+/****************************************************************************
+ * Name: up_heap_color
+ *
+ * Description:
+ *   Set heap memory to a known, non-zero state to checking heap usage.
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_DEBUG_HEAP
+static inline void up_heap_color(FAR void *start, size_t size)
+{
+  memset(start, HEAP_COLOR, size);
+}
+#else
+#  define up_heap_color(start,size)
+#endif
 
 /****************************************************************************
  * Public Functions
@@ -457,9 +474,13 @@ void up_allocate_heap(FAR void **heap_start, size_t *heap_size)
 
   /* Return the user-space heap settings */
 
-  up_ledon(LED_HEAPALLOCATE);
+  board_led_on(LED_HEAPALLOCATE);
   *heap_start = (FAR void*)ubase;
   *heap_size  = usize;
+
+  /* Colorize the heap for debug */
+
+  up_heap_color((FAR void*)ubase, usize);
 
   /* Allow user-mode access to the user heap memory */
 
@@ -468,9 +489,13 @@ void up_allocate_heap(FAR void **heap_start, size_t *heap_size)
 
   /* Return the heap settings */
 
-  up_ledon(LED_HEAPALLOCATE);
+  board_led_on(LED_HEAPALLOCATE);
   *heap_start = (FAR void*)g_idle_topstack;
   *heap_size  = SRAM1_END - g_idle_topstack;
+
+  /* Colorize the heap for debug */
+
+  up_heap_color(*heap_start, *heap_size);
 #endif
 }
 
@@ -539,6 +564,10 @@ void up_addregion(void)
 
 #endif
 
+  /* Colorize the heap for debug */
+
+  up_heap_color((FAR void*)SRAM2_START, SRAM2_END-SRAM2_START);
+
   /* Add the STM32F20xxx/STM32F40xxx CCM SRAM user heap region. */
 
   kumm_addregion((FAR void*)SRAM2_START, SRAM2_END-SRAM2_START);
@@ -553,9 +582,13 @@ void up_addregion(void)
 
 #endif
 
-   /* Add the external FSMC SRAM user heap region. */
+  /* Colorize the heap for debug */
 
-   kumm_addregion((FAR void*)CONFIG_HEAP2_BASE, CONFIG_HEAP2_SIZE);
+  up_heap_color((FAR void*)CONFIG_HEAP2_BASE, CONFIG_HEAP2_SIZE);
+
+  /* Add the external FSMC SRAM user heap region. */
+
+  kumm_addregion((FAR void*)CONFIG_HEAP2_BASE, CONFIG_HEAP2_SIZE);
 #endif
 }
 #endif

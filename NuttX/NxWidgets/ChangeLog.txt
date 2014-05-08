@@ -345,7 +345,7 @@
 * NxWidgets::CNxWidgets:  Allow overriding of the checkCollision() method.
   From Petteri Aimonen (2013-4-22).
 
-1.8 2013-xx-xx Gregory Nutt <gnutt@nuttx.org>
+1.8 2013-06-14 Gregory Nutt <gnutt@nuttx.org>
 
 * NxWM::CMediaPlayer: shell application for an MP3 Media Player with
   Kconfig settings to enable it.  I plan to write this app to help
@@ -362,7 +362,7 @@
   should be 100, not 50, to be consistent with other default priorities.
 * NxWidgets::CGlyphSliderHorizontal and NxWidgets::CGlyphSliderHorizontalGrip:
   New widgets added by Ken Pettit (2013-5-15).
-* NxWidgets/UnitTests/CGlyphSliderHorizontal:  Addes a unit test for the
+* NxWidgets/UnitTests/CGlyphSliderHorizontal:  Adds a unit test for the
   NxWidgets::CGlyphSliderHorizontal class. From Ken Pettit (2013-5-17) .
 * NxWidgets::CGlyphSliderHorizontal:  Fix a drawing error.  From Ken
   Pettit (2013-5-17).
@@ -378,4 +378,52 @@
   application.  This should only be necessary if the display loses
   state due to e.g. powerdown or other manual intervention.  From
   Petteri Aimonen (2013-6-4).
+
+1.9 2013-10-28 Gregory Nutt <gnutt@nuttx.org>
+
+* NxWM::CCalibration.cxx/hxx:  If CONFIG_NXWM_CALIBRATION_MESSAGES is
+  defined then CCalibration will provide some instructions in the center
+  of the display (2013-10-14).
+* NxWM::CCalibration.cxx/hxx:  Add options to collect and average
+  multiple samples at each location.  Also logic to discard the most
+  extreme samples before averaging (2013-10-14).
+* NxWidgets::CScaledImage:  This new class is a wrapper for an class
+  the exports IBitMap.  It will perform scaling via bi-linear interpolation
+  so that images can be scaled to any size desired (2013-10-15).
+* NxWM::CTaskbar:: Can now be configured to scale taskbar icons using
+  NxWidgets::CScaledImage (2013-10-15)
+* NxWidgets/libnxwidgets/src/glyph_nxlogo320x320.cxx:  Add a big, 320x320
+  NuttX logo image.  The older, smaller NuttX logo was renamed from
+  nxlogo to nxlogo160x160 in all places (2015-10-15).
+* NxWM::CCalibration and NxWM::CTouchscreen:  Add a complex touchscreen
+  scaling algorithm to handling the case where the measured X values also
+  vary with y position (and vice versa) (2013-10-17).
+
+1.10 2013-12-07 Gregory Nutt <gnutt@nuttx.org>
+
+* Kconfig and UnitTests/nxwm:  Add logic to enable saving and recovering
+  touchscreen calibration data.  This depends upon having platform-dependent
+  support for storage of configuration data.  Portions suggested by
+  Ken Pettit (2013-10-30).
+* NxWM:Calibration:  Saving of calibration data must be performed in
+  CCalibration, not in UnitTests/nxwm.  Why?  Because the touchscreen
+  calibration could also be initiated from other ways other than through
+  the one-time, start-up initialization logic (2013-10-30).
+
+1.11 2014-01-30 Gregory Nutt <gnutt@nuttx.org>
+
+* NxWidgets/Kconfig and NxWidgets::CNxServer:  Server initialization can
+  now be disabled in the configuration (in fact, it is disabled by default).
+  This is because in the kernel build mode, the NX server must be initialized
+  in kernel mode by the RTOS before applications using the server run in
+  user mode.
+* NxWm: Added CONFIG_NXWM_NXCONSOLE that can be used to disable the NxConsole
+  window (2013-12-30).
+* NxWm::CTouchscreen: Added CONFIG_NXWM_TOUCHSCREEN_DEVINIT that can be used
+  to suppress calls to initialize the touchscreen device from the listener
+  thread.  This is necessary if the kernel mode build is used: In that case,
+  the touchscreen must be initialized in kernel space before NxWM is started
+  (2013-12-30).
+
+1.12 2014-xx-xx Gregory Nutt <gnutt@nuttx.org>
 

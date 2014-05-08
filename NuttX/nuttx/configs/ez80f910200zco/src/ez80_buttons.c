@@ -113,18 +113,18 @@ void up_pb2interrupt(void)
  ****************************************************************************/
 
 /****************************************************************************
- * Name: up_buttoninit
+ * Name: board_button_initialize
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_BUTTONS
-void up_buttoninit(void)
+void board_button_initialize(void)
 {
   uint8_t regval;
 
 #if 0 /* Interrupts are not used */
 
   /* Attach GIO interrupts */
-  
+
   irq_attach(EZ80_PB_IRQ, up_PBinterrupt);
   irq_attach(EZ80_PB1_IRQ, up_pb1interrupt);
   irq_attach(EZ80_PB2_IRQ, up_pb2interrupt);
@@ -164,10 +164,10 @@ void up_buttoninit(void)
 }
 
 /****************************************************************************
- * Name: up_buttons
+ * Name: board_buttons
  ****************************************************************************/
 
-uint8_t up_buttons(void)
+uint8_t board_buttons(void)
 {
   return inp(EZ80_PB_DDR) & 7;
 }

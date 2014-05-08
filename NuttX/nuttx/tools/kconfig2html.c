@@ -59,7 +59,7 @@
 #define MAX_DEPENDENCIES 100
 #define MAX_LEVELS       100
 #define MAX_SELECT       16
-#define MAX_DEFAULTS     80
+#define MAX_DEFAULTS     128
 #define TAB_SIZE         4
 #define VAR_SIZE         80
 #define HTML_VAR_SIZE    (2*VAR_SIZE + 64)
@@ -469,7 +469,7 @@ static int htmlize_character(char *dest, char ch)
   const char *str;
 
   /* Transfer the character from into the destination buffer, perform the
-   * conversion only the the character is one of the special characters.
+   * conversion only if the character is one of the special characters.
    */
 
   str = NULL;
@@ -690,7 +690,7 @@ static char *read_line(FILE *stream)
 
   /* Loop to handle continuation lines */
 
-  for(;;)
+  for (;;)
     {
       /* How long is the line so far? */
 
@@ -1413,7 +1413,7 @@ static void process_default(FILE *stream, struct default_s *defp)
  * Name: print_default
  *
  * Description:
- *   Output and the list of defaults to the the HTML body file.
+ *   Output and the list of defaults to the HTML body file.
  *
  ****************************************************************************/
 
@@ -1485,7 +1485,7 @@ static void print_default(struct default_s *defp, output_t outfunc)
  * Name: free_default
  *
  * Description:
- *   Output and the list of defaults to the the HTML body file.
+ *   Output and the list of defaults to the HTML body file.
  *
  ****************************************************************************/
 
@@ -2101,7 +2101,6 @@ static inline char *process_menu(FILE *stream, const char *kconfigdir)
   const char *paranum;
   char *menuname;
   char *token = NULL;
-  char *ptr;
 
   /* Get the menu information */
 
@@ -2114,7 +2113,7 @@ static inline char *process_menu(FILE *stream, const char *kconfigdir)
 
   /* Process each line in the choice */
 
-  while ((ptr = kconfig_line(stream)) != NULL)
+  while (kconfig_line(stream) != NULL)
     {
       /* Process the first token on the Kconfig file line */
 
@@ -2228,11 +2227,10 @@ static char *parse_kconfigfile(FILE *stream, const char *kconfigdir)
 {
   enum token_type_e tokid;
   char *token = NULL;
-  char *ptr;
 
   /* Process each line in the Kconfig file */
 
-  while ((ptr = kconfig_line(stream)) != NULL)
+  while (kconfig_line(stream) != NULL)
     {
       /* Process the first token on the Kconfig file line */
 
@@ -2475,7 +2473,7 @@ int main(int argc, char **argv, char **envp)
             error("Missing option argument, option: %c\n", optopt);
             show_usage(argv[0], ERROR_MISSING_OPTION_ARGUMENT);
 
-           break;
+          default:
             error("Unexpected option: %c\n", ch);
             show_usage(argv[0], ERROR_UNEXPECTED_OPTION);
         }

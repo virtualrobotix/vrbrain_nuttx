@@ -59,7 +59,7 @@
  * CONFIG_UG9664HSWAG01_POWER
  *   If the hardware supports a controllable OLED a power supply, this
  *   configuration shold be defined.  (See ug_power() below).
- * 
+ *
  * Required LCD driver settings:
  * CONFIG_LCD_UG9664HSWAG01 - Enable UG-9664HSWAG01 support
  * CONFIG_LCD_MAXCONTRAST should be 255, but any value >0 and <=255 will be accepted.
@@ -119,7 +119,7 @@ extern "C"
  ****************************************************************************/
 
 struct lcd_dev_s; /* see nuttx/lcd.h */
-struct spi_dev_s; /* see nuttx/spi.h */
+struct spi_dev_s; /* see nuttx/spi/spi.h */
 FAR struct lcd_dev_s *ug_initialize(FAR struct spi_dev_s *spi, unsigned int devno);
 
 /****************************************************************************

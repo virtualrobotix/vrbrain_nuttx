@@ -68,7 +68,7 @@
  *
  * If CONFIG_ARCH_LEDS is defined, the LEDs will be controlled as follows
  * for NuttX debug functionality (where NC means "No Change").
- * 
+ *
  *                                      ON            OFF
  *                                  LED1   LED2   LED1   LED2
  *   LED_STARTED                0   OFF    OFF     -      -
@@ -136,14 +136,14 @@ static void led_dumppins(FAR const char *msg)
  ****************************************************************************/
 
 /****************************************************************************
- * Name: up_ledinit
+ * Name: board_led_initialize
  ****************************************************************************/
 
-void up_ledinit(void)
+void board_led_initialize(void)
 {
   /* Configure all LED pins as GPIO outputs */
 
-  led_dumppins("up_ledinit() Entry)");
+  led_dumppins("board_led_initialize() Entry)");
 
   /* Configure LED pins as GPIOs, then configure GPIOs as outputs */
 
@@ -153,14 +153,14 @@ void up_ledinit(void)
   lpc43_pin_config(PINCONFIG_LED2);
   lpc43_gpio_config(GPIO_LED2);
 
-  led_dumppins("up_ledinit() Exit");
+  led_dumppins("board_led_initialize() Exit");
 }
 
 /****************************************************************************
- * Name: up_ledon
+ * Name: board_led_on
  ****************************************************************************/
 
-void up_ledon(int led)
+void board_led_on(int led)
 {
   switch (led)
     {
@@ -182,10 +182,10 @@ void up_ledon(int led)
 }
 
 /****************************************************************************
- * Name: up_ledoff
+ * Name: board_led_off
  ****************************************************************************/
 
-void up_ledoff(int led)
+void board_led_off(int led)
 {
   switch (led)
     {

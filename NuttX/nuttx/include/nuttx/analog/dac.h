@@ -53,7 +53,7 @@
 #include <stdbool.h>
 #include <semaphore.h>
 #include <nuttx/fs/fs.h>
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 
 /************************************************************************************
  * Pre-processor Definitions
@@ -103,7 +103,7 @@ struct dac_ops_s
   CODE void (*ao_reset)(FAR struct dac_dev_s *dev);
 
   /* Configure the DAC. This method is called the first time that the DAC
-   * device is opened.  This will occur when the port is first opened. 
+   * device is opened.  This will occur when the port is first opened.
    * This setup includes configuring and attaching DAC interrupts.  Interrupts
    * are all disabled upon return.
    */

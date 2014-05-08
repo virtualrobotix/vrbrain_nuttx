@@ -25,6 +25,7 @@ The files in the libc/ directory are organized (mostly) according which file
 in the include/ directory provides the prototype for library functions.  So
 we have:
 
+  audio     - This part of the audio system: nuttx/audio/audio.h
   libgen    - libgen.h
   fixedmath - fixedmath.h
   math      - math.h
@@ -44,7 +45,7 @@ There is also a misc/ subdirectory that contains various internal functions
 and interfaces from header files that are too few to warrant their own sub-
 directory:
 
- misc       - Nonstandard "glue" logic, debug.h, crc32.h, dirent.h
+  misc      - Nonstandard "glue" logic, debug.h, crc32.h, dirent.h
 
 Library Database
 ================
@@ -69,7 +70,7 @@ Each type field has a format as follows:
 
   type name:
         For all simpler types
-  formal type | actual type: 
+  formal type | actual type:
         For array types where the form of the formal (eg. int parm[2])
         differs from the type of actual passed parameter (eg. int*).  This
         is necessary because you cannot do simple casts to array types.

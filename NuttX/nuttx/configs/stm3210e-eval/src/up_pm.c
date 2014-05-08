@@ -75,7 +75,7 @@
  * Description:
  *   This function is called by MCU-specific logic at power-on reset in
  *   order to provide one-time initialization the power management subystem.
- *   This function must be called *very* early in the intialization sequence
+ *   This function must be called *very* early in the initializeation sequence
  *   *before* any other device drivers are initialized (since they may
  *   attempt to register with the power management subsystem).
  *
@@ -93,7 +93,7 @@ void up_pminitialize(void)
 
   pm_initialize();
 
-#if defined(CONFIG_IDLE_CUSTOM) && defined(CONFIG_PM_BUTTONS)
+#if defined(CONFIG_ARCH_IDLE_CUSTOM) && defined(CONFIG_PM_BUTTONS)
   /* Initialize the buttons to wake up the system from low power modes */
 
   up_pmbuttons();

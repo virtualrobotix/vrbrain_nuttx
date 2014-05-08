@@ -456,7 +456,7 @@ static int stm32_getstatus(FAR struct watchdog_lowerhalf_s *lower,
     {
       status->flags |= WDFLAGS_ACTIVE;
     }
- 
+
   if (priv->handler)
     {
       status->flags |= WDFLAGS_CAPTURE;
@@ -595,7 +595,7 @@ static int stm32_settimeout(FAR struct watchdog_lowerhalf_s *lower,
 
   wdvdbg("wdgtb=%d fwwdg=%d reload=%d timout=%d\n",
          wdgtb, fwwdg, reload, priv->timeout);
-  
+
   /* Set WDGTB[1:0] bits according to calculated value */
 
   regval = stm32_getreg(STM32_WWDG_CFR);
@@ -623,7 +623,7 @@ static int stm32_settimeout(FAR struct watchdog_lowerhalf_s *lower,
  *   lower      - A pointer the publicly visible representation of the "lower-half"
  *                driver state structure.
  *   newhandler - The new watchdog expiration function pointer.  If this
- *                function pointer is NULL, then the the reset-on-expiration
+ *                function pointer is NULL, then the reset-on-expiration
  *                behavior is restored,
  *
  * Returned Values:
@@ -662,7 +662,7 @@ static xcpt_t stm32_capture(FAR struct watchdog_lowerhalf_s *lower,
 
       regval |= WWDG_CFR_EWI;
       stm32_putreg(regval, STM32_WWDG_CFR);
- 
+
       up_enable_irq(STM32_IRQ_WWDG);
     }
   else
@@ -716,7 +716,7 @@ static int stm32_ioctl(FAR struct watchdog_lowerhalf_s *lower, int cmd,
   if (cmd == WDIOC_MINTIME)
     {
       uint32_t mintime = (uint32_t)arg;
- 
+
       /* The minimum time should be strictly less than the total delay
        * which, in turn, will be less than or equal to WWDG_CR_T_MAX
        */
@@ -742,7 +742,7 @@ static int stm32_ioctl(FAR struct watchdog_lowerhalf_s *lower, int cmd,
  * Name: stm32_wwdginitialize
  *
  * Description:
- *   Initialize the WWDG watchdog time.  The watchdog timer is intialized and
+ *   Initialize the WWDG watchdog time.  The watchdog timer is initialized and
  *   registers as 'devpath.  The initial state of the watchdog time is
  *   disabled.
  *

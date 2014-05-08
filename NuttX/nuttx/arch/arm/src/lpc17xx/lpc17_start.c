@@ -122,7 +122,7 @@ static inline void lpc17_fpuconfig(void)
    * with the volatile FP registers stacked above the basic context.
    */
 
-  regval = getcontrol(); 
+  regval = getcontrol();
   regval |= (1 << 2);
   setcontrol(regval);
 
@@ -152,7 +152,7 @@ static inline void lpc17_fpuconfig(void)
    * with the volatile FP registers stacked in the saved context.
    */
 
-  regval = getcontrol(); 
+  regval = getcontrol();
   regval &= ~(1 << 2);
   setcontrol(regval);
 
@@ -213,7 +213,7 @@ void __start(void)
 
   showprogress('B');
 
-  /* Move the intialized data section from his temporary holding spot in
+  /* Move the initialized data section from his temporary holding spot in
    * FLASH into the correct place in SRAM.  The correct place in SRAM is
    * give by _sdata and _edata.  The temporary location is in FLASH at the
    * end of all of the other read-only data (.text, .rodata) at _eronly.
@@ -257,5 +257,5 @@ void __start(void)
 
   /* Shouldn't get here */
 
-  for(;;);
+  for (;;);
 }

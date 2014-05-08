@@ -50,6 +50,7 @@
 #include <nuttx/arch.h>
 #include <nuttx/init.h>
 #include <nuttx/wqueue.h>
+#include <nuttx/kthread.h>
 #include <nuttx/userspace.h>
 
 #include "os_internal.h"
@@ -124,7 +125,7 @@
  *   symbols:
  *
  *   - USER_ENTRYPOINT: This is the default user application entry point.
- *                 
+ *
  ****************************************************************************/
 
 int os_bringup(void)

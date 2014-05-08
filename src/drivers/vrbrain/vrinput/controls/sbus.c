@@ -47,7 +47,7 @@
 
 #include <drivers/drv_hrt.h>
 
-#define DEBUG
+//#define DEBUG
 #include "controls.h"
 #include "protocol.h"
 #include "debug.h"

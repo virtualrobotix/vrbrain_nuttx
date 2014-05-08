@@ -45,8 +45,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <nuttx/mtd.h>
-#include <nuttx/smart.h>
+#include <nuttx/mtd/mtd.h>
+#include <nuttx/fs/smart.h>
 #include <nuttx/fs/ioctl.h>
 
 /****************************************************************************
@@ -100,15 +100,15 @@ int flash_test_main(int argc, char *argv[])
       goto errout_with_driver;
     }
 
-  /* Test if the device is formatted.  If not, then we must do a 
+  /* Test if the device is formatted.  If not, then we must do a
    * low-level format first */
-  
+
   if (!(fmt.flags & SMART_FMT_ISFORMATTED))
     {
       /* Perform a low-level format */
 
-      ret = inode->u.i_bops->ioctl(inode, BIOC_LLFORMAT, 0);
-      ret = inode->u.i_bops->ioctl(inode, BIOC_GETFORMAT, (unsigned long) &fmt);
+      (void)inode->u.i_bops->ioctl(inode, BIOC_LLFORMAT, 0);
+      (void)inode->u.i_bops->ioctl(inode, BIOC_GETFORMAT, (unsigned long) &fmt);
     }
 
   if (!(fmt.flags & SMART_FMT_ISFORMATTED))
@@ -160,16 +160,16 @@ int flash_test_main(int argc, char *argv[])
     {
       /* Allocate a new sector */
 
-      logsector = inode->u.i_bops->ioctl(inode, BIOC_ALLOCSECT, 
+      logsector = inode->u.i_bops->ioctl(inode, BIOC_ALLOCSECT,
                                          (unsigned long) -1);
       if (logsector < 0)
         {
           fprintf(stderr, "Error allocating sector: %d\n", logsector);
-          goto errout_with_driver; 
+          goto errout_with_driver;
         }
 
       /* Save the sector in our array */
-     
+
       sectors[x] = (uint16_t) logsector;
       seqs[x] = seq++;
 
@@ -182,7 +182,7 @@ int flash_test_main(int argc, char *argv[])
       readwrite.offset = 0;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      ret = inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
                                    &readwrite);
 
       /* Print the logical sector number */
@@ -190,7 +190,7 @@ int flash_test_main(int argc, char *argv[])
       printf("\r%d    ", sectors[x]);
     }
 
-  /* Now read the data back to validate everything was written and can 
+  /* Now read the data back to validate everything was written and can
    * be read. */
 
   printf("\nDoing read verify test\n");
@@ -241,7 +241,7 @@ int flash_test_main(int argc, char *argv[])
       readwrite.offset = 0;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      ret = inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
                                    &readwrite);
 
       /* Print the logical sector number */
@@ -266,7 +266,7 @@ int flash_test_main(int argc, char *argv[])
       readwrite.offset = 64;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      ret = inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
                                    &readwrite);
 
       /* Print the logical sector number */
@@ -284,7 +284,7 @@ int flash_test_main(int argc, char *argv[])
 
       if (sectors[x] != 0xFFFF)
         {
-          ret = inode->u.i_bops->ioctl(inode, BIOC_FREESECT, (unsigned long)
+          (void)inode->u.i_bops->ioctl(inode, BIOC_FREESECT, (unsigned long)
                                        sectors[x]);
         }
     }

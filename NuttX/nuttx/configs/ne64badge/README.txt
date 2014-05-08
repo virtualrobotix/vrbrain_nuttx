@@ -174,7 +174,7 @@ PIN PIN NAME            BOARD SIGNAL   NOTES
  35 PS5/MOSI            J3 SPI_MOSI    " " "  " "" "   "
  36 PS6/SCK             J3 SPI_CLOCK   " " "  " "" "   "
  37 PS7/SS_B            J3 SPI_SS      " " "  " "" "   "
- 
+
  22 PG0/RXD0/KWG0       J3 GPIO0       Not used on board
  23 PG1/RXD1/KWG1       J3 GPIO1       " " "  " "" "   "
  24 PG2/RXD2/KWG2       J3 GPIO2       " " "  " "" "   "
@@ -183,7 +183,7 @@ PIN PIN NAME            BOARD SIGNAL   NOTES
  27 PG5/RXDV/KWG5       J3 GPIO5       " " "  " "" "   "
  28 PG6/RXER/KWG6       J3 GPIO6       " " "  " "" "   "
  29 PG7/KWG7            J3 GPIO7       " " "  " "" "   "
- 
+
   7 PH0/TXD0/KWH0       N/C            N/C
   6 PH1/TXD1/KWH1       N/C            N/C
   5 PH2/TXD2/KWH2       J4 XBEE_RESET  Not used on board
@@ -191,7 +191,7 @@ PIN PIN NAME            BOARD SIGNAL   NOTES
   3 PH4/TXCLK/KWH4      BUTTON2        SW2
   2 PH5/TXDV/KWH5       J5 XBEE_LOAD_H Not used on board
   1 PH6/TXER/KWH6       J4 XBEE_LOAD_L Not used on board
- 
+
   8 PJ0/MDC/KWJ0        LED1           D21, red
   9 PJ1/MDIO/KWJ1       LED2           D22, red
  20 PJ2/CRS/KWJ2        J3 SPI_CS      Not used on board
@@ -399,9 +399,9 @@ HCS12/NE64BADGE-specific Configuration Options
 	CONFIG_ENDIAN_BIG - define if big endian (default is little
 	   endian)
 
-	CONFIG_DRAM_SIZE - Describes the installed RAM.
+	CONFIG_RAM_SIZE - Describes the installed RAM.
 
-	CONFIG_DRAM_START - The start address of installed RAM
+	CONFIG_RAM_START - The start address of installed RAM
 
 	CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
 	   have LEDs
@@ -421,12 +421,12 @@ HCS12/NE64BADGE-specific Configuration Options
 	   the delay actually is 100 seconds.
 
   GPIO Interrupts
-  
+
     CONFIG_GPIO_IRQ - Enable general support for GPIO IRQs
     CONFIG_HCS12_PORTG_INTS - Enable PortG IRQs
     CONFIG_HCS12_PORTH_INTS - Enable PortH IRQs
     CONFIG_HCS12_PORTJ_INTS - Enable PortJ IRQs
-   
+
   HCS12 build options:
 
 	CONFIG_HCS12_SERIALMON - Indicates that the target systems uses
@@ -434,7 +434,7 @@ HCS12/NE64BADGE-specific Configuration Options
 
 	CONFIG_HCS12_NONBANKED - Indicates that the target systems does not
 	  support banking.  Only short calls are made; one fixed page is
-	  presented the the paging window.  Only 48Kb of FLASH is usable
+	  presented in the paging window.  Only 48Kb of FLASH is usable
 	  in this configuration: pages 3e, 3d, then 3f will appear as a
 	  contiguous address space in memory.
 
@@ -465,17 +465,40 @@ HCS12/NE64BADGE-specific Configuration Options
 Configurations
 ^^^^^^^^^^^^^^
 
-Each Freescale HCS12 configuration is maintained in a sub-directory and
-can be selected as follow:
+Common Configuration Notes
+--------------------------
 
-	cd tools
-	./configure.sh ne64badge/<subdir>
-	cd -
-	. ./setenv.sh
+  1. Each Freescale HCS12 configuration is maintained in a sub-directory and
+     can be selected as follow:
 
-Where <subdir> is one of the following:
+       cd tools
+       ./configure.sh ne64badge/<subdir>
+       cd -
+       . ./setenv.sh
 
-ostest:
-  This configuration directory, performs a simple OS test using
-  examples/ostest.
+     Where <subdir> is one of the configuration sub-directories described in
+     the following paragraph.
+
+  2. These configurations use the mconf-based configuration tool.  To
+     change a configurations using that tool, you should:
+
+     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+        and misc/tools/
+
+     b. Execute 'make menuconfig' in nuttx/ in order to start the
+        reconfiguration process.
+
+  3. By default, all configurations assume the that you are building under
+     under Linux (should work under Windows with Cygwin as well).  This
+     is easily reconfigured:
+
+        CONFIG_HOST_LINUX=y
+
+Configuration Sub-Directories
+-----------------------------
+
+  ostest
+
+    This configuration directory, performs a simple OS test using
+    examples/ostest.
 

@@ -44,8 +44,8 @@
 #include <errno.h>
 #include <string.h>
 
-#include <nuttx/spi.h>
-#include <nuttx/mtd.h>
+#include <nuttx/spi/spi.h>
+#include <nuttx/mtd/mtd.h>
 
 FAR struct mtd_dev_s *ramtron_initialize(FAR struct spi_dev_s *dev);
 
@@ -56,7 +56,7 @@ int ramtron_start(int spino)
   int retval;
 
   /* Get the SPI port */
-  
+
   spi = up_spiinitialize(spino);
   if (!spi)
     {
@@ -86,17 +86,17 @@ int ramtron_start(int spino)
 int ramtron_main(int argc, char *argv[])
 {
   int spino;
-  
+
   if (argc == 3)
     {
       spino = atoi(argv[2]);
-    
+
       if (!strcmp(argv[1], "start"))
         {
         return ramtron_start(spino);
         }
     }
-  
+
   /* todo: write protect */
 
   printf("%s: <start> <spino>\n", argv[0]);

@@ -62,7 +62,7 @@
 #undef KMALLOC_EXTERN
 #if defined(__cplusplus)
 # define KMALLOC_EXTERN extern "C"
-extern "C" 
+extern "C"
 {
 #else
 # define KMALLOC_EXTERN extern
@@ -77,7 +77,7 @@ extern "C"
  * be used for both the kernel- and user-mode objects.
  */
 
-/* This familiy of allocators is used to manage user-accessible memory
+/* This family of allocators is used to manage user-accessible memory
  * from the kernel.  In the flat build, the following are declared in
  * stdlib.h and are directly callable.  In the kernel-phase of the kernel
  * build, the following are defined in userspace.h as macros that call
@@ -97,6 +97,7 @@ extern "C"
 # define kumalloc(s)             malloc(s)
 # define kuzalloc(s)             zalloc(s)
 # define kurealloc(p,s)          realloc(p,s)
+# define kumemalign(a,s)         memalign(a,s)
 # define kufree(p)               free(p)
 
 #else
@@ -108,11 +109,12 @@ extern "C"
 # define kumalloc(s)             umm_malloc(s)
 # define kuzalloc(s)             umm_zalloc(s)
 # define kurealloc(p,s)          umm_realloc(p,s)
+# define kumemalign(a,s)         umm_memalign(a,s)
 # define kufree(p)               umm_free(p)
 
 #endif
 
-/* This familiy of allocators is used to manage kernel protected memory */
+/* This family of allocators is used to manage kernel protected memory */
 
 #if !defined(CONFIG_NUTTX_KERNEL)
 /* If this is not a kernel build, then these map to the same interfaces
@@ -127,6 +129,7 @@ extern "C"
 # define kmalloc(s)             malloc(s)
 # define kzalloc(s)             zalloc(s)
 # define krealloc(p,s)          realloc(p,s)
+# define kmemalign(a,s)         memalign(a,s)
 # define kfree(p)               free(p)
 
 #elif !defined(CONFIG_MM_KERNEL_HEAP)
@@ -143,6 +146,7 @@ extern "C"
 # define kmalloc(s)             umm_malloc(s)
 # define kzalloc(s)             umm_zalloc(s)
 # define krealloc(p,s)          umm_realloc(p,s)
+# define kmemalign(a,s)         umm_memalign(a,s)
 # define kfree(p)               umm_free(p)
 
 #else
@@ -158,6 +162,7 @@ void kmm_givesemaphore(void);
 FAR void *kmalloc(size_t size);
 FAR void *kzalloc(size_t size);
 FAR void *krealloc(FAR void *oldmem, size_t newsize);
+FAR void *kmemalign(size_t alignment, size_t size);
 void kfree(FAR void *mem);
 
 #ifdef CONFIG_DEBUG

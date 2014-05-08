@@ -2,7 +2,7 @@
  * configs/shenzhou/src/up_usbdev.c
  * arch/arm/src/board/up_boot.c
  *
- *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2012-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@
 
 #include "up_arch.h"
 #include "stm32.h"
+#include "stm32_otgfs.h"
 #include "shenshou-internal.h"
 
 #ifdef CONFIG_STM32_OTGFS
@@ -81,7 +82,7 @@
  ************************************************************************************/
 
 #ifdef CONFIG_USBHOST
-static struct usbhost_driver_s *g_drvr;
+static struct usbhost_connection_s *g_usbconn;
 #endif
 
 /************************************************************************************
@@ -107,7 +108,7 @@ static int usbhost_waiter(int argc, char *argv[])
     {
       /* Wait for the device to change state */
 
-      ret = DRVR_WAIT(g_drvr, connected);
+      ret = CONN_WAIT(g_usbconn, &connected);
       DEBUGASSERT(ret == OK);
 
       connected = !connected;
@@ -119,7 +120,7 @@ static int usbhost_waiter(int argc, char *argv[])
         {
           /* Yes.. enumerate the newly connected device */
 
-          (void)DRVR_ENUMERATE(g_drvr);
+          (void)CONN_ENUMERATE(g_usbconn, 0);
         }
     }
 
@@ -185,8 +186,8 @@ int stm32_usbhost_initialize(void)
   /* Then get an instance of the USB host interface */
 
   uvdbg("Initialize USB host\n");
-  g_drvr = usbhost_initialize(0);
-  if (g_drvr)
+  g_usbconn = stm32_otgfshost_initialize(0);
+  if (g_usbconn)
     {
       /* Start a thread to handle device connection. */
 
@@ -209,14 +210,14 @@ int stm32_usbhost_initialize(void)
  *   Enable/disable driving of VBUS 5V output.  This function must be provided be
  *   each platform that implements the STM32 OTG FS host interface
  *
- *   "On-chip 5 V VBUS generation is not supported. For this reason, a charge pump 
- *    or, if 5 V are available on the application board, a basic power switch, must 
- *    be added externally to drive the 5 V VBUS line. The external charge pump can 
- *    be driven by any GPIO output. When the application decides to power on VBUS 
- *    using the chosen GPIO, it must also set the port power bit in the host port 
+ *   "On-chip 5 V VBUS generation is not supported. For this reason, a charge pump
+ *    or, if 5 V are available on the application board, a basic power switch, must
+ *    be added externally to drive the 5 V VBUS line. The external charge pump can
+ *    be driven by any GPIO output. When the application decides to power on VBUS
+ *    using the chosen GPIO, it must also set the port power bit in the host port
  *    control and status register (PPWR bit in OTG_FS_HPRT).
  *
- *   "The application uses this field to control power to this port, and the core 
+ *   "The application uses this field to control power to this port, and the core
  *    clears this bit on an overcurrent condition."
  *
  * Input Parameters:
@@ -232,7 +233,7 @@ int stm32_usbhost_initialize(void)
 void stm32_usbhost_vbusdrive(int iface, bool enable)
 {
   DEBUGASSERT(iface == 0);
-  
+
   if (enable)
     {
       /* Enable the Power Switch by driving the enable pin low */
@@ -240,9 +241,9 @@ void stm32_usbhost_vbusdrive(int iface, bool enable)
       stm32_gpiowrite(GPIO_OTGFS_PWRON, false);
     }
   else
-    { 
+    {
       /* Disable the Power Switch by driving the enable pin high */
- 
+
       stm32_gpiowrite(GPIO_OTGFS_PWRON, true);
     }
 }

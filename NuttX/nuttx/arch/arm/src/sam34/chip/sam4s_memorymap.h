@@ -71,13 +71,14 @@
 
 #define SAM_HSMCI_BASE         0x40000000 /* 0x40000000-0x400003ff: High Speed Multimedia Card Interface */
 #define SAM_SSC_BASE           0x40004000 /* 0x40004000-0x40007fff: Synchronous Serial Controller */
-#define SAM_SPI_BASE           0x40008000 /* 0x40008000-0x4000bfff: Serial Peripheral Interface */
+#define SAM_SPI0_BASE          0x40008000 /* 0x40008000-0x4000bfff: Serial Peripheral Interface */
                                           /* 0x4000c000-0x4000ffff: Reserved */
-#define SAM_TC_BASE            0x40010000 /* 0x40010000-0x40017fff: Timer Counters */
+#define SAM_TC012_BASE         0x40010000 /* 0x40010000-0x400100bf: Timer Counters 0-2 */
 #  define SAM_TC0_BASE         0x40080000 /* 0x40010000-0x4001003f:   Timer Counter 0 */
 #  define SAM_TC1_BASE         0x40080040 /* 0x40010040-0x4001007f:   Timer Counter 1 */
 #  define SAM_TC2_BASE         0x40080080 /* 0x40010080-0x400100bf:   Timer Counter 2 */
                                           /* 0x400100c0-0x40013fff    Reserved */
+#define SAM_TC345_BASE         0x40080000 /* 0x40014000-0x400140bf: Timer Counters 3-5 */
 #  define SAM_TC3_BASE         0x40080000 /* 0x40014000-0x4001403f:   Timer Counter 3 */
 #  define SAM_TC4_BASE         0x40080040 /* 0x40014040-0x4001407f:   Timer Counter 4 */
 #  define SAM_TC5_BASE         0x40080080 /* 0x40014080-0x400140bf:   Timer Counter 5 */
@@ -92,7 +93,7 @@
                                           /* 0x40030000-0x40033fff: Reserved */
 #define SAM_UDP_BASE           0x40034000 /* 0x40034000-0x40037fff: USB 2.0 Device */
 #define SAM_ADC_BASE           0x40038000 /* 0x40038000-0x4003bfff: Analog To Digital Converter */
-#define SAM_DACCBASE           0x400cC000 /* 0x4003c000-0x4003ffff: Digital To Analog Converter */
+#define SAM_DACC_BASE          0x4003c000 /* 0x4003c000-0x4003ffff: Digital To Analog Converter */
 #define SAM_ACC_BASE           0x40040000 /* 0x40040000-0x40043fff: Analog Comparator */
 #define SAM_CRCCU_BASE         0x40044000 /* 0x40040000-0x40047fff: CRC Calculation Unit */
                                           /* 0x40048000-0x400dffff: Reserved */

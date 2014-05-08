@@ -70,12 +70,12 @@ GNU Toolchain Options
   the CodeSourcery or devkitARM toolchain, you simply need add one of the
   following configuration options to your .config (or defconfig) file:
 
-    CONFIG_LPC17_CODESOURCERYW=y   : CodeSourcery under Windows
-    CONFIG_LPC17_CODESOURCERYL=y   : CodeSourcery under Linux
-    CONFIG_LPC17_DEVKITARM=y       : devkitARM under Windows
-    CONFIG_LPC17_BUILDROOT=y       : NuttX buildroot under Linux or Cygwin (default)
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y   : CodeSourcery under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYL=y   : CodeSourcery under Linux
+    CONFIG_ARMV7M_TOOLCHAIN_DEVKITARM=y       : devkitARM under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y       : NuttX buildroot under Linux or Cygwin (default)
 
-  If you are not using CONFIG_LPC17_BUILDROOT, then you may also have to modify
+  If you are not using CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT, then you may also have to modify
   the PATH in the setenv.h file if your make cannot find the tools.
 
   NOTE: the CodeSourcery (for Windows)and devkitARM are Windows native toolchains.
@@ -280,15 +280,15 @@ Lincoln 60 Configuration Options
     CONFIG_ENDIAN_BIG - define if big endian (default is little
        endian)
 
-    CONFIG_DRAM_SIZE - Describes the installed DRAM (CPU SRAM in this case):
+    CONFIG_RAM_SIZE - Describes the installed DRAM (CPU SRAM in this case):
 
-       CONFIG_DRAM_SIZE=(32*1024) (32Kb)
+       CONFIG_RAM_SIZE=(32*1024) (32Kb)
 
        There is an additional 32Kb of SRAM in AHB SRAM banks 0 and 1.
 
-    CONFIG_DRAM_START - The start address of installed DRAM
+    CONFIG_RAM_START - The start address of installed DRAM
 
-       CONFIG_DRAM_START=0x10000000
+       CONFIG_RAM_START=0x10000000
 
     CONFIG_ARCH_IRQPRIO - The LPC17xx supports interrupt prioritization
 
@@ -380,7 +380,7 @@ Lincoln 60 Configuration Options
   LPC17xx specific PHY/Ethernet device driver settings.  These setting
   also require CONFIG_NET and CONFIG_LPC17_ETHERNET.
 
-    CONFIG_PHY_KS8721 - Selects Micrel KS8721 PHY
+    CONFIG_ETH0_PHY_KS8721 - Selects Micrel KS8721 PHY
     CONFIG_PHY_AUTONEG - Enable auto-negotion
     CONFIG_PHY_SPEED100 - Select 100Mbit vs. 10Mbit speed.
     CONFIG_PHY_FDUPLEX - Select full (vs. half) duplex
@@ -483,10 +483,19 @@ as follow:
 
 Where <subdir> is one of the following:
 
-  ostest:
-    Builds the NuttX OS test at apps/examples/ostest.
-
   nsh:
-    Configures the NuttShell (nsh) located at apps/examples/nsh.  The
-    Configuration enables only the serial NSH interfaces.  See notes
-    above for enabling USB host support in this configuration.
+    Configures the NuttShell (nsh) located at apps/examples/nsh.
+
+    NOTES:
+
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2.  This configuration enables only the serial NSH interface.  See
+        notes above for enabling USB host support in this configuration.

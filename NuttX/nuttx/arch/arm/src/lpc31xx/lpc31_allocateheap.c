@@ -68,31 +68,31 @@
  * memory regions that we have been asked to add to the heap.
  */
 
-#if defined(CONFIG_ARCH_EXTSRAM0) && defined(CONFIG_ARCH_EXTSRAM0HEAP)
-#  if defined(CONFIG_ARCH_EXTSRAM1) && defined(CONFIG_ARCH_EXTSRAM1HEAP)
-#    if defined(CONFIG_ARCH_EXTDRAM) && defined(CONFIG_ARCH_EXTDRAMHEAP)
+#if defined(CONFIG_LPC31_EXTSRAM0) && defined(CONFIG_LPC31_EXTSRAM0HEAP)
+#  if defined(CONFIG_LPC31_EXTSRAM1) && defined(CONFIG_LPC31_EXTSRAM1HEAP)
+#    if defined(CONFIG_LPC31_EXTDRAM) && defined(CONFIG_LPC31_EXTDRAMHEAP)
 #      /* SRAM+EXTSRAM0+EXTSRAM1+EXTSDRAM */
 #      define LPC31_NEXT_REGIONS 4
 #    else
 #      /* SRAM+EXTSRAM0+EXTSRAM1 */
 #      define LPC31_NEXT_REGIONS 3
 #    endif
-#  elif defined(CONFIG_ARCH_EXTDRAM) && defined(CONFIG_ARCH_EXTDRAMHEAP)
+#  elif defined(CONFIG_LPC31_EXTDRAM) && defined(CONFIG_LPC31_EXTDRAMHEAP)
 #      /* SRAM+EXTSRAM0+EXTSDRAM */
 #      define LPC31_NEXT_REGIONS 3
 #  else
 #      /* SRAM+EXTSRAM0 */
 #      define LPC31_NEXT_REGIONS 2
 #  endif
-#elif defined(CONFIG_ARCH_EXTSRAM1) && defined(CONFIG_ARCH_EXTSRAM1HEAP)
-#  if defined(CONFIG_ARCH_EXTDRAM) && defined(CONFIG_ARCH_EXTDRAMHEAP)
+#elif defined(CONFIG_LPC31_EXTSRAM1) && defined(CONFIG_LPC31_EXTSRAM1HEAP)
+#  if defined(CONFIG_LPC31_EXTDRAM) && defined(CONFIG_LPC31_EXTDRAMHEAP)
 #      /* SRAM+EXTSRAM1+EXTSDRAM */
 #      define LPC31_NEXT_REGIONS 3
 #  else
 #      /* SRAM+EXTSRAM1 */
 #      define LPC31_NEXT_REGIONS 2
 #  endif
-#elif defined(CONFIG_ARCH_EXTDRAM) && defined(CONFIG_ARCH_EXTDRAMHEAP)
+#elif defined(CONFIG_LPC31_EXTDRAM) && defined(CONFIG_LPC31_EXTDRAMHEAP)
 #      /* SRAM+EXTSDRAM */
 #      define LPC31_NEXT_REGIONS 2
 #else
@@ -106,14 +106,14 @@
 #  else
 #    error "CONFIG_MM_REGIONS is too large for the selected memory regions"
 #  endif
-#  if defined(CONFIG_ARCH_EXTSRAM0) && defined(CONFIG_ARCH_EXTSRAM0HEAP)
+#  if defined(CONFIG_LPC31_EXTSRAM0) && defined(CONFIG_LPC31_EXTSRAM0HEAP)
 #    error "External SRAM0 is selected for heap"
 #  endif
-#  if defined(CONFIG_ARCH_EXTSRAM1) && defined(CONFIG_ARCH_EXTSRAM1HEAP)
+#  if defined(CONFIG_LPC31_EXTSRAM1) && defined(CONFIG_LPC31_EXTSRAM1HEAP)
 #    error "External SRAM1 is selected for heap"
 #  endif
-#  if defined(CONFIG_ARCH_EXTDRAM) && defined(CONFIG_ARCH_EXTDRAMHEAP)
-#    error "External SRAM1 is selected for heap"
+#  if defined(CONFIG_LPC31_EXTDRAM) && defined(CONFIG_LPC31_EXTDRAMHEAP)
+#    error "External DRAM is selected for heap"
 #  endif
 #endif
 
@@ -129,15 +129,15 @@
 
 #ifdef CONFIG_PAGING
 #  ifdef PGTABLE_IN_HIGHSRAM
-#    define LPC31_HEAP_VEND (PG_LOCKED_VBASE + PG_TOTAL_VSIZE - PGTABLE_SIZE)  
+#    define LPC31_HEAP_VEND (PG_LOCKED_VBASE + PG_TOTAL_VSIZE - PGTABLE_SIZE)
 #  else
-#    define LPC31_HEAP_VEND (PG_LOCKED_VBASE + PG_TOTAL_VSIZE)  
+#    define LPC31_HEAP_VEND (PG_LOCKED_VBASE + PG_TOTAL_VSIZE)
 #  endif
 #else
 #  ifdef PGTABLE_IN_HIGHSRAM
-#    define LPC31_HEAP_VEND (LPC31_INTSRAM_VSECTION + LPC31_ISRAM_SIZE - PGTABLE_SIZE)  
+#    define LPC31_HEAP_VEND (LPC31_INTSRAM_VSECTION + LPC31_ISRAM_SIZE - PGTABLE_SIZE)
 #  else
-#    define LPC31_HEAP_VEND (LPC31_INTSRAM_VSECTION + LPC31_ISRAM_SIZE)  
+#    define LPC31_HEAP_VEND (LPC31_INTSRAM_VSECTION + LPC31_ISRAM_SIZE)
 #  endif
 #endif
 
@@ -179,7 +179,7 @@
 
 void up_allocate_heap(FAR void **heap_start, size_t *heap_size)
 {
-  up_ledon(LED_HEAPALLOCATE);
+  board_led_on(LED_HEAPALLOCATE);
   *heap_start = (FAR void*)g_idle_topstack;
   *heap_size  = LPC31_HEAP_VEND - g_idle_topstack;
 }
@@ -196,16 +196,16 @@ void up_allocate_heap(FAR void **heap_start, size_t *heap_size)
 #if CONFIG_MM_REGIONS > 1
 void up_addregion(void)
 {
-#if defined(CONFIG_ARCH_EXTSRAM0) && defined(CONFIG_ARCH_EXTSRAM0HEAP)
-  kmm_addregion((FAR void*)LPC31_EXTSRAM0_VSECTION, CONFIG_ARCH_EXTSRAM0SIZE);
+#if defined(CONFIG_LPC31_EXTSRAM0) && defined(CONFIG_LPC31_EXTSRAM0HEAP)
+  kmm_addregion((FAR void*)LPC31_EXTSRAM0_VSECTION, CONFIG_LPC31_EXTSRAM0SIZE);
 #endif
 
-#if defined(CONFIG_ARCH_EXTSRAM1) && defined(CONFIG_ARCH_EXTSRAM1HEAP)
-  kmm_addregion((FAR void*)LPC31_EXTSRAM1_VSECTION, CONFIG_ARCH_EXTSRAM1SIZE);
+#if defined(CONFIG_LPC31_EXTSRAM1) && defined(CONFIG_LPC31_EXTSRAM1HEAP)
+  kmm_addregion((FAR void*)LPC31_EXTSRAM1_VSECTION, CONFIG_LPC31_EXTSRAM1SIZE);
 #endif
 
-#if defined(CONFIG_ARCH_EXTDRAM) && defined(CONFIG_ARCH_EXTDRAMHEAP)
-  kmm_addregion((FAR void*)LPC31_EXTSDRAM_VSECTION, CONFIG_ARCH_EXTDRAMSIZE);
+#if defined(CONFIG_LPC31_EXTDRAM) && defined(CONFIG_LPC31_EXTDRAMHEAP)
+  kmm_addregion((FAR void*)LPC31_EXTSDRAM_VSECTION, CONFIG_LPC31_EXTDRAMSIZE);
 #endif
 }
 #endif

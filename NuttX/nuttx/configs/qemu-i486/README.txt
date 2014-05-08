@@ -33,7 +33,7 @@ some links (which will probably be mostly outdated by the time your read this):
 Building QEMU
 -------------
 
-  tar zxf qemu-0.14.0.tar.gz 
+  tar zxf qemu-0.14.0.tar.gz
   cd qemu-0.14.0
   ./configure --target-list=i386-softmmu
   make
@@ -43,21 +43,21 @@ Cygwin Build Problems
 ---------------------
 
   Error:
- 
+
     "gcc: The -mno-cygwin flag has been removed; use a mingw-targeted cross-compiler."
 
   Workaround:
-  
+
     None known.  It does not seem possible to build QEMU using the Cygwin gcc.
     I tried editing configure.  Removing the following line will allow QEMU to
     configure:
-  
+
       QEMU_CFLAGS="-mno-cygwin $QEMU_CFLAGS"
 
     However, it then fails later during the compilation phase.
 
   Recommendation:
- 
+
     1. Google for "qemu windows download" and download some pre-built QEMU
        binaries.  I found 0.14.0 here: http://dietpc.org/windows/qemu/, or
     2. Try building QEMU with MingGW (I understand that this is difficult).
@@ -75,11 +75,11 @@ Running QEMU
 
   The -nographic option redirects COM1 to your console.  However, the -nographic
   option does not work under Cygwin.  For simple testing under Cygwin, I use
-  
+
     qemu -cpu 486 -m 2 -kernel nuttx.elf -serial file:test.txt
 
   which will send COM1 output to the file test.txt.
- 
+
 Toolchains
 ==========
 
@@ -156,21 +156,41 @@ A: Add -fno-stack-protector to ARCHCPUFLAGS in you Make.defs file.  Switch the
 Configurations
 ==============
 
-ostest
-------
+Common Configuration Notes
+--------------------------
 
-  The "standard" NuttX examples/ostest configuration.  This
-  configuration may be selected as follows:
+  1. Each Qemu-i486 Web Server configuration is maintained in a sub-directory
+     and can be selected as follow:
 
-    cd <nuttx-directory>/tools
-    ./configure.sh qemu-i486/ostest
+       cd tools
+       ./configure.sh qemu-i486/<subdir>
+       cd -
+       . ./setenv.sh
 
-nsh
----
+     Where <subdir> is one of the configuration sub-directories described in
+     the following paragraph.
 
-  Configures the NuttShell (nsh) located at examples/nsh.  This
-  configuration may be selected as follows:
+  2. These configurations use the mconf-based configuration tool.  To
+     change a configurations using that tool, you should:
 
-    cd <nuttx-directory>/tools
-    ./configure.sh qemu-i486/nsh
+     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+        and misc/tools/
 
+     b. Execute 'make menuconfig' in nuttx/ in order to start the
+        reconfiguration process.
+
+  3. By default, all configurations assume the Linux.  This is easily
+     reconfigured:
+
+        CONFIG_HOST_LINUX=y
+
+Configuration Sub-Directories
+-----------------------------
+
+  ostest
+
+    The "standard" NuttX examples/ostest configuration.
+
+  nsh
+
+    Configures the NuttShell (nsh) located at examples/nsh.

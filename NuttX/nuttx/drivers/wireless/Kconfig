@@ -8,6 +8,13 @@ config WL_CC1101
 	default n
 	select SPI
 
+menuconfig WL_CC3000
+	bool "CC3000 Wireless Module support"
+	default n
+	select SPI
+
+source drivers/wireless/cc3000/Kconfig
+
 config WL_NRF24L01
 	bool "nRF24l01+ transceiver support"
 	default n

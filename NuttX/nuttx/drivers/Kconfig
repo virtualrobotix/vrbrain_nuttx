@@ -22,7 +22,7 @@ config DEV_ZERO
 config ARCH_HAVE_RNG
 	bool
 
-config DEV_RANDOM 
+config DEV_RANDOM
 	bool "Enable /dev/random"
 	default n
 	depends on ARCH_HAVE_RNG
@@ -41,7 +41,7 @@ config RAMDISK
 	---help---
 		Can be used to set up a block of memory or (read-only) FLASH as
 		a block driver that can be mounted as a files system.  See
-		include/nuttx/ramdisk.h.
+		include/nuttx/fs/ramdisk.h.
 
 menuconfig CAN
 	bool "CAN Driver Support"
@@ -71,14 +71,18 @@ config CAN_NPENDINGRTR
 		The size of the list of pending RTR requests. Default: 4
 
 config CAN_LOOPBACK
-	bool "CAN extended IDs"
+	bool "CAN loopback mode"
 	default n
 	---help---
 		A CAN driver may or may not support a loopback mode for testing. If the
 		driver does support loopback mode, the setting will enable it. (If the
 		driver does not, this setting will have no effect).
 
-endif
+endif # CAN
+
+config ARCH_HAVE_PWM_PULSECOUNT
+	bool
+	default n
 
 menuconfig PWM
 	bool "PWM Driver Support"
@@ -91,13 +95,18 @@ if PWM
 config PWM_PULSECOUNT
 	bool "PWM Pulse Count Support"
 	default n
+	depends on ARCH_HAVE_PWM_PULSECOUNT
 	---help---
 		Some hardware will support generation of a fixed number of pulses.
 		This might be used, for example to support a stepper motor.  If the
 		hardware will support a fixed pulse count, then this configuration
 		should be set to enable the capability.
 
-endif
+endif # PWM
+
+config ARCH_HAVE_I2CRESET
+	bool
+	default n
 
 menuconfig I2C
 	bool "I2C Driver Support"
@@ -106,43 +115,39 @@ menuconfig I2C
 		This selection enables building of the "upper-half" I2C driver.
 		See include/nuttx/i2c.h for further I2C driver information.
 
+if I2C
+
 config I2C_SLAVE
 	bool "I2C Slave"
 	default n
-	depends on I2C
 
 config I2C_TRANSFER
 	bool "Support the I2C transfer() method"
 	default n
-	depends on I2C
 
 config I2C_WRITEREAD
 	bool "Support the I2C writeread() method"
 	default n
-	depends on I2C
 
 config I2C_POLLED
 	bool "Polled I2C (no interrupts)"
 	default n
-	depends on I2C
 
 config I2C_TRACE
 	bool "Enable I2C trace debug"
 	default n
-	depends on I2C
 
 config I2C_NTRACE
-	bool "Enable I2C trace debug"
-	default n
+	int "Number of I2C trace records"
+	default 32
 	depends on I2C_TRACE
-
-config ARCH_HAVE_I2CRESET
-	bool
 
 config I2C_RESET
 	bool "Support up_i2creset"
 	default n
-	depends on I2C && ARCH_HAVE_I2CRESET
+	depends on ARCH_HAVE_I2CRESET
+
+endif # I2C
 
 menuconfig SPI
 	bool "SPI Driver Support"
@@ -150,34 +155,22 @@ menuconfig SPI
 	---help---
 		This selection enables selection of common SPI options.  This option
 		should be enabled by all platforms that support SPI interfaces.
-		See include/nuttx/spi.h for further SPI driver information.
+		See include/nuttx/spi/spi.h for further SPI driver information.
 
 if SPI
-config SPI_OWNBUS
-	bool "SPI single device"
+source drivers/spi/Kconfig
+endif # SPI
+
+menuconfig I2S
+	bool "I2S Driver Support"
 	default n
 	---help---
-		Set if there is only one active device on the SPI bus.  No locking or
-		SPI configuration will be performed. It is not necessary for clients to
-		lock, re-configure, etc..
+		This selection enables selection of common I2S options.  This option
+		should be enabled by all platforms that support I2S interfaces.
+		See include/nuttx/audio/i2s.h for further I2S driver information.
 
-config SPI_EXCHANGE
-	bool "SPI exchange"
-	default y
-	---help---
-		Driver supports a single exchange method (vs a recvblock() and
-		sndblock() methods).
-
-config SPI_CMDDATA
-	bool "SPI CMD/DATA"
-	default n
-	---help---
-		Devices on the SPI bus require out-of-band support to distinguish
-		command transfers from data transfers.  Such devices will often support
-		either 9-bit SPI (yech) or 8-bit SPI and a GPIO output that selects
-		between command and data.
-
-endif
+if I2S
+endif # I2S
 
 menuconfig RTC
 	bool "RTC Driver Support"
@@ -188,10 +181,11 @@ menuconfig RTC
 		Most RTC drivers are MCU specific and may require other specific
 		settings.
 
+if RTC
+
 config RTC_DATETIME
 	bool "Date/Time RTC Support"
 	default n
-	depends on RTC
 	---help---
 		There are two general types of RTC:  (1) A simple battery backed
 		counter that keeps the time when power is down, and (2) a full
@@ -200,10 +194,11 @@ config RTC_DATETIME
 		of RTC. In this case, the RTC is used to "seed" the normal NuttX timer
 		and the NuttX system timer provides for higher resolution time.
 
+if !RTC_DATETIME
+
 config RTC_HIRES
 	bool "Hi-Res RTC Support"
 	default n
-	depends on RTC && !RTC_DATETIME
 	---help---
 		If RTC_DATETIME not selected, then the simple, battery backed counter
 		is used.  There are two different implementations of such simple
@@ -219,19 +214,22 @@ config RTC_HIRES
 config RTC_FREQUENCY
 	int "Hi-Res RTC frequency"
 	default 1
-	depends on RTC && !RTC_DATETIME && RTC_HIRES
+	depends on RTC_HIRES
 	---help---
 		If RTC_HIRES is defined, then the frequency of the high resolution RTC
 		must be provided.  If RTC_HIRES is not defined, RTC_FREQUENCY is
 		assumed to be one Hz.
 
-config RTC_ALARM 
+endif # !RTC_DATETIME
+
+config RTC_ALARM
 	bool "RTC Alarm Support"
 	default n
-	depends on RTC
 	---help---
 		Enable if the RTC hardware supports setting of an alarm.  A callback
 		function will be executed when the alarm goes off.
+
+endif # RTC
 
 menuconfig WATCHDOG
 	bool "Watchdog Timer Support"
@@ -242,7 +240,7 @@ menuconfig WATCHDOG
 		information.
 
 if WATCHDOG
-endif
+endif # WATCHDOG
 
 menuconfig ANALOG
 	bool "Analog Device(ADC/DAC) Support"
@@ -255,20 +253,30 @@ menuconfig ANALOG
 
 if ANALOG
 source drivers/analog/Kconfig
-endif
+endif # ANALOG
 
 menuconfig AUDIO_DEVICES
 	bool "Audio Device Support"
 	default n
 	---help---
-		This directory holds implementations of audio device drivers.
+		Enable support for audio device drivers.
 		This includes drivers for MP3, WMA and Ogg Vorbis encoding,
 		decoding, as well as drivers for interfacing with external
 		DSP chips to perform custom audio functions.
 
 if AUDIO_DEVICES
 source drivers/audio/Kconfig
-endif
+endif # AUDIO_DEVICES
+
+menuconfig VIDEO_DEVICES
+	bool "Video Device Support"
+	default n
+	---help---
+		Enable support for video device drivers.
+
+if VIDEO_DEVICES
+source drivers/video/Kconfig
+endif # VIDEO_DEVICES
 
 menuconfig BCH
 	bool "Block-to-Character (BCH) Support"
@@ -281,7 +289,7 @@ menuconfig BCH
 
 if BCH
 source drivers/bch/Kconfig
-endif
+endif # BCH
 
 menuconfig INPUT
 	bool "Input Device Support"
@@ -293,7 +301,7 @@ menuconfig INPUT
 
 if INPUT
 source drivers/input/Kconfig
-endif
+endif # INPUT
 
 menuconfig LCD
 	bool "LCD Driver Support"
@@ -309,7 +317,7 @@ menuconfig LCD
 
 if LCD
 source drivers/lcd/Kconfig
-endif
+endif # LCD
 
 menuconfig MMCSD
 	bool "MMC/SD Driver Support"
@@ -321,7 +329,7 @@ menuconfig MMCSD
 
 if MMCSD
 source drivers/mmcsd/Kconfig
-endif
+endif # MMCSD
 
 menuconfig MTD
 	bool "Memory Technology Device (MTD) Support"
@@ -329,7 +337,7 @@ menuconfig MTD
 	---help---
 		Memory Technology Device (MTD) drivers.  Some simple drivers for
 		memory technologies like FLASH, EEPROM, NVRAM, etc.  See
-		include/nuttx/mtd.h
+		include/nuttx/mtd/mtd.h
 
 		(Note: This is a simple memory interface and should not be
 		confused with the "real" MTD developed at infradead.org.  This
@@ -338,18 +346,27 @@ menuconfig MTD
 
 if MTD
 source drivers/mtd/Kconfig
-endif
+endif # MTD
 
 menuconfig NETDEVICES
-	bool "Network Device Support"
-	default n
+	bool "Network Device/PHY Support"
+	default n if !ARCH_HAVE_PHY
+	default y if ARCH_HAVE_PHY
 	depends on NET
 	---help---
-		Network interface drivers.  See also include/nuttx/net/net.h
+		Network interface driver and PHY selections.  This options enables
+		selection of drivers for external Ethernet MAC chips.  The majority
+		of MCUs, however, have built-in, internal Ethernet MAC peripherals
+		and that Ethernet support is selected in the MCU-specific
+		configuration menus.
+
+		Most Ethernet MAC drivers, whether internal or external, will
+		require configuration of an external PHY device.  That external PHY
+		device is also selected via this menu.
 
 if NETDEVICES
 source drivers/net/Kconfig
-endif
+endif # NETDEVICES
 
 menuconfig PIPES
 	bool "FIFO and named pipe drivers"
@@ -360,7 +377,7 @@ menuconfig PIPES
 
 if PIPES
 source drivers/pipes/Kconfig
-endif
+endif # PIPES
 
 config PM
 	bool "Power management (PM) driver interfaces"
@@ -380,7 +397,7 @@ menuconfig POWER
 
 if POWER
 source drivers/power/Kconfig
-endif
+endif # POWER
 
 menuconfig SENSORS
 	bool "Sensor Device Support"
@@ -390,7 +407,7 @@ menuconfig SENSORS
 
 if SENSORS
 source drivers/sensors/Kconfig
-endif
+endif # SENSORS
 
 menuconfig SERCOMM_CONSOLE
 	bool "Osmocom-bb Sercomm Driver Support"
@@ -405,9 +422,9 @@ menuconfig SERCOMM_CONSOLE
 		osmocom-bb, you will get compilation errors because of header files
 		that are needed from the osmocom-bb.
 
-if SERCOMM
+if SERCOMM_CONSOLE
 source drivers/sercomm/Kconfig
-endif
+endif # SERCOMM_CONSOLE
 
 menuconfig SERIAL
 	bool "Serial Driver Support"
@@ -419,7 +436,7 @@ menuconfig SERIAL
 
 if SERIAL
 source drivers/serial/Kconfig
-endif
+endif # SERIAL
 
 menuconfig USBDEV
 	bool "USB Device Driver Support"
@@ -429,7 +446,7 @@ menuconfig USBDEV
 
 if USBDEV
 source drivers/usbdev/Kconfig
-endif
+endif # USBDEV
 
 menuconfig USBHOST
 	bool "USB Host Driver Support"
@@ -439,7 +456,7 @@ menuconfig USBHOST
 
 if USBHOST
 source drivers/usbhost/Kconfig
-endif
+endif # USBHOST
 
 menuconfig WIRELESS
 	bool "Wireless Device Support"
@@ -449,10 +466,8 @@ menuconfig WIRELESS
 
 if WIRELESS
 source drivers/wireless/Kconfig
-endif
+endif # WIRELESS
 
 comment "System Logging Device Options"
 
 source drivers/syslog/Kconfig
-
-

@@ -323,9 +323,9 @@ static void slcd_action(enum slcdcode_e code, uint8_t count);
 
 static ssize_t slcd_read(FAR struct file *, FAR char *, size_t);
 static ssize_t slcd_write(FAR struct file *, FAR const char *, size_t);
-static int slcd_ioctl(FAR struct file *filp, int cmd, unsigned long arg);
+static int slcd_ioctl(FAR struct file *filep, int cmd, unsigned long arg);
 #ifndef CONFIG_DISABLE_POLL
-static int slcd_poll(FAR struct file *filp, FAR struct pollfd *fds, bool setup);
+static int slcd_poll(FAR struct file *filep, FAR struct pollfd *fds, bool setup);
 #endif
 
 /****************************************************************************
@@ -366,7 +366,7 @@ static struct stm32_slcdstate_s g_slcdstate;
  *              D
  *
  * LCD character 16-bit-encoding:
- * { E , D , P , N, M , C , COL , DP, B , A , K , J, G , F , Q , H   }
+ * { E , D , P , N,   M , C , COL , DP,   B , A , K , J,   G , F , Q , H }
  */
 
 #warning "Encodings for all punctuation are incomplete"
@@ -465,7 +465,7 @@ static void slcd_dumpstate(FAR const char *msg)
 static void slcd_dumpslcd(FAR const char *msg)
 {
   lcdvdbg("%s:\n", msg);
-  lcdvdbg("  CR: %08x FCR: %08x SR: %08x CLR: %08x:\n",
+  lcdvdbg("  CR: %08x FCR: %08x SR: %08x CLR: %08x\n",
           getreg32(STM32_LCD_CR), getreg32(STM32_LCD_FCR),
           getreg32(STM32_LCD_SR), getreg32(STM32_LCD_CLR));
   lcdvdbg("  RAM0L: %08x RAM1L: %08x RAM2L: %08x RAM3L: %08x\n",
@@ -698,7 +698,16 @@ static inline void slcd_writemem(uint16_t segset, int curpos)
   lcdvdbg("segset: %04x curpos: %d\n", segset, curpos);
   slcd_dumpslcd("BEFORE WRITE");
 
-  /* Isolate the least significant bits */
+  /* Isolate the least significant bits
+   *
+   * LCD character 16-bit-encoding:
+   * { E , D , P , N,   M , C , COL , DP,   B , A , K , J,   G , F , Q , H }
+   *
+   * segments[0] = { E , D , P , N }
+   * segments[1] = { M , C , COL , DP }
+   * segments[2] = { B , A , K , J }
+   * segments[3] = { G , F , Q , H }
+   */
 
   for (i = 12, j = 0; j < 4; i -= 4, j++)
     {
@@ -1076,13 +1085,13 @@ static void slcd_action(enum slcdcode_e code, uint8_t count)
  * Name: slcd_read
  ****************************************************************************/
 
-static ssize_t slcd_read(FAR struct file *filp, FAR char *buffer, size_t len)
+static ssize_t slcd_read(FAR struct file *filep, FAR char *buffer, size_t len)
 {
   int ret = 0;
   int i;
 
   /* Try to read the entire display.  Notice that the seek offset
-   * (filp->f_pos) is ignored.  It probably should be taken into account
+   * (filep->f_pos) is ignored.  It probably should be taken into account
    * and also updated after each read and write.
    */
 
@@ -1118,7 +1127,7 @@ static ssize_t slcd_read(FAR struct file *filp, FAR char *buffer, size_t len)
  * Name: slcd_write
  ****************************************************************************/
 
-static ssize_t slcd_write(FAR struct file *filp,
+static ssize_t slcd_write(FAR struct file *filep,
                           FAR const char *buffer, size_t len)
 {
   struct slcd_instream_s instream;
@@ -1305,7 +1314,7 @@ static ssize_t slcd_write(FAR struct file *filp,
  * Name: slcd_poll
  ****************************************************************************/
 
-static int slcd_ioctl(FAR struct file *filp, int cmd, unsigned long arg)
+static int slcd_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 {
   switch (cmd)
     {
@@ -1340,7 +1349,6 @@ static int slcd_ioctl(FAR struct file *filp, int cmd, unsigned long arg)
        * argument:  Pointer to struct slcd_curpos_s in which values will be
        *            returned
        */
-
 
       case SLCDIOC_CURPOS:
         {
@@ -1449,7 +1457,7 @@ static int slcd_ioctl(FAR struct file *filp, int cmd, unsigned long arg)
  ****************************************************************************/
 
 #ifndef CONFIG_DISABLE_POLL
-static int slcd_poll(FAR struct file *filp, FAR struct pollfd *fds,
+static int slcd_poll(FAR struct file *filep, FAR struct pollfd *fds,
                         bool setup)
 {
   if (setup)

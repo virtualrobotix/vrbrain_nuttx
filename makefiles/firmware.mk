@@ -458,7 +458,7 @@ endif
 #
 # What we're going to build.
 #
-PRODUCT_BUNDLE		 = $(WORK_DIR)firmware.vrbrain
+PRODUCT_BUNDLE		 = $(WORK_DIR)firmware.vrx
 PRODUCT_BIN		 = $(WORK_DIR)firmware.bin
 PRODUCT_HEX		 = $(WORK_DIR)firmware.hex
 PRODUCT_ELF		 = $(WORK_DIR)firmware.elf

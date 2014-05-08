@@ -130,6 +130,12 @@ static const char* get_fstype(FAR struct statfs *statbuf)
         break;
 #endif
 
+#ifdef CONFIG_FS_PROCFS
+      case PROCFS_MAGIC:
+        fstype = "procfs";
+        break;
+#endif
+
       default:
         fstype = "Unrecognized";
         break;
@@ -188,42 +194,50 @@ static int df_man_readable_handler(FAR const char *mountpoint,
   /* Find the label for size */
 
   which = 0;
-  while (size >= 1024)
+  while (size >= 9999 || ((size & 0x3ff) == 0 && size != 0))
     {
       which++;
       size >>= 10;
     }
+
   sizelabel = labels[which];
 
   /* Find the label for free */
 
   which = 0;
-  while (free >= 1024)
+  while (free >= 9999 || ((free & 0x3ff) == 0 && free != 0))
     {
       which++;
       free >>= 10;
     }
+
   freelabel = labels[which];
 
   /* Find the label for used */
 
   which = 0;
-  while (used >= 1024)
+  while (used >= 9999 || ((used & 0x3ff) == 0 && used != 0))
     {
       which++;
       used >>= 10;
     }
+
   usedlabel = labels[which];
 
+#ifndef CONFIG_NUTTX_KERNEL
   nsh_output(vtbl, "%-10s %6ld%c %8ld%c  %8ld%c %s\n", get_fstype(statbuf),
              size, sizelabel, used, usedlabel, free, freelabel,
              mountpoint);
+#else
+  nsh_output(vtbl, "%6ld%c %8ld%c  %8ld%c %s\n", size, sizelabel, used,
+             usedlabel, free, freelabel, mountpoint);
+#endif
 
   return OK;
 }
 #endif /* CONFIG_NSH_CMDOPT_DF_H */
 
-#endif /* CONFIG_NFILE_DESCRIPTORS > 0 && !defined(CONFIG_DISABLE_MOUNTPOINT) && 
+#endif /* CONFIG_NFILE_DESCRIPTORS > 0 && !defined(CONFIG_DISABLE_MOUNTPOINT) &&
             defined(CONFIG_FS_READABLE) && !defined(CONFIG_NSH_DISABLE_DF) */
 
 /****************************************************************************
@@ -280,7 +294,11 @@ int cmd_df(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #ifdef CONFIG_NSH_CMDOPT_DF_H
   if (argc > 1 && strcmp(argv[1], "-h") == 0)
     {
+#ifndef CONFIG_NUTTX_KERNEL
       nsh_output(vtbl, "Filesystem    Size      Used  Available Mounted on\n");
+#else
+      nsh_output(vtbl, "Size      Used  Available Mounted on\n");
+#endif
       return foreach_mountpoint(df_man_readable_handler, (FAR void *)vtbl);
     }
   else
@@ -369,7 +387,7 @@ int cmd_mount(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   source = NULL;
   target = argv[optind];
   optind++;
-  
+
   if (optind < argc)
     {
       source = target;

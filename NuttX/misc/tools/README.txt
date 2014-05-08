@@ -5,11 +5,16 @@ Contents:
 
   o genromfs-0.5.2.tar.gz
   o kconfig-frontends
+    - General Build Instructions
+    - Graphical Configuration Tools
     - --program-prefix=
     - kconfig-frontends-3.3.0-1-libintl.patch
     - kconfig-macos.patch
-    - kconfig-macos.patch
+    - kconfig-mconf Path Issues
+    - gperf
     - kconfig-frontends for Windows
+    - Buildroot
+  o osmocon
 
 genromfs-0.5.2.tar.gz
 =====================
@@ -24,7 +29,10 @@ genromfs-0.5.2.tar.gz
 kconfig-frontends
 =================
 
-  This is a snapshot of the kconfig-frontends version 3.7.0 tarball taken
+General Build Instructions
+--------------------------
+
+  This is a snapshot of the kconfig-frontends version 3.12.0 tarball taken
   from http://ymorin.is-a-geek.org/projects/kconfig-frontends.
 
   General build instructions:
@@ -58,6 +66,32 @@ kconfig-frontends
 
   The default installation location for the tools is /usr/local/bin.  You
   may require root privileges to 'make install'.
+
+Graphical Configuration Tools
+-----------------------------
+
+  If you have an environment that suppots the Qt or GTK graphical systems
+  (probably KDE or gnome, respectively), then you can also build the
+  graphical kconfig-frontends, kconfig-qconf and kconfig-gconf:
+
+    ./configure --enable-mconf --disable-nconf --disable-gconf --enable-qconf
+    make
+    make install
+
+  Or,
+
+    ./configure --enable-mconf --disable-nconf --enable-gconf --disable-qconf
+    make
+    make install
+
+  In these case, you can start the graphical configurator in the nuttx/
+  directory with either:
+
+    make qconfig
+
+  or
+
+    make gconfig
 
 --program-prefix=
 -----------------
@@ -94,7 +128,7 @@ kconfig-frontends-3.3.0-1-libintl.patch
 
   See: http://ymorin.is-a-geek.org/hg/kconfig-frontends/file/tip/docs/known-issues.txt
 
-  Update: Version 3.6.0 (and above) will build on Cygwin with no patches: 
+  Update: Version 3.6.0 (and above) will build on Cygwin with no patches:
 
     http://ymorin.is-a-geek.org/download/kconfig-frontends/
 
@@ -109,8 +143,60 @@ kconfig-macos.patch
     make
     make install
 
+kconfig-mconf Path Issues
+-------------------------
+
+Some people have experienced this problem after successfully building and installing
+the kconfig-frontends tools:
+
+  kconfig-mconf: error while loading shared libraries: libkconfig-parser-3.8.0.so: cannot open shared object file: No such file or directory
+  make: *** [menuconfig] Error 127
+
+There two known solutions to this:
+
+1) Add the directory where the kconfig-frontends libraries were installed
+   to the file /etc//ld.so.conf (probably /usr/local/lib), then run the
+   ldconfig tool.
+
+2) Specify the LD_RUN_PATH environment when building the kconfig-frontends
+   tools like:
+
+     ./configure --enable-mconf
+     LD_RUN_PATH=/usr/local/lib
+     make
+     make install
+
+3) Build the kconfig-frontends tools using only static libraries:
+
+     ./configure --enable-mconf --disable-shared --enable-static
+
+I have also been told that some people see this error until they re-boot, then it
+just goes away.  I would try that before anything else.
+
+gperf
+-----
+
+  "I am getting an error when configuring the kconfig-frontends-3.12.0.0 package.
+   Using command
+
+    ./configure --enable-mconf
+
+  "It says it 'configure: error: can not find gperf'"
+
+   If you see this, make sure that the gperf package is installed.
+
+
 kconfig-frontends for Windows
 -----------------------------
+
+Recent versions of NuttX support building NuttX from a native Windows
+console window (see "Native Windows Build" below).  But kconfig-frontends
+is a Linux tool.  At one time this was a problem for Windows users, but
+now there is a specially modified version of the kconfig-frontends tools
+that can be used:
+http://uvc.de/posts/linux-kernel-configuration-tool-mconf-under-windows.html
+
+[The remainder of the text in this section is for historical interest only]
 
 From http://tech.groups.yahoo.com/group/nuttx/message/2900:
 
@@ -158,6 +244,13 @@ windows IS POSSIBLE, I have done it in a few minutes."
 "Oops, forgot something, I had to bring a gperf binary from the gnuwin32 project."
 
 - Sebastien Lorquet
+
+Buildroot
+---------
+As of 2014-3-7, the kconfig-frontends tools have been included in the
+buildroot tool set.  This means that in one package you can build GCC tools
+that are especially tuned for NuttX and all of the support tools that you
+need ROMFS, configuration, and NXFLAT.
 
 osmocon
 =======

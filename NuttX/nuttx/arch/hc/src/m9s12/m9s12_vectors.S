@@ -80,7 +80,7 @@
  *              PCH
  * High Address PCL  <-- SP before interrupt
  */
- 
+
 	.macro	HANDLER, label, irqno
 \label:
 	ldab	#\irqno							/* Load B=IRQ number */
@@ -293,7 +293,7 @@ vcommon:
 #endif
 
 	/* Save the PPAGE register */
- 
+
 #ifndef CONFIG_HCS12_NONBANKED
 	movb	HCS12_MMC_PPAGE, 1, -sp
 #endif
@@ -318,7 +318,7 @@ vcommon:
 	bne		up_fullcontextrestore
 
 	/* Restore registers and return */
- 
+
 	/* Restore the PPAGE register */
 
 #ifndef CONFIG_HCS12_NONBANKED
@@ -433,7 +433,7 @@ up_fullcontextrestore:
 	.comm	.Lspsave, 2, 1
 
 /************************************************************************************
- *	Name: up_interruptstack/g_userstack
+ *	Name: up_interruptstack/g_intstackbase
  *
  * Description:
  *	 If CONFIG_ARCH_INTERRUPTSTACK is defined, this sets aside memory for the

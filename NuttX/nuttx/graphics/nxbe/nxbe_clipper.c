@@ -110,7 +110,7 @@ static inline void nxbe_pushrectangle(FAR struct nxbe_clipstack_s *stack,
 
   if ((stack->npushed + 1) > stack->mxrects)
     {
-      /* No then we will need to reallocate the stack to hole more */
+      /* No then we will need to reallocate the stack to hold more */
 
       int mxrects = stack->mxrects ? 2 * stack->mxrects : NX_INITIAL_STACKSIZE;
       struct nxbe_cliprect_s *newstack;
@@ -141,13 +141,14 @@ static inline bool nxbe_poprectangle(struct nxbe_clipstack_s *stack,
                                      FAR struct nxbe_window_s **wnd,
                                      struct nxgl_rect_s *rect)
 {
-  if(stack->npushed > 0)
+  if (stack->npushed > 0)
     {
       stack->npushed--;
       *wnd = stack->stack[stack->npushed].wnd;
       nxgl_rectcopy(rect, &stack->stack[stack->npushed].rect);
       return true;
     }
+
   return false;
 }
 

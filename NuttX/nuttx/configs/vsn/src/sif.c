@@ -79,7 +79,7 @@
 #include <nuttx/i2c.h>
 #include <nuttx/sensors/lis331dl.h>
 
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <nuttx/wireless/cc1101.h>
 
 #include <stdio.h>
@@ -475,7 +475,7 @@ int devsif_close(FAR struct file *filep)
 }
 
 
-static ssize_t devsif_read(FAR struct file *filp, FAR char *buffer, size_t len)
+static ssize_t devsif_read(FAR struct file *filep, FAR char *buffer, size_t len)
 {
     sif_sem_wait();
     memset(buffer, 0, len);
@@ -484,7 +484,7 @@ static ssize_t devsif_read(FAR struct file *filp, FAR char *buffer, size_t len)
 }
 
 
-static ssize_t devsif_write(FAR struct file *filp, FAR const char *buffer, size_t len)
+static ssize_t devsif_write(FAR struct file *filep, FAR const char *buffer, size_t len)
 {
     sif_sem_wait();
     printf("getpid: %d\n", getpid() );
@@ -494,7 +494,7 @@ static ssize_t devsif_write(FAR struct file *filp, FAR const char *buffer, size_
 
 
 #ifndef CONFIG_DISABLE_POLL
-static int devsif_poll(FAR struct file *filp, FAR struct pollfd *fds,
+static int devsif_poll(FAR struct file *filep, FAR struct pollfd *fds,
                         bool setup)
 {
     if (setup) {

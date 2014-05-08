@@ -51,8 +51,8 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 
-#include <nuttx/spi.h>
-#include <nuttx/mtd.h>
+#include <nuttx/spi/spi.h>
+#include <nuttx/mtd/mtd.h>
 #include <nuttx/fs/nxffs.h>
 #include <nuttx/fs/ioctl.h>
 
@@ -240,11 +240,15 @@ mtd_start(char *partition_names[], unsigned n_partitions)
 			at24xxx_attach();
 		#elif defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 			ramtron_attach();
-		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V4)
+		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
 			at24xxx_attach();
-		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V5)
+		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
 			at24xxx_attach();
-		#elif defined(CONFIG_ARCH_BOARD_VRHERO_V1)
+		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
+			at24xxx_attach();
+		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
+			at24xxx_attach();
+		#elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
 			at24xxx_attach();
 		#endif
 	}

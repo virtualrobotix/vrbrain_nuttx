@@ -199,7 +199,7 @@ EXTERN int i486_dumpgpio(uint16_t pinset, const char *msg);
  * Description:
  *   These external functions must be provided by board-specific logic.  They are
  *   implementations of the select, status, and cmddata methods of the SPI interface
- *   defined by struct spi_ops_s (see include/nuttx/spi.h). All other methods 
+ *   defined by struct spi_ops_s (see include/nuttx/spi/spi.h). All other methods
  *   including up_spiinitialize()) are provided by common LPC17xx logic.  To use
  *   this common SPI logic on your board:
  *
@@ -215,7 +215,7 @@ EXTERN int i486_dumpgpio(uint16_t pinset, const char *msg);
  *   3. Add a call to up_spiinitialize() in your low level application
  *      initialization logic
  *   4. The handle returned by up_spiinitialize() may then be used to bind the
- *      SPI driver to higher level logic (e.g., calling 
+ *      SPI driver to higher level logic (e.g., calling
  *      mmcsd_spislotinitialize(), for example, will bind the SPI driver to
  *      the SPI MMC/SD driver).
  *
@@ -386,7 +386,7 @@ EXTERN void i486_dmadump(DMA_HANDLE handle, const struct i486_dmaregs_s *regs,
  * Description:
  *   These are the various ISR/IRQ vector address exported from
  *   qemu_vectors.S.  These addresses need to have global scope so that they
- *   can be known to the interrupt intialization logic in qemu_irq.c.
+ *   can be known to the interrupt initializeation logic in qemu_irq.c.
  *
  ****************************************************************************/
 

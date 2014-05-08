@@ -72,6 +72,9 @@
 #include <drivers/drv_gyro.h>
 #include <mathlib/math/filter/LowPassFilter2p.hpp>
 
+//Define the type of orientation of the board
+//#define MPU6000_CHIP_FORWARD
+
 #define DIR_READ			0x80
 #define DIR_WRITE			0x00
 
@@ -1245,6 +1248,7 @@ MPU6000::measure()
 	/*
 	 * Swap axes and negate y
 	 */
+#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
 	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
 	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
 	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
@@ -1252,6 +1256,49 @@ MPU6000::measure()
 	int16_t gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
 	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
 	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
+	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+
+	int16_t gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
+	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+
+	int16_t gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
+	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+
+	int16_t gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+#elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
+#ifdef	MPU6000_CHIP_FORWARD
+	int16_t accel_xt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : report.accel_x);
+	int16_t accel_zt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+
+	int16_t gyro_xt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : report.gyro_x);
+	int16_t gyro_zt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+#else
+	int16_t accel_xt = ((report.accel_z == -32768) ? 32767 : report.accel_z);
+	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+	int16_t accel_zt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+
+	int16_t gyro_xt = ((report.gyro_z == -32768) ? 32767 : report.gyro_z);
+	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+	int16_t gyro_zt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+#endif
+#endif
 
 	/*
 	 * Apply the swap

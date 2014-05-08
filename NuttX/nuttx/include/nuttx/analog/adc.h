@@ -7,6 +7,7 @@
  *            0.2 remove ao_read
  *
  * Derived from include/nuttx/can.h
+ *
  *   Copyright (C) 2008, 2009 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
@@ -54,13 +55,13 @@
 #include <stdbool.h>
 #include <semaphore.h>
 #include <nuttx/fs/fs.h>
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 
 /************************************************************************************
  * Pre-processor Definitions
  ************************************************************************************/
 
-/* Default configuration settings that may be overridden in the board configuration.
+/* Default configuration settings that may be overridden in the NuttX configuration
  * file.  The configured size is limited to 255 to fit into a uint8_t.
  */
 
@@ -105,7 +106,7 @@ struct adc_ops_s
   CODE void (*ao_reset)(FAR struct adc_dev_s *dev);
 
   /* Configure the ADC. This method is called the first time that the ADC
-   * device is opened.  This will occur when the port is first opened. 
+   * device is opened.  This will occur when the port is first opened.
    * This setup includes configuring and attaching ADC interrupts.  Interrupts
    * are all disabled upon return.
    */
@@ -121,15 +122,14 @@ struct adc_ops_s
   /* Call to enable or disable RX interrupts */
 
   CODE void (*ao_rxint)(FAR struct adc_dev_s *dev, bool enable);
- 
+
   /* All ioctl calls will be routed through this method */
 
   CODE int (*ao_ioctl)(FAR struct adc_dev_s *dev, int cmd, unsigned long arg);
-
 };
 
 /* This is the device structure used by the driver.  The caller of
- * can_register() must allocate and initialize this structure.  The
+ * adc_register() must allocate and initialize this structure.  The
  * calling logic need only set all fields to zero except:
  *
  *   The elements of 'ad_ops', and 'ad_priv'
@@ -157,7 +157,8 @@ struct adc_dev_s
  ************************************************************************************/
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 /************************************************************************************

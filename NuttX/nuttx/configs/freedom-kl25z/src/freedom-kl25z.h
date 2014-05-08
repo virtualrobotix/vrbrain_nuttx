@@ -68,14 +68,14 @@
  *   SYMBOL                Meaning                 LED state
  *                                                 Initially all LED is OFF
  *   -------------------  -----------------------  --------------------------
- *   LED_STARTED          NuttX has been started   
- *   LED_HEAPALLOCATE     Heap has been allocated  
- *   LED_IRQSENABLED      Interrupts enabled       
- *   LED_STACKCREATED     Idle stack created       
- *   LED_INIRQ            In an interrupt          
- *   LED_SIGNAL           In a signal handler      
- *   LED_ASSERTION        An assertion failed      
- *   LED_PANIC            The system has crashed   
+ *   LED_STARTED          NuttX has been started
+ *   LED_HEAPALLOCATE     Heap has been allocated
+ *   LED_IRQSENABLED      Interrupts enabled
+ *   LED_STACKCREATED     Idle stack created
+ *   LED_INIRQ            In an interrupt
+ *   LED_SIGNAL           In a signal handler
+ *   LED_ASSERTION        An assertion failed
+ *   LED_PANIC            The system has crashed
  *   LED_IDLE             K25Z1XX is in sleep mode  (Optional, not used)
  */
 
@@ -83,8 +83,10 @@
 #define GPIO_LED_G (GPIO_OUTPUT | GPIO_OUTPUT_ONE | PIN_PORTB | PIN19)
 #define GPIO_LED_B (GPIO_OUTPUT | GPIO_OUTPUT_ONE | PIN_PORTD | PIN1)
 
-/* Button definitions ***************************************************************/
+/* Button definitions *******************************************************************************/
 /* The Freedom KL25Z has no buttons */
+
+/* Chip selects ************************************************************************************/
 
 /****************************************************************************************************
  * Public Types

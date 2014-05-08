@@ -75,7 +75,7 @@ void lpc31_boardinitialize(void)
 {
   /* Initialize configured, external memory resources */
 
-#ifdef CONFIG_ARCH_EXTDRAM
+#ifdef CONFIG_LPC31_EXTDRAM
   lpc31_meminitialize();
 #endif
 
@@ -91,21 +91,34 @@ void lpc31_boardinitialize(void)
 #endif
 
    /* Initialize USB is 1) USBDEV is selected, 2) the USB controller is not
-    * disabled, and 3) the weak function lpc31_usbinitialize() has been brought
+    * disabled, and 3) the weak function lpc31_usbdev_initialize() has been brought
     * into the build.
     */
 
-#if defined(CONFIG_USBDEV) && defined(CONFIG_LPC31_USB)
-  if (lpc31_usbinitialize)
+#if defined(CONFIG_USBDEV) && defined(CONFIG_LPC31_USBOTG)
+  if (lpc31_usbdev_initialize)
     {
-      lpc31_usbinitialize();
+      lpc31_usbdev_initialize();
+    }
+#endif
+
+  /* Initialize USB if the 1) the HS host or device controller is in the
+   * configuration and 2) the weak function lpc31_usbhost_bootinitialize() has
+   * been brought into the build. Presumably either CONFIG_USBDEV or CONFIG_USBHOST
+   * is also selected.
+   */
+
+#if defined(CONFIG_SAMA5_UHPHS) || defined(CONFIG_SAMA5_UDPHS)
+  if (lpc31_usbhost_bootinitialize)
+    {
+      lpc31_usbhost_bootinitialize();
     }
 #endif
 
   /* Configure on-board LEDs if LED support has been selected. */
 
 #ifdef CONFIG_ARCH_LEDS
-  up_ledinit();
+  board_led_initialize();
 #endif
 
   /* Set up mass storage device to support on demand paging */

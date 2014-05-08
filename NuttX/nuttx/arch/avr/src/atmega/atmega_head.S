@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/avr32/src/atmega/atmega_head.S
+ * arch/avr/src/atmega/atmega_head.S
  *
  *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -240,7 +240,7 @@ __do_clear_bss:
 
 .Lclearloop:
 	st		X+, r1
- 
+
 .Lclearstart:
 	cpi		r26, lo8(_ebss)
 	cpc		r27, r17

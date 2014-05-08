@@ -48,7 +48,7 @@
 
 #include <nuttx/kmalloc.h>
 #include <nuttx/fs/ioctl.h>
-#include <nuttx/mtd.h>
+#include <nuttx/mtd/mtd.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -474,5 +474,12 @@ FAR struct mtd_dev_s *rammtd_initialize(FAR uint8_t *start, size_t size)
 
   priv->start      = start;
   priv->nblocks    = nblocks;
+
+  /* Register the MTD with the procfs system if enabled */
+
+#ifdef CONFIG_MTD_REGISTRATION
+  mtd_register(&priv->mtd, "rammtd");
+#endif
+
   return &priv->mtd;
 }

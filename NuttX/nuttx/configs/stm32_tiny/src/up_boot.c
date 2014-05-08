@@ -39,7 +39,7 @@
  ************************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <debug.h>
 
 #include <arch/board/board.h>
@@ -74,7 +74,7 @@ void stm32_boardinitialize(void)
   /* Configure on-board LEDs if LED support has been selected. */
 
 #ifdef CONFIG_ARCH_LEDS
-  up_ledinit();
+  board_led_initialize();
 #endif
 
   /* Configure SPI chip selects if 1) SPI is not disabled, and 2) the weak function
@@ -93,5 +93,4 @@ void stm32_boardinitialize(void)
 #if defined(CONFIG_USBDEV) && defined(CONFIG_STM32_USB)
   stm32_usbinitialize();
 #endif
-
 }

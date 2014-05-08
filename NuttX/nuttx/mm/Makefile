@@ -1,7 +1,7 @@
 ############################################################################
 # mm/Makefile
 #
-#   Copyright (C) 2007, 2012, 2013 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2007, 2012, 2013-2014 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,9 +35,22 @@
 
 -include $(TOPDIR)/Make.defs
 
+# REVISIT: Backslash causes problems in $(COBJS) target
+DELIM := $(strip /)
+
+# CFLAGS
+
+ifeq ($(CONFIG_NUTTX_KERNEL),y)
+ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+  KDEFINE = ${shell $(TOPDIR)\tools\define.bat "$(CC)" __KERNEL__}
+else
+  KDEFINE = ${shell $(TOPDIR)/tools/define.sh "$(CC)" __KERNEL__}
+endif
+endif
+
 # Core allocator logic
 
-ASRCS  = 
+ASRCS  =
 CSRCS  = mm_initialize.c mm_sem.c  mm_addfreechunk.c mm_size2ndx.c
 CSRCS += mm_shrinkchunk.c mm_malloc.c mm_zalloc.c mm_calloc.c mm_realloc.c
 CSRCS += mm_memalign.c mm_free.c mm_mallinfo.c
@@ -70,13 +83,15 @@ KBIN = libkmm$(LIBEXT)
 BIN ?= libmm$(LIBEXT)
 
 all: $(BIN)
-.PHONY: clean distclean 
+.PHONY: clean distclean
 
 $(AOBJS): $(BINDIR)$(DELIM)%$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
+	$(call MOVEOBJ,$(patsubst $(BINDIR)$(DELIM)%$(OBJEXT),%,$@),$(BINDIR))
 
 $(COBJS): $(BINDIR)$(DELIM)%$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
+	$(call MOVEOBJ,$(patsubst $(BINDIR)$(DELIM)%$(OBJEXT),%,$@),$(BINDIR))
 
 # Memory manager for the flat build
 
@@ -100,7 +115,12 @@ endif
 # Dependencies
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+ifeq ($(CONFIG_NUTTX_KERNEL),y)
+	$(Q) $(MKDEP) --obj-path ubin --obj-suffix $(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make_ubin.dep
+	$(Q) $(MKDEP) --obj-path kbin --obj-suffix $(OBJEXT) "$(CC)" -- $(CFLAGS) $(KDEFINE) -- $(SRCS) >Make_kbin.dep
+else
+	$(Q) $(MKDEP) --obj-path bin --obj-suffix $(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make_bin.dep
+endif
 	$(Q) touch $@
 
 depend: .depend
@@ -122,7 +142,11 @@ distclean: clean
 	$(Q) $(MAKE) -C bin  distclean TOPDIR=$(TOPDIR)
 	$(Q) $(MAKE) -C ubin distclean TOPDIR=$(TOPDIR)
 	$(Q) $(MAKE) -C kbin distclean TOPDIR=$(TOPDIR)
-	$(call DELFILE, Make.dep)
+	$(call DELFILE, Make_bin.dep)
+	$(call DELFILE, Make_ubin.dep)
+	$(call DELFILE, Make_kbin.dep)
 	$(call DELFILE, .depend)
 
--include Make.dep
+-include Make_bin.dep
+-include Make_ubin.dep
+-include Make_kbin.dep

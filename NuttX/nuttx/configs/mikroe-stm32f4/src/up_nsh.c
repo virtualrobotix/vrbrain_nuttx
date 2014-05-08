@@ -52,11 +52,17 @@
 #endif
 
 #ifdef CONFIG_MTD_M25P
-#  include <nuttx/mtd.h>
+#  include <nuttx/mtd/mtd.h>
 #endif
 
 #ifdef CONFIG_SYSTEM_USBMONITOR
 #  include <apps/usbmonitor.h>
+#endif
+
+#ifdef CONFIG_MIKROE_FLASH_CONFIG_PART
+#ifdef CONFIG_PLATFORM_CONFIGDATA
+#  include <nuttx/configdata.h>
+#endif
 #endif
 
 #ifdef CONFIG_STM32_OTGFS
@@ -175,9 +181,6 @@
 
 int nsh_archinitialize(void)
 {
-#if defined(HAVE_USBHOST) || defined(HAVE_USBMONITOR)
-  int ret;
-#endif
 #ifdef CONFIG_STM32_SPI3
   FAR struct spi_dev_s *spi;
   FAR struct mtd_dev_s *mtd;
@@ -227,6 +230,7 @@ int nsh_archinitialize(void)
         partno = 0;
         ptr = partstring;
         partoffset = 0;
+
         while (*ptr != '\0')
           {
             /* Get the partition size */
@@ -235,12 +239,27 @@ int nsh_archinitialize(void)
             mtd_part = mtd_partition(mtd, partoffset, (partsize>>2)*16);
             partoffset += (partsize >> 2) * 16;
 
-            /* Now initialize a SMART Flash block device and bind it to the MTD device */
+#ifdef CONFIG_MIKROE_FLASH_CONFIG_PART
+            /* Test if this is the config partition */
+
+            if (CONFIG_MIKROE_FLASH_CONFIG_PART_NUMBER == partno)
+              {
+                /* Register the partition as the config device */
+
+                mtdconfig_register(mtd_part);
+              }
+            else
+#endif
+              {
+                /* Now initialize a SMART Flash block device and bind it
+                 * to the MTD device.
+                 */
 
 #if defined(CONFIG_MTD_SMART) && defined(CONFIG_FS_SMARTFS)
-            sprintf(partname, "p%d", partno);
-            smart_initialize(CONFIG_MIKROE_FLASH_MINOR, mtd_part, partname);
+                sprintf(partname, "p%d", partno);
+                smart_initialize(CONFIG_MIKROE_FLASH_MINOR, mtd_part, partname);
 #endif
+              }
 
             /* Update the pointer to point to the next size in the list */
 
@@ -258,7 +277,6 @@ int nsh_archinitialize(void)
 
             partno++;
           }
-      }
 #else /* CONFIG_MIKROE_FLASH_PART */
 
         /* Configure the device with no partition support */
@@ -266,20 +284,21 @@ int nsh_archinitialize(void)
         smart_initialize(CONFIG_MIKROE_FLASH_MINOR, mtd, NULL);
 
 #endif /* CONFIG_MIKROE_FLASH_PART */
+      }
     }
 
   /* Create a RAM MTD device if configured */
 
 #if defined(CONFIG_RAMMTD) && defined(CONFIG_MIKROE_RAMMTD)
   {
-      uint8_t *start = (uint8_t *) kmalloc(CONFIG_MIKROE_RAMMTD_SIZE * 1024);
-      mtd = rammtd_initialize(start, CONFIG_MIKROE_RAMMTD_SIZE * 1024);
-      mtd->ioctl(mtd, MTDIOC_BULKERASE, 0);
+    uint8_t *start = (uint8_t *) kmalloc(CONFIG_MIKROE_RAMMTD_SIZE * 1024);
+    mtd = rammtd_initialize(start, CONFIG_MIKROE_RAMMTD_SIZE * 1024);
+    mtd->ioctl(mtd, MTDIOC_BULKERASE, 0);
 
-      /* Now initialize a SMART Flash block device and bind it to the MTD device */
+    /* Now initialize a SMART Flash block device and bind it to the MTD device */
 
 #if defined(CONFIG_MTD_SMART) && defined(CONFIG_FS_SMARTFS)
-      smart_initialize(CONFIG_MIKROE_RAMMTD_MINOR, mtd, NULL);
+    smart_initialize(CONFIG_MIKROE_RAMMTD_MINOR, mtd, NULL);
 #endif
   }
 
@@ -308,7 +327,6 @@ int nsh_archinitialize(void)
   else
     {
       message("nsh_archinitialize: Successfully bound SPI to the MMC/SD driver\n");
-
     }
 #endif
 
@@ -335,7 +353,7 @@ int nsh_archinitialize(void)
     }
 #endif
 
-#ifdef CONFIG_LCD_MIO283QT2
+#if defined(CONFIG_LCD_MIO283QT2) || defined(CONFIG_LCD_MIO283QT9A)
   /* Configure the TFT LCD module */
 
   message("nsh_archinitialize: Initializing TFT LCD module\n");

@@ -55,7 +55,7 @@
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
- 
+
 #undef EXTERN
 #if defined(__cplusplus)
 #define EXTERN extern "C"
@@ -64,10 +64,10 @@ extern "C" {
 #define EXTERN extern
 #endif
 
-EXTERN int mount(const char *source, const char *target,
-                 const char *filesystemtype, unsigned long mountflags,
-                 const void *data);
-EXTERN int umount(const char *target);
+int mount(const char *source, const char *target,
+          const char *filesystemtype, unsigned long mountflags,
+          const void *data);
+int umount(const char *target);
 
 #undef EXTERN
 #if defined(__cplusplus)

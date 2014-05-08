@@ -153,7 +153,7 @@ static int up_poll(FAR struct file *filep, struct pollfd *fds, bool setup);
  * Private Data
  ****************************************************************************/
 
-/* This the the vtable that supports the character driver interface */
+/* This the vtable that supports the character driver interface */
 
 static const struct file_operations up_fops =
 {
@@ -168,7 +168,7 @@ static const struct file_operations up_fops =
 #endif
 };
 
-/* Only one simulated touchscreen is supported o the the driver state
+/* Only one simulated touchscreen is supported so the driver state
  * structure may as well be pre-allocated.
  */
 
@@ -199,7 +199,7 @@ static void up_notify(FAR struct up_dev_s *priv)
        * is no longer avaialable.
        */
 
-      sem_post(&priv->waitsem); 
+      sem_post(&priv->waitsem);
     }
 
   /* If there are threads waiting on poll() for touchscreen data to become availabe,
@@ -324,7 +324,7 @@ static int up_waitsample(FAR struct up_dev_s *priv,
         }
     }
 
-  /* Re-acquire the the semaphore that manages mutually exclusive access to
+  /* Re-acquire the semaphore that manages mutually exclusive access to
    * the device structure.  We may have to wait here.  But we have our sample.
    * Interrupts and pre-emption will be re-enabled while we wait.
    */
@@ -534,7 +534,7 @@ static int up_poll(FAR struct file *filep, FAR struct pollfd *fds,
 {
   FAR struct inode    *inode;
   FAR struct up_dev_s *priv;
-  int                  ret = OK;
+  int                  ret;
   int                  i;
 
   ivdbg("setup: %d\n", (int)setup);

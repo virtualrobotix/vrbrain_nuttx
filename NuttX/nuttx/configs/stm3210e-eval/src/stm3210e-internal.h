@@ -112,7 +112,7 @@
  * configured as CH1OUT for variable backlight control.  Otherwise, the
  * following definition will be used to support a discrete backlight control.
  */
- 
+
 #define GPIO_LCD_BACKLIGHT (GPIO_OUTPUT|GPIO_CNF_OUTPP|GPIO_MODE_50MHz|\
                              GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN8)
 
@@ -313,7 +313,7 @@ void up_ledpminitialize(void);
  *
  ************************************************************************************/
 
-#if defined(CONFIG_PM) && defined(CONFIG_IDLE_CUSTOM) && defined(CONFIG_PM_BUTTONS)
+#if defined(CONFIG_PM) && defined(CONFIG_ARCH_IDLE_CUSTOM) && defined(CONFIG_PM_BUTTONS)
 void up_pmbuttons(void);
 #endif
 

@@ -49,7 +49,7 @@
 
 /* Assume the large model */
 
-#if !defined(CONFIG_Z8_MODEL_LARGE) && !defined(CONFIG_Z8_MODEL_SMALL) 
+#if !defined(CONFIG_Z8_MODEL_LARGE) && !defined(CONFIG_Z8_MODEL_SMALL)
 #  define CONFIG_Z8_MODEL_LARGE 1
 #  undef  CONFIG_Z8_MODEL_SMALL
 #endif
@@ -68,7 +68,7 @@
 	xref	_z16f_clkinit:ROM
 	xref	_z16f_lowinit:ROM
 #ifdef CONFIG_ARCH_LEDS
-	xref	_up_ledinit:ROM
+	xref	_board_led_initialize:ROM
 #endif
 	xref	_os_start:ROM
 	xref	_up_doirq:ROM
@@ -96,7 +96,7 @@
  **************************************************************************/
 
  	segment	CODE
- 
+
 /**************************************************************************
  * Interrupt Vectors
  **************************************************************************/
@@ -222,7 +222,7 @@ _z8_reset10:
 
 	/* Start NuttX */
 
-	ldx     __intrp,#0   
+	ldx     __intrp,#0
 	xor     r15, r15
 	xor     r14, r14
 	call	_os_start

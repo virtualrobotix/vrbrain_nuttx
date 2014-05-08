@@ -45,7 +45,7 @@
 #include <debug.h>
 
 #include <nuttx/arch.h>
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 
 #include <arch/irq.h>
 #include <arch/board/board.h>
@@ -63,16 +63,16 @@
 
 /* The i.MX1/L supports 2 SPI interfaces.  Which have been enabled? */
 
-#ifndef CONFIG_SPI1_DISABLE
+#ifdef CONFIG_IMX_SPI1
 #  define SPI1_NDX 0           /* Index to SPI1 in g_spidev[] */
-#  ifndef CONFIG_SPI2_DISABLE
+#  ifdef CONFIG_IMX_SPI2
 #   define SPI2_NDX 1          /* Index to SPI2 in g_spidev[] */
 #   define NSPIS 2             /* Two SPI interfaces: SPI1 & SPI2 */
 #  else
 #   define NSPIS 1             /* One SPI interface: SPI1 */
 #  endif
 #else
-#  ifndef CONFIG_SPI2_DISABLE
+#  ifdef CONFIG_IMX_SPI2
 #   define SPI2_NDX 0          /* Index to SPI2 in g_spidev[] */
 #   define NSPIS 1             /* One SPI interface: SPI2 */
 #  else
@@ -140,7 +140,7 @@ struct imx_spidev_s
  ****************************************************************************/
 
  /* SPI register access */
- 
+
 static inline uint32_t spi_getreg(struct imx_spidev_s *priv, unsigned int offset);
 static inline void spi_putreg(struct imx_spidev_s *priv, unsigned int offset, uint32_t value);
 
@@ -213,7 +213,7 @@ static const struct spi_ops_s g_spiops =
 
 static struct imx_spidev_s g_spidev[] =
 {
-#ifndef CONFIG_SPI1_DISABLE
+#ifdef CONFIG_IMX_SPI1
   {
     .ops  = &g_spiops,
     .base = IMX_CSPI1_VBASE,
@@ -222,7 +222,7 @@ static struct imx_spidev_s g_spidev[] =
 #endif
   },
 #endif
-#ifndef CONFIG_SPI2_DISABLE
+#ifdef CONFIG_IMX_SPI2
   {
     .ops  = &g_spiops,
     .base = IMX_CSPI2_VBASE,
@@ -500,10 +500,10 @@ static int spi_transfer(struct imx_spidev_s *priv, const void *txbuffer,
 {
 #ifndef CONFIG_SPI_POLLWAIT
   irqstate_t flags;
-#endif
   uint32_t regval;
-  int ntxd;
   int ret;
+#endif
+  int ntxd;
 
   /* Set up to perform the transfer */
 
@@ -614,11 +614,11 @@ static inline struct imx_spidev_s *spi_mapirq(int irq)
 {
   switch (irq)
     {
-#ifndef CONFIG_SPI1_DISABLE
+#ifdef CONFIG_IMX_SPI1
       case IMX_IRQ_CSPI1:
         return &g_spidev[SPI1_NDX];
 #endif
-#ifndef CONFIG_SPI2_DISABLE
+#ifdef CONFIG_IMX_SPI2
       case IMX_IRQ_CSPI2:
         return &g_spidev[SPI2_NDX];
 #endif
@@ -1020,7 +1020,7 @@ FAR struct spi_dev_s *up_spiinitialize(int port)
 
   switch (port)
     {
-#ifndef CONFIG_SPI1_DISABLE
+#ifdef CONFIG_IMX_SPI1
     case 1:
       /* Select SPI1 */
 
@@ -1035,9 +1035,9 @@ FAR struct spi_dev_s *up_spiinitialize(int port)
       imxgpio_configpfinput(GPIOC, 16);  /* Port C, pin 16: MISO */
       imxgpio_configpfoutput(GPIOC, 17); /* Port C, pin 17: MOSI */
       break;
-#endif /* CONFIG_SPI1_DISABLE */
+#endif /* CONFIG_IMX_SPI1 */
 
-#ifndef CONFIG_SPI2_DISABLE
+#ifdef CONFIG_IMX_SPI2
     case 2:
       /* Select SPI2 */
 
@@ -1083,11 +1083,11 @@ FAR struct spi_dev_s *up_spiinitialize(int port)
       imxgpio_configinput(GPIOD, 31);
       imxgpio_ocrbin(GPIOD, 31);
       imxgpio_dirout(GPIOD, 31);
-#else 
+#else
       imxgpio_configoutput(GPIOD, 10);
 #endif
       break;
-#endif /* CONFIG_SPI2_DISABLE */
+#endif /* CONFIG_IMX_SPI2 */
 
     default:
       return NULL;
@@ -1101,7 +1101,7 @@ FAR struct spi_dev_s *up_spiinitialize(int port)
 
   /* Initialize control register: min frequency, ignore ready, master mode, mode=0, 8-bit */
 
-  spi_putreg(priv, CSPI_CTRL_OFFSET, 
+  spi_putreg(priv, CSPI_CTRL_OFFSET,
              CSPI_CTRL_DIV512 |                /* Lowest frequency */
              CSPI_CTRL_DRCTL_IGNRDY |          /* Ignore ready */
              CSPI_CTRL_MODE |                  /* Master mode */

@@ -54,6 +54,7 @@
 #include <debug.h>
 
 #include <net/ethernet.h>
+#include <net/if.h>
 #include <netinet/ether.h>
 
 #include <nuttx/net/net.h>
@@ -116,7 +117,7 @@
 #if defined(CONFIG_NET_UDP) && CONFIG_NFILE_DESCRIPTORS > 0
 struct tftpc_args_s
 {
-  bool        binary;    /* true:binary ("octect") false:text ("netascii") */
+  bool        binary;    /* true:binary ("octet") false:text ("netascii") */
   bool        allocated; /* true: destpath is allocated */
   char       *destpath;  /* Path at destination */
   const char *srcpath;   /* Path at src */
@@ -225,9 +226,9 @@ static inline void uip_statistics(FAR struct nsh_vtbl_s *vtbl)
   nsh_output(vtbl, "\n");
 
 #ifdef CONFIG_NET_TCP
-  nsh_output(vtbl, "  TCP       ACK: %04x SYN: %04x\n", 
+  nsh_output(vtbl, "  TCP       ACK: %04x SYN: %04x\n",
             uip_stat.tcp.ackerr, uip_stat.tcp.syndrop);
-  nsh_output(vtbl, "            RST: %04x %04x\n", 
+  nsh_output(vtbl, "            RST: %04x %04x\n",
             uip_stat.tcp.rst, uip_stat.tcp.synrst);
 #endif
 
@@ -282,18 +283,32 @@ int ifconfig_callback(FAR struct uip_driver_s *dev, void *arg)
 {
   struct nsh_vtbl_s *vtbl = (struct nsh_vtbl_s*)arg;
   struct in_addr addr;
-  bool is_running = false;
+  uint8_t iff;
+  const char *status;
   int ret;
 
-  ret = uip_getifstatus(dev->d_ifname,&is_running);
+  ret = uip_getifstatus(dev->d_ifname, &iff);
   if (ret != OK)
     {
       nsh_output(vtbl, "\tGet %s interface flags error: %d\n",
                  dev->d_ifname, ret);
     }
 
+  if (iff & IFF_RUNNING)
+    {
+      status = "RUNNING";
+    }
+  else if (iff & IFF_UP)
+    {
+      status = "UP";
+    }
+  else
+    {
+      status = "DOWN";
+    }
+
   nsh_output(vtbl, "%s\tHWaddr %s at %s\n",
-             dev->d_ifname, ether_ntoa(&dev->d_mac), (is_running)?"UP":"DOWN");
+             dev->d_ifname, ether_ntoa(&dev->d_mac), status);
 
   addr.s_addr = dev->d_ipaddr;
   nsh_output(vtbl, "\tIPaddr:%s ", inet_ntoa(addr));
@@ -502,6 +517,7 @@ int cmd_get(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       free(args.destpath);
     }
+
   free(fullpath);
   return OK;
 }
@@ -572,7 +588,9 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   FAR char *mask = NULL;
   FAR char *tmp = NULL;
   FAR char *hw = NULL;
+#if defined(CONFIG_NSH_DHCPC) || defined(CONFIG_NSH_DNS)
   FAR char *dns = NULL;
+#endif
   bool badarg = false;
   uint8_t mac[IFHWADDRLEN];
 #if defined(CONFIG_NSH_DHCPC)
@@ -594,7 +612,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     }
 
   /* If both the network interface name and an IP address are supplied as
-   * arguments, then ifconfig will set the address of the ethernet device:
+   * arguments, then ifconfig will set the address of the Ethernet device:
    *
    *    ifconfig nic_name ip_address
    */
@@ -638,7 +656,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
                       badarg = true;
                     }
                 }
-              else if(!strcmp(tmp, "hw"))
+              else if (!strcmp(tmp, "hw"))
                 {
                   if (argc-1>=i+1)
                     {
@@ -651,7 +669,8 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
                       badarg = true;
                     }
                 }
-              else if(!strcmp(tmp, "dns"))
+#if defined(CONFIG_NSH_DHCPC) || defined(CONFIG_NSH_DNS)
+              else if (!strcmp(tmp, "dns"))
                 {
                   if (argc-1 >= i+1)
                     {
@@ -663,6 +682,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
                       badarg = true;
                     }
                 }
+#endif
             }
         }
     }
@@ -673,7 +693,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       return ERROR;
     }
 
-  /* Set Hardware ethernet MAC addr */
+  /* Set Hardware Ethernet MAC address */
 
   if (hw)
     {
@@ -911,12 +931,12 @@ int cmd_ping(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
             (ipaddr >> 16 ) & 0xff, (ipaddr >> 24 ) & 0xff,
             DEFAULT_PING_DATALEN);
 
-  start = g_system_timer;
+  start = clock_systimer();
   for (i = 1; i <= count; i++)
     {
       /* Send the ECHO request and wait for the response */
 
-      next  = g_system_timer;
+      next  = clock_systimer();
       seqno = uip_ping(ipaddr, id, i, DEFAULT_PING_DATALEN, maxwait);
 
       /* Was any response returned? We can tell if a non-negative sequence
@@ -930,7 +950,7 @@ int cmd_ping(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
            * to an earlier request, then fudge the elpased time.
            */
 
-          elapsed = TICK2MSEC(g_system_timer - next);
+          elapsed = TICK2MSEC(clock_systimer() - next);
           if (seqno < i)
             {
               elapsed += 100 * dsec * (i - seqno);
@@ -948,7 +968,7 @@ int cmd_ping(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
        * to the current request!
        */
 
-      elapsed = TICK2DSEC(g_system_timer - next);
+      elapsed = TICK2DSEC(clock_systimer() - next);
       if (elapsed < dsec)
         {
           usleep(100000 * (dsec - elapsed));
@@ -957,7 +977,7 @@ int cmd_ping(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   /* Get the total elapsed time */
 
-  elapsed = TICK2MSEC(g_system_timer - start);
+  elapsed = TICK2MSEC(clock_systimer() - start);
 
   /* Calculate the percentage of lost packets */
 
@@ -1009,6 +1029,7 @@ int cmd_put(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       free(args.destpath);
     }
+
   free(fullpath);
   return OK;
 }
@@ -1119,7 +1140,7 @@ int cmd_wget(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       nsh_output(vtbl, g_fmtcmdfailed, argv[0], "wget", NSH_ERRNO);
       goto exit;
-     }
+    }
 
   /* Free allocated resources */
 
@@ -1128,18 +1149,22 @@ exit:
     {
       close(fd);
     }
+
   if (allocfile)
     {
       free(allocfile);
     }
+
   if (fullpath)
     {
       free(fullpath);
     }
+
   if (buffer)
     {
       free(buffer);
     }
+
   return ret;
 
 errout:

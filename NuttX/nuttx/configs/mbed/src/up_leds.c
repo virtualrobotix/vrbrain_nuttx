@@ -96,14 +96,14 @@ debug functionality (where NC means "No Change").
 
 During the boot phases.  LED1 and LED2 will show boot status.  LED3/4 Not used.
 
-               LED1   LED2   
-STARTED         OFF    OFF   
-HEAPALLOCATE   BLUE    OFF    
+               LED1   LED2
+STARTED         OFF    OFF
+HEAPALLOCATE   BLUE    OFF
 IRQSENABLED     OFF   BLUE
-STACKCREATED    OFF    OFF 
+STACKCREATED    OFF    OFF
 
 After the system is booted, this logic will no longer use LEDs 1 & 2.  They
-are available together with LED3 for use the application software using 
+are available together with LED3 for use the application software using
 lpc17_led (prototyped below)
 */
 
@@ -119,28 +119,28 @@ static int  g_nestcount;
  ****************************************************************************/
 
 /****************************************************************************
- * Name: up_ledinit
+ * Name: board_led_initialize
  ****************************************************************************/
 
-void up_ledinit(void)
+void board_led_initialize(void)
 {
   /* Configure all LED GPIO lines */
 
-  led_dumpgpio("up_ledinit() Entry)");
+  led_dumpgpio("board_led_initialize() Entry)");
 
   lpc17_configgpio(MBED_LED1);
   lpc17_configgpio(MBED_LED2);
   lpc17_configgpio(MBED_LED3);
   lpc17_configgpio(MBED_LED4);
 
-  led_dumpgpio("up_ledinit() Exit");
+  led_dumpgpio("board_led_initialize() Exit");
 }
 
 /****************************************************************************
- * Name: up_ledon
+ * Name: board_led_on
  ****************************************************************************/
 
-void up_ledon(int led)
+void board_led_on(int led)
 {
   /* We will control LED1 and LED2 not yet completed the boot sequence. */
 
@@ -184,10 +184,10 @@ void up_ledon(int led)
 }
 
 /****************************************************************************
- * Name: up_ledoff
+ * Name: board_led_off
  ****************************************************************************/
 
-void up_ledoff(int led)
+void board_led_off(int led)
 {
   /* In all states, OFF can only mean turning off the HB LED */
 

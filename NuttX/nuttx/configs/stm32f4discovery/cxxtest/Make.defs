@@ -64,9 +64,8 @@ ifeq ($(WINTOOL),y)
     -isystem "${shell cygpath -w $(TOPDIR)/include/cxx}" \
     -isystem "${shell cygpath -w $(TOPDIR)/include/uClibc++}"
   ARCHSCRIPT = -T "${shell cygpath -w $(TOPDIR)/configs/$(CONFIG_ARCH_BOARD)/scripts/$(LDSCRIPT)}"
-  MAXOPTIMIZATION = -O2
 else
-  # Linux/Cygwin-native toolchain 
+  # Linux/Cygwin-native toolchain
   MKDEP = $(TOPDIR)/tools/mkdeps.sh
   ARCHINCLUDES = -I. -isystem $(TOPDIR)/include
   ARCHXXINCLUDES = -I. -isystem $(TOPDIR)/include \
@@ -76,8 +75,10 @@ endif
 
 ifeq ($(CONFIG_DEBUG_SYMBOLS),y)
   ARCHOPTIMIZATION = -g
-else
-  ARCHOPTIMIZATION = $(MAXOPTIMIZATION) -fno-strict-aliasing -fno-strength-reduce -fomit-frame-pointer
+endif
+
+ifneq ($(CONFIG_DEBUG_NOOPT),y)
+  ARCHOPTIMIZATION += $(MAXOPTIMIZATION) -fno-strict-aliasing -fno-strength-reduce -fomit-frame-pointer
 endif
 
 ARCHCFLAGS = -fno-builtin
@@ -117,4 +118,3 @@ HOSTCC = gcc
 HOSTINCLUDES = -I.
 HOSTCFLAGS = -Wall -Wstrict-prototypes -Wshadow -g -pipe
 HOSTLDFLAGS =
-

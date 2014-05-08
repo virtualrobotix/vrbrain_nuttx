@@ -36,8 +36,8 @@ conditions where mmap() can be supported:
 2. If CONFIG_FS_RAMMAP is defined in the configuration, then mmap() will
    support simulation of memory mapped files by copying files whole
    into RAM.  These copied files have some of the properties of
-   standard memory mapped files.  There are many, many exceptions
-   exceptions, however.  Some of these include:
+   standard memory mapped files.  There are many, many exceptions,
+   however.  Some of these include:
 
    a. The goal is to have a single region of memory that represents a single
       file and can be shared by many threads.  That is, given a filename a
@@ -51,7 +51,7 @@ conditions where mmap() can be supported:
       each time that rammap() is called. Not very useful!
 
    b. The entire mapped portion of the file must be present in memory.
-      Since it is assumed the the MCU does not have an MMU, on-demanding
+      Since it is assumed that the MCU does not have an MMU, on-demanding
       paging in of file blocks cannot be supported. Since the while mapped
       portion of the file must be present in memory, there are limitations
       in the size of files that may be memory mapped (especially on MCUs
@@ -59,7 +59,7 @@ conditions where mmap() can be supported:
 
    c. All mapped files are read-only.  You can write to the in-memory image,
       but the file contents will not change.
- 
+
    d. There are no access privileges.
 
    e. Since there are no processes in NuttX, all mmap() and munmap()

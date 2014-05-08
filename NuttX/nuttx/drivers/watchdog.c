@@ -87,7 +87,7 @@ struct watchdog_upperhalf_s
   FAR char *path;     /* Registration path */
 
   /* The contained lower-half driver */
- 
+
   FAR struct watchdog_lowerhalf_s *lower;
 };
 
@@ -172,7 +172,7 @@ static int wdog_open(FAR struct file *filep)
 
 errout_with_sem:
   sem_post(&upper->exclsem);
-  
+
 errout:
   return ret;
 }
@@ -213,7 +213,7 @@ static int wdog_close(FAR struct file *filep)
 
   sem_post(&upper->exclsem);
   ret = OK;
-  
+
 errout:
   return ret;
 }
@@ -222,7 +222,7 @@ errout:
  * Name: wdog_read
  *
  * Description:
- *   A dummy read method.  This is provided only to satsify the VFS layer.
+ *   A dummy read method.  This is provided only to satisfy the VFS layer.
  *
  ************************************************************************************/
 
@@ -237,7 +237,7 @@ static ssize_t wdog_read(FAR struct file *filep, FAR char *buffer, size_t buflen
  * Name: wdog_write
  *
  * Description:
- *   A dummy write method.  This is provided only to satsify the VFS layer.
+ *   A dummy write method.  This is provided only to satisfy the VFS layer.
  *
  ************************************************************************************/
 
@@ -252,7 +252,7 @@ static ssize_t wdog_write(FAR struct file *filep, FAR const char *buffer, size_t
  * Description:
  *   The standard ioctl method.  This is where ALL of the watchdog timer work is
  *   done.
- *   
+ *
  ************************************************************************************/
 
 static int wdog_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
@@ -306,7 +306,7 @@ static int wdog_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
       break;
 
     /* cmd:         WDIOC_GETSTATUS
-     * Description: et the status of the watchdog timer.
+     * Description: Get the status of the watchdog timer.
      * Argument:    A writeable pointer to struct watchdog_status_s.
      */
 

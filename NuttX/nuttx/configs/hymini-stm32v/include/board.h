@@ -112,20 +112,20 @@
 #define STM32_CFGR_USBPRE       0
 
 /* Timer Frequencies, if APBx is set to 1, frequency is same to APBx
- * otherwise frequency is 2xAPBx. 
+ * otherwise frequency is 2xAPBx.
  * Note: TIM1,8 are on APB2, others on APB1 */
 
 #define STM32_TIM18_FREQUENCY   STM32_HCLK_FREQUENCY
 #define STM32_TIM27_FREQUENCY   STM32_HCLK_FREQUENCY
 
-/* SDIO dividers.  Note that slower clocking is required when DMA is disabled 
+/* SDIO dividers.  Note that slower clocking is required when DMA is disabled
  * in order to avoid RX overrun/TX underrun errors due to delayed responses
  * to service FIFOs in interrupt driven mode.  These values have not been
  * tuned!!!
  *
  * HCLK=72MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(178+2)=400 KHz
  */
-  
+
 #define SDIO_INIT_CLKDIV        (178 << SDIO_CLKCR_CLKDIV_SHIFT)
 
 /* DMA ON:  HCLK=72 MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(2+2)=18 MHz
@@ -133,9 +133,9 @@
  */
 
 #ifdef CONFIG_SDIO_DMA
-#  define SDIO_MMCXFR_CLKDIV    (2 << SDIO_CLKCR_CLKDIV_SHIFT) 
+#  define SDIO_MMCXFR_CLKDIV    (2 << SDIO_CLKCR_CLKDIV_SHIFT)
 #else
-#  define SDIO_MMCXFR_CLKDIV    (3 << SDIO_CLKCR_CLKDIV_SHIFT) 
+#  define SDIO_MMCXFR_CLKDIV    (3 << SDIO_CLKCR_CLKDIV_SHIFT)
 #endif
 
 /* DMA ON:  HCLK=72 MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(1+2)=24 MHz
@@ -202,38 +202,7 @@ extern "C" {
  *
  ************************************************************************************/
 
-EXTERN void stm32_boardinitialize(void);
-
-/************************************************************************************
- * Button support.
- *
- * Description:
- *   up_buttoninit() must be called to initialize button resources.  After
- *   that, up_buttons() may be called to collect the current state of all
- *   buttons or up_irqbutton() may be called to register button interrupt
- *   handlers.
- *
- *   After up_buttoninit() has been called, up_buttons() may be called to
- *   collect the state of all buttons.  up_buttons() returns an 8-bit bit set
- *   with each bit associated with a button.  See the BUTTON_*_BIT and JOYSTICK_*_BIT
- *   definitions in board.h for the meaning of each bit.
- *
- *   up_irqbutton() may be called to register an interrupt handler that will
- *   be called when a button is depressed or released.  The ID value is a
- *   button enumeration value that uniquely identifies a button resource. See the
- *   BUTTON_* and JOYSTICK_* definitions in board.h for the meaning of enumeration
- *   value.  The previous interrupt handler address is returned (so that it may
- *   restored, if so desired).
- *
- ************************************************************************************/
-
-#ifdef CONFIG_ARCH_BUTTONS
-EXTERN void up_buttoninit(void);
-EXTERN uint8_t up_buttons(void);
-#ifdef CONFIG_ARCH_IRQBUTTONS
-EXTERN xcpt_t up_irqbutton(int id, xcpt_t irqhandler);
-#endif
-#endif
+void stm32_boardinitialize(void);
 
 #undef EXTERN
 #if defined(__cplusplus)

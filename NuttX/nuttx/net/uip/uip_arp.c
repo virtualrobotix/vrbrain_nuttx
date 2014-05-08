@@ -97,7 +97,7 @@ struct arp_hdr_s
   uint8_t  ah_hwlen;         /*  8-bit Hardware address size (6) */
   uint8_t  ah_protolen;      /*  8-bit Procotol address size (4) */
   uint16_t ah_opcode;        /* 16-bit Operation */
-  uint8_t  ah_shwaddr[6];    /* 48-bit Sender hardware address */   
+  uint8_t  ah_shwaddr[6];    /* 48-bit Sender hardware address */
   uint16_t ah_sipaddr[2];    /* 32-bit Sender IP adress */
   uint8_t  ah_dhwaddr[6];    /* 48-bit Target hardware address */
   uint16_t ah_dipaddr[2];    /* 32-bit Target IP address */
@@ -201,7 +201,7 @@ void uip_arp_ipin(struct uip_driver_s *dev)
    */
 
   srcipaddr = uip_ip4addr_conv(IPBUF->eh_srcipaddr);
-  if (!uip_ipaddr_maskcmp(srcipaddr, dev->d_ipaddr, dev->d_netmask))
+  if (uip_ipaddr_maskcmp(srcipaddr, dev->d_ipaddr, dev->d_netmask))
     {
       uip_arp_update(IPBUF->eh_srcipaddr, ETHBUF->src);
     }
@@ -236,24 +236,25 @@ void uip_arp_arpin(struct uip_driver_s *dev)
 
   if (dev->d_len < (sizeof(struct arp_hdr_s) + UIP_LLH_LEN))
     {
-      nlldbg("Too small\n");    
+      nlldbg("Too small\n");
       dev->d_len = 0;
       return;
     }
+
   dev->d_len = 0;
 
   ipaddr = uip_ip4addr_conv(parp->ah_dipaddr);
   switch(parp->ah_opcode)
     {
       case HTONS(ARP_REQUEST):
-        nllvdbg("ARP request for IP %04lx\n", (long)ipaddr);    
+        nllvdbg("ARP request for IP %04lx\n", (long)ipaddr);
 
         /* ARP request. If it asked for our address, we send out a reply. */
 
         if (uip_ipaddr_cmp(ipaddr, dev->d_ipaddr))
           {
             struct uip_eth_hdr *peth = ETHBUF;
- 
+
             /* First, we register the one who made the request in our ARP
              * table, since it is likely that we will do more communication
              * with this host in the future.
@@ -278,7 +279,7 @@ void uip_arp_arpin(struct uip_driver_s *dev)
         break;
 
       case HTONS(ARP_REPLY):
-        nllvdbg("ARP reply for IP %04lx\n", (long)ipaddr);    
+        nllvdbg("ARP reply for IP %04lx\n", (long)ipaddr);
 
         /* ARP reply. We insert or update the ARP table if it was meant
          * for us.
@@ -327,7 +328,7 @@ void uip_arp_out(struct uip_driver_s *dev)
   in_addr_t               destipaddr;
 
   /* Find the destination IP address in the ARP table and construct
-   * the Ethernet header. If the destination IP addres isn't on the
+   * the Ethernet header. If the destination IP address isn't on the
    * local network, we use the default router's IP address instead.
    *
    * If not ARP table entry is found, we overwrite the original IP
@@ -340,6 +341,7 @@ void uip_arp_out(struct uip_driver_s *dev)
     {
       memcpy(peth->dest, g_broadcast_ethaddr.ether_addr_octet, ETHER_ADDR_LEN);
     }
+
 #if defined(CONFIG_NET_IGMP) && !defined(CONFIG_NET_IPv6)
   /* Check if the destination address is a multicast address
    *
@@ -353,7 +355,7 @@ void uip_arp_out(struct uip_driver_s *dev)
  else if (NTOHS(pip->eh_destipaddr[0]) >= 0xe000 &&
           NTOHS(pip->eh_destipaddr[0]) <= 0xefff)
     {
-      /* Build the well-known IPv4 IGMP ethernet address.  The first
+      /* Build the well-known IPv4 IGMP Ethernet address.  The first
        * three bytes are fixed; the final three variable come from the
        * last three bytes of the IP address.
        */
@@ -370,12 +372,23 @@ void uip_arp_out(struct uip_driver_s *dev)
       destipaddr = uip_ip4addr_conv(pip->eh_destipaddr);
       if (!uip_ipaddr_maskcmp(destipaddr, dev->d_ipaddr, dev->d_netmask))
         {
-          /* Destination address was not on the local network, so we need to
-           * use the default router's IP address instead of the destination
-           * address when determining the MAC address.
+          /* Destination address is not on the local network */
+
+#ifdef CONFIG_NET_ROUTE
+          /* We have a routing table.. find the correct router to use in
+           * this case (or, as a fall-back, use the device's default router
+           * address).  We will use the router IP address instead of the
+           * destination address when determining the MAC address.
+           */
+
+          netdev_router(dev, destipaddr, &ipaddr);
+#else
+          /* Use the device's default router IP address instead of the
+           * destination address when determining the MAC address.
            */
 
           uip_ipaddr_copy(ipaddr, dev->d_draddr);
+#endif
         }
       else
         {
@@ -389,7 +402,7 @@ void uip_arp_out(struct uip_driver_s *dev)
       tabptr = uip_arp_find(ipaddr);
       if (!tabptr)
         {
-           nllvdbg("ARP request for IP %04lx\n", (long)ipaddr);    
+           nllvdbg("ARP request for IP %04lx\n", (long)ipaddr);
 
           /* The destination address was not in our ARP table, so we
            * overwrite the IP packet with an ARP request.
@@ -415,12 +428,12 @@ void uip_arp_out(struct uip_driver_s *dev)
           return;
         }
 
-      /* Build an ethernet header. */
+      /* Build an Ethernet header. */
 
       memcpy(peth->dest, tabptr->at_ethaddr.ether_addr_octet, ETHER_ADDR_LEN);
     }
 
-  /* Finish populating the ethernet header */
+  /* Finish populating the Ethernet header */
 
   memcpy(peth->src, dev->d_mac.ether_addr_octet, ETHER_ADDR_LEN);
   peth->type  = HTONS(UIP_ETHTYPE_IP);

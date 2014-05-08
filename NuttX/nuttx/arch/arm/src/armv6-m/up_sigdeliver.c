@@ -1,7 +1,7 @@
 /****************************************************************************
  * arch/arm/src/armv6-m/up_sigdeliver.c
  *
- *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2013-2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -97,7 +97,7 @@ void up_sigdeliver(void)
 
   int saved_errno = rtcb->pterrno;
 
-  up_ledon(LED_SIGNAL);
+  board_led_on(LED_SIGNAL);
 
   sdbg("rtcb=%p sigdeliver=%p sigpendactionq.head=%p\n",
         rtcb, rtcb->xcp.sigdeliver, rtcb->sigpendactionq.head);
@@ -105,10 +105,13 @@ void up_sigdeliver(void)
 
   /* Save the real return state on the stack. */
 
-  up_copystate(regs, rtcb->xcp.regs);
+  up_copyfullstate(regs, rtcb->xcp.regs);
   regs[REG_PC]         = rtcb->xcp.saved_pc;
   regs[REG_PRIMASK]    = rtcb->xcp.saved_primask;
   regs[REG_XPSR]       = rtcb->xcp.saved_xpsr;
+#ifdef CONFIG_NUTTX_KERNEL
+  regs[REG_LR]         = rtcb->xcp.saved_lr;
+#endif
 
   /* Get a local copy of the sigdeliver function pointer. We do this so that
    * we can nullify the sigdeliver function pointer in the TCB and accept
@@ -139,9 +142,8 @@ void up_sigdeliver(void)
    * execution.
    */
 
-  up_ledoff(LED_SIGNAL);
+  board_led_off(LED_SIGNAL);
   up_fullcontextrestore(regs);
 }
 
 #endif /* !CONFIG_DISABLE_SIGNALS */
-

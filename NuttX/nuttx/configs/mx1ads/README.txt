@@ -72,11 +72,11 @@ ARM/i.MX1-specific Configuration Options
 	CONFIG_ENDIAN_BIG - define if big endian (default is little
 	   endian)
 
-	CONFIG_DRAM_SIZE - Describes the installed DRAM.
+	CONFIG_RAM_SIZE - Describes the installed DRAM.
 
-	CONFIG_DRAM_START - The start address of installed DRAM
+	CONFIG_RAM_START - The start address of installed DRAM
 
-	CONFIG_DRAM_VSTART - The startaddress of DRAM (virtual)
+	CONFIG_RAM_VSTART - The startaddress of DRAM (virtual)
 
 	CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
 	   have LEDs
@@ -113,7 +113,7 @@ ARM/i.MX1-specific Configuration Options
 	CONFIG_IMX_GIO_USBATTACH
 	   GIO that detects USB attach/detach events
 	CONFIG_IMX_GIO_USBDPPULLUP
-	   GIO 
+	   GIO
 	CONFIG_DMA320_USBDEV_DMA
 	   Enable IMX-specific DMA support
 	CONFIG_IMX_GIO_USBATTACH=6
@@ -121,18 +121,41 @@ ARM/i.MX1-specific Configuration Options
 Configurations
 ^^^^^^^^^^^^^^
 
-Each MX1ADS configuration is maintained in a sub-directory and
-can be selected as follow:
+Common Configuration Notes
+--------------------------
 
-	cd tools
-	./configure.sh imxads/<subdir>
-	cd -
-	. ./setenv.sh
+  1. Each MX1ADS configuration is maintained in a sub-directory and
+     can be selected as follow:
+
+       cd tools
+       ./configure.sh imxads/<subdir>
+       cd -
+       . ./setenv.sh
+
+     Where <subdir> is one of the configuration sub-directories described in
+     the following paragraph.
+
+  2. These configurations use the mconf-based configuration tool.  To
+     change a configurations using that tool, you should:
+
+     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+        and misc/tools/
+
+     b. Execute 'make menuconfig' in nuttx/ in order to start the
+        reconfiguration process.
+
+  3. By default, all configurations assume that you are building under
+     Linux (should work under Windows with Cygwin as well).  This is
+     is easily reconfigured:
+
+        CONFIG_HOST_LINUX=y
+
+Configuration Sub-Directories
+-----------------------------
 
 Where <subdir> is one of the following:
 
-ostest
-^^^^^^
+  ostest
 
-This configuration directory, performs a simple OS test using
-examples/ostest.
+  This configuration directory, performs a simple OS test using
+  examples/ostest.

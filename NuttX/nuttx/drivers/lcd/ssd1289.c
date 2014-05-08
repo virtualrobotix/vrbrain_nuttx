@@ -2,7 +2,7 @@
  * drivers/lcd/ssd1289.c
  *
  * Generic LCD driver for LCDs based on the Solomon Systech SSD1289 LCD controller.
- * Think of this as a template for an LCD driver that you will proably ahve to
+ * Think of this as a template for an LCD driver that you will probably have to
  * customize for any particular LCD hardware.
  *
  *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
@@ -38,7 +38,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  **************************************************************************************/
- 
+
 /**************************************************************************************
  * Included Files
  **************************************************************************************/
@@ -53,7 +53,7 @@
 #include <debug.h>
 
 #include <nuttx/arch.h>
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <nuttx/lcd/lcd.h>
 #include <nuttx/lcd/ssd1289.h>
 
@@ -117,7 +117,7 @@
 /* Display/Color Properties ***********************************************************/
 /* Display Resolution */
 
-#if defined(CONFIG_LCD_LANDSCAPE) || defined(CONFIG_LCD_RLANDSCAPE) 
+#if defined(CONFIG_LCD_LANDSCAPE) || defined(CONFIG_LCD_RLANDSCAPE)
 #  define SSD1289_XRES       320
 #  define SSD1289_YRES       240
 #else
@@ -132,7 +132,7 @@
 
 /* LCD Profiles ***********************************************************************/
 /* Many details of the controller initialization must, unfortunately, vary from LCD to
- * LCD.  I have looked at the spec and at three different drivers for LCDs that have 
+ * LCD.  I have looked at the spec and at three different drivers for LCDs that have
  * SSD1289 controllers.  I have tried to summarize these differences as "LCD profiles"
  *
  * Most of the differences between LCDs are nothing more than a few minor bit
@@ -361,7 +361,7 @@ static struct ssd1289_dev_s g_lcddev;
  **************************************************************************************/
 
 /**************************************************************************************
- * Name:  ssd1289_putreg(lcd, 
+ * Name:  ssd1289_putreg(lcd,
  *
  * Description:
  *   Write to an LCD register
@@ -448,7 +448,7 @@ static inline void ssd1289_readsetup(FAR struct ssd1289_lcd_s *lcd, FAR uint16_t
  *   Read one correctly aligned pixel from the GRAM memory.  Possibly shifting the
  *   data and possibly swapping red and green components.
  *
- *   - ILI932x: Unknown -- assuming colors are in the color order 
+ *   - ILI932x: Unknown -- assuming colors are in the color order
  *
  **************************************************************************************/
 
@@ -590,7 +590,7 @@ static int ssd1289_putrun(fb_coord_t row, fb_coord_t col, FAR const uint8_t *buf
   FAR struct ssd1289_lcd_s *lcd = priv->lcd;
   FAR const uint16_t *src = (FAR const uint16_t*)buffer;
   int i;
- 
+
   /* Buffer must be provided and aligned to a 16-bit address boundary */
 
   ssd1289_showrun(priv, row, col, npixels, true);
@@ -674,7 +674,7 @@ static int ssd1289_putrun(fb_coord_t row, fb_coord_t col, FAR const uint8_t *buf
    */
 
   row = (SSD1289_YRES-1) - row;
-  
+
   /* Then write the GRAM data, manually incrementing Y (which is col) */
 
   for (i = 0; i < npixels; i++)
@@ -721,7 +721,7 @@ static int ssd1289_getrun(fb_coord_t row, fb_coord_t col, FAR uint8_t *buffer,
   FAR uint16_t *dest = (FAR uint16_t*)buffer;
   uint16_t accum;
   int i;
- 
+
   /* Buffer must be provided and aligned to a 16-bit address boundary */
 
   ssd1289_showrun(priv, row, col, npixels, false);
@@ -807,7 +807,7 @@ static int ssd1289_getrun(fb_coord_t row, fb_coord_t col, FAR uint8_t *buffer,
    */
 
   row = (SSD1289_YRES-1) - row;
-  
+
   /* Then write the GRAM data, manually incrementing Y (which is col) */
 
   for (i = 0; i < npixels; i++)
@@ -950,7 +950,7 @@ static int ssd1289_setpower(FAR struct lcd_dev_s *dev, int power)
 
       ssd1289_putreg(lcd, SSD1289_DSPCTRL,
                      (SSD1289_DSPCTRL_ON | SSD1289_DSPCTRL_GON |
-                      SSD1289_DSPCTRL_DTE | SSD1289_DSPCTRL_VLE(0))); 
+                      SSD1289_DSPCTRL_DTE | SSD1289_DSPCTRL_VLE(0)));
 
       g_lcddev.power = power;
     }
@@ -1066,7 +1066,7 @@ static inline int ssd1289_hwinitialize(FAR struct ssd1289_dev_s *priv)
 
       ssd1289_putreg(lcd, SSD1289_DSPCTRL,
                      (SSD1289_DSPCTRL_INTERNAL | SSD1289_DSPCTRL_GON |
-                      SSD1289_DSPCTRL_VLE(0))); 
+                      SSD1289_DSPCTRL_VLE(0)));
 
       /* Then enable the oscillator */
 
@@ -1078,7 +1078,7 @@ static inline int ssd1289_hwinitialize(FAR struct ssd1289_dev_s *priv)
 
       ssd1289_putreg(lcd, SSD1289_DSPCTRL,
                      (SSD1289_DSPCTRL_ON | SSD1289_DSPCTRL_GON |
-                      SSD1289_DSPCTRL_VLE(0))); 
+                      SSD1289_DSPCTRL_VLE(0)));
 
      /* Take the LCD out of sleep mode */
 
@@ -1091,7 +1091,7 @@ static inline int ssd1289_hwinitialize(FAR struct ssd1289_dev_s *priv)
 
       ssd1289_putreg(lcd, SSD1289_DSPCTRL,
                      (SSD1289_DSPCTRL_ON | SSD1289_DSPCTRL_DTE |
-                      SSD1289_DSPCTRL_GON | SSD1289_DSPCTRL_VLE(0))); 
+                      SSD1289_DSPCTRL_GON | SSD1289_DSPCTRL_VLE(0)));
 #endif
 
       /* Set up power control registers.  There is a lot of variability
@@ -1108,7 +1108,7 @@ static inline int ssd1289_hwinitialize(FAR struct ssd1289_dev_s *priv)
       ssd1289_putreg(lcd, SSD1289_PWRCTRL4, PWRCTRL4_SETTING);
       ssd1289_putreg(lcd, SSD1289_PWRCTRL5, PWRCTRL5_SETTING);
 
-      /* One driver does an odd setting of the the driver output control.
+      /* One driver does an odd setting of the driver output control.
        * No idea why.
        */
 #if 0
@@ -1199,7 +1199,7 @@ static inline int ssd1289_hwinitialize(FAR struct ssd1289_dev_s *priv)
 
       ssd1289_putreg(lcd, SSD1289_DSPCTRL,
                      (SSD1289_DSPCTRL_ON  | SSD1289_DSPCTRL_DTE |
-                      SSD1289_DSPCTRL_GON | SSD1289_DSPCTRL_VLE(1))); 
+                      SSD1289_DSPCTRL_GON | SSD1289_DSPCTRL_VLE(1)));
 
       /* Frame cycle control.  Alternative: SSD1289_FCYCCTRL_DIV8 */
 

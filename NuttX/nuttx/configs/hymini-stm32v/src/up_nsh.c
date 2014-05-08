@@ -46,8 +46,8 @@
 #include <errno.h>
 
 #ifdef CONFIG_STM32_SPI1
-#  include <nuttx/spi.h>
-#  include <nuttx/mtd.h>
+#  include <nuttx/spi/spi.h>
+#  include <nuttx/mtd/mtd.h>
 #endif
 
 #ifdef CONFIG_STM32_SDIO
@@ -211,7 +211,7 @@ int nsh_archinitialize(void)
       return ret;
     }
   dbg("nsh_archinitialize: Successfully bound SDIO to the MMC/SD driver\n");
-  
+
   /* Use SD card detect pin to check if a card is inserted */
 
   cd_status = !stm32_gpioread(GPIO_SD_CD);

@@ -44,7 +44,7 @@
 #include <errno.h>
 #include <debug.h>
 
-#include <nuttx/fb.h>
+#include <nuttx/video/fb.h>
 #include "up_internal.h"
 
 /****************************************************************************
@@ -303,7 +303,7 @@ static int up_getcursor(FAR struct fb_vtable_s *vtable,
 #endif
 
 /****************************************************************************
- * Name: 
+ * Name:
  ****************************************************************************/
 
 #ifdef CONFIG_FB_HWCURSOR

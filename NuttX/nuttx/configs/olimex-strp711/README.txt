@@ -19,7 +19,7 @@ Contents
   ENC28J60 Module
   Configurations
   STR71x-Specific Configuration Settings
-  
+
 Olimex STR-P711
 ^^^^^^^^^^^^^^^
  Features:
@@ -276,7 +276,7 @@ Windows OpenOCD will Olimex JTAG
   I used to start the OpenOCD daemon on my system called oocd.sh.  That
   script would probably require some modifications to work in another
   environment:
-  
+
     - possibly the value of OPENOCD_PATH
     - If you are working under Linux you will need to change any
       occurances of `cygpath -w blablabla` to just blablabla
@@ -319,12 +319,12 @@ MMC/SD Slot
   P0.4/S1.MISO 7     DAT0/D0    MISO1
   ---          8     DAT1/RES   (Pulled up)
   ---          9     DAT2/RES   (Pulled up)
-             
+
   P1.10/USBCLK 10/14 WP         P1.10 input
   P1.15/HTXD   13/15 CP         P1.15 input
 
   Use of SPI1 doesn't conflict with anything.  WP conflicts USB; CP conflicts
-  with NTXD. 
+  with NTXD.
 
 ENC28J60 Module
 ^^^^^^^^^^^^^^^
@@ -372,29 +372,55 @@ ENC28J60 Module
   the ENC28J60 (And I don't have the correct wall wart to power the
   the board).
 
-Configurations:
----------------
+Common Configuration Notes:
+---------------------------
+
+  1. Each Olimex STRP711 configuration is maintained in a sub-directory and
+     can be selected as follow:
+
+       cd tools
+       ./configure.sh olimex-strp711/<subdir>
+       cd -
+       . ./setenv.sh
+
+     Where <subdir> is one of the configuration sub-directories described in
+     the following paragraph.
+
+  2. These configurations use the mconf-based configuration tool.  To
+     change a configurations using that tool, you should:
+
+     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+        and misc/tools/
+
+     b. Execute 'make menuconfig' in nuttx/ in order to start the
+        reconfiguration process.
+
+  3. By default, all configurations assume the NuttX Buildroot toolchain
+     under Linux (should work under Windows with Cygwin as well).  This
+     is easily reconfigured:
+
+        CONFIG_HOST_LINUX=y
+        CONFIG_ARM_TOOLCHAIN_BUILDROOT=y
+
+Configuration Sub-Directories:
+------------------------------
 
   nettest:
     This configuration directory may be used to enable networking using the
-    an Microchip ENC28J60 SPI ethernet module (see above for connection to
-    STR-P711.
+    an Microchip ENC28J60 SPI Ethernet module (see above for connection to
+    STR-P711).
 
   nsh:
     Configures the NuttShell (nsh) located at examples/nsh.  The
     Configuration enables both the serial and telnetd NSH interfaces.
-
-  ostest:
-    This configuration directory, performs a simple OS test using
-    examples/ostest.
 
 STR71x-Specific Configuration Settings
 --------------------------------------
 
   CONFIG_STR71X_I2C0, CONFIG_STR71X_I2C1, CONFIG_STR71X_UART0, CONFIG_STR71X_UART1,
   CONFIG_STR71X_UART2, CONFIG_STR71X_UART3, CONFIG_STR71X_USB, CONFIG_STR71X_CAN,
-  CONFIG_STR71X_BSPI0, CONFIG_STR71X_BSPI1, CONFIG_STR71X_HDLC, CONFIG_STR71X_XTI, 
-  CONFIG_STR71X_GPIO0, CONFIG_STR71X_GPIO1, CONFIG_STR71X_GPIO2, CONFIG_STR71X_ADC12, 
+  CONFIG_STR71X_BSPI0, CONFIG_STR71X_BSPI1, CONFIG_STR71X_HDLC, CONFIG_STR71X_XTI,
+  CONFIG_STR71X_GPIO0, CONFIG_STR71X_GPIO1, CONFIG_STR71X_GPIO2, CONFIG_STR71X_ADC12,
   CONFIG_STR71X_CKOUT, CONFIG_STR71X_TIM1, CONFIG_STR71X_TIM2, CONFIG_STR71X_TIM3, and
   CONFIG_STR71X_RTC
     Select peripherals to initialize (Timer0 and EIC are always initialized)
@@ -425,4 +451,3 @@ STR71x-Specific Configuration Settings
   CONFIG_UARTn_BITS - The number of bits.  Must be either 7 or 8.
   CONFIG_UARTn_PARTIY - 0=no parity, 1=odd parity, 2=even parity, 3=mark 1, 4=space 0
   CONFIG_UARTn_2STOP - Two stop bits
-

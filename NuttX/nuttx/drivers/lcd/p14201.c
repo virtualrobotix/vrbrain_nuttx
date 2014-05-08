@@ -1,6 +1,6 @@
 /**************************************************************************************
  * drivers/lcd/p14201.c
- * Driver for RiT P14201 series display (wih sd1329 IC controller)
+ * Driver for RiT P14201 series display (wih SD1329 IC controller)
  *
  *   Copyright (C) 2010, 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -48,7 +48,7 @@
 #include <debug.h>
 
 #include <nuttx/arch.h>
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <nuttx/lcd/lcd.h>
 #include <nuttx/lcd/p14201.h>
 
@@ -653,7 +653,7 @@ static inline void rit_clear(FAR struct rit_dev_s *priv)
 
   /* Display each row */
 
-  for(row = 0; row < RIT_YRES; row++)
+  for (row = 0; row < RIT_YRES; row++)
     {
       /* Display a horizontal run */
 
@@ -680,7 +680,7 @@ static inline void rit_clear(FAR struct rit_dev_s *priv)
 
   /* Display each row */
 
-  for(row = 0; row < RIT_YRES; row++)
+  for (row = 0; row < RIT_YRES; row++)
     {
       /* Display a horizontal run */
 

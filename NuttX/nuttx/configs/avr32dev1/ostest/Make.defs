@@ -35,6 +35,7 @@
 
 include ${TOPDIR}/.config
 include ${TOPDIR}/tools/Config.mk
+include ${TOPDIR}/arch/avr/src/avr32/Toolchain.defs
 
 # Setup for the selected toolchain
 
@@ -59,7 +60,7 @@ ifeq ($(WINTOOL),y)
   ARCHXXINCLUDES = -I. -isystem "${shell cygpath -w $(TOPDIR)/include}" -isystem "${shell cygpath -w $(TOPDIR)/include/cxx}"
   ARCHSCRIPT = -T "${shell cygpath -w $(TOPDIR)/configs/$(CONFIG_ARCH_BOARD)/ostest/ld.script}"
 else
-  # Linux/Cygwin-native toolchain 
+  # Linux/Cygwin-native toolchain
   MKDEP = $(TOPDIR)/tools/mkdeps.sh
   ARCHINCLUDES = -I. -isystem $(TOPDIR)/include
   ARCHXXINCLUDES = -I. -isystem $(TOPDIR)/include -isystem $(TOPDIR)/include/cxx
@@ -80,8 +81,10 @@ ARCHCCMAJOR = ${shell echo $(ARCHCCVERSION) | cut -d'.' -f1}
 
 ifeq ($(CONFIG_DEBUG_SYMBOLS),y)
   ARCHOPTIMIZATION = -g
-else
-  ARCHOPTIMIZATION = -Os -ffunction-sections -fdata-sections -fno-strict-aliasing
+endif
+
+ifneq ($(CONFIG_DEBUG_NOOPT),y)
+  ARCHOPTIMIZATION += -Os -ffunction-sections -fdata-sections -fno-strict-aliasing
 endif
 
 ARCHCFLAGS = -fno-builtin -muse-rodata-section

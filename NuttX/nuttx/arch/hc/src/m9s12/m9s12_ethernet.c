@@ -291,7 +291,7 @@ static void emac_receive(FAR struct emac_driver_s *priv)
             }
         }
     }
-  while (); /* While there are more packets to be processed */
+  while (true); /* While there are more packets to be processed */
 }
 
 /****************************************************************************
@@ -440,7 +440,7 @@ static void emac_polltimer(int argc, uint32_t arg, ...)
  *
  * Description:
  *   NuttX Callback: Bring up the Ethernet interface when an IP address is
- *   provided 
+ *   provided
  *
  * Parameters:
  *   dev  - Reference to the NuttX driver state structure
@@ -504,7 +504,7 @@ static int emac_ifdown(struct uip_driver_s *dev)
   wd_cancel(priv->d_txpoll);
   wd_cancel(priv->d_txtimeout);
 
-  /* Put the the EMAC is its reset, non-operational state.  This should be
+  /* Put the EMAC is its reset, non-operational state.  This should be
    * a known configuration that will guarantee the emac_ifup() always
    * successfully brings the interface back up.
    */
@@ -520,7 +520,7 @@ static int emac_ifdown(struct uip_driver_s *dev)
  * Function: emac_txavail
  *
  * Description:
- *   Driver callback invoked when new TX data is available.  This is a 
+ *   Driver callback invoked when new TX data is available.  This is a
  *   stimulus perform an out-of-cycle poll and, thereby, reduce the TX
  *   latency.
  *
@@ -570,7 +570,7 @@ static int emac_txavail(struct uip_driver_s *dev)
  *
  * Parameters:
  *   dev  - Reference to the NuttX driver state structure
- *   mac  - The MAC address to be added 
+ *   mac  - The MAC address to be added
  *
  * Returned Value:
  *   None
@@ -599,7 +599,7 @@ static int emac_addmac(struct uip_driver_s *dev, FAR const uint8_t *mac)
  *
  * Parameters:
  *   dev  - Reference to the NuttX driver state structure
- *   mac  - The MAC address to be removed 
+ *   mac  - The MAC address to be removed
  *
  * Returned Value:
  *   None
@@ -655,7 +655,7 @@ int emac_initialize(int intf)
 
   if (irq_attach(CONFIG_HCS12_IRQ, emac_interrupt))
     {
-      /* We could not attach the ISR to the the interrupt */
+      /* We could not attach the ISR to the interrupt */
 
       return -EAGAIN;
     }

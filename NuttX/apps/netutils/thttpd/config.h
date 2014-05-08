@@ -53,7 +53,7 @@
 #undef CONFIG_THTTPD
 #if defined(CONFIG_NET) && defined(CONFIG_NET_TCP) && \
     defined(CONFIG_NET_TCPBACKLOG) && !defined(CONFIG_DISABLE_ENVIRONMENT) && \
-    !defined(CONFIG_SDCLONE_DISABLE) && CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
+    !defined(CONFIG_SDCLONE_DISABLE) && defined(CONFIG_NET_TCP_READAHEAD)
 
 #  define CONFIG_THTTPD 1
 
@@ -232,7 +232,7 @@
  * about tildes. Enabling both options is an error.
  *
  * Typical values, if they're defined, are "users" for CONFIG_THTTPD_TILDE_MAP1 and "public_html"
- * for CONFIG_THTTPD_TILDE_MAP2. 
+ * for CONFIG_THTTPD_TILDE_MAP2.
  */
 
 #  if defined(CONFIG_THTTPD_TILDE_MAP1) && defined(CONFIG_THTTPD_TILDE_MAP2)

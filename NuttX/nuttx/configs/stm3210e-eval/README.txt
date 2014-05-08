@@ -48,13 +48,13 @@ GNU Toolchain Options
   add one of the following configuration options to your .config (or defconfig)
   file:
 
-    CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
-    CONFIG_STM32_CODESOURCERYL=y  : CodeSourcery under Linux
-    CONFIG_STM32_DEVKITARM=y      : devkitARM under Windows
-    CONFIG_STM32_RAISONANCE=y     : Raisonance RIDE7 under Windows
-    CONFIG_STM32_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin (default)
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y  : CodeSourcery under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYL=y  : CodeSourcery under Linux
+    CONFIG_ARMV7M_TOOLCHAIN_DEVKITARM=y      : devkitARM under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_RAISONANCE=y     : Raisonance RIDE7 under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin (default)
 
-  If you are not using CONFIG_STM32_BUILDROOT, then you may also have to modify
+  If you are not using CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT, then you may also have to modify
   the PATH in the setenv.h file if your make cannot find the tools.
 
   NOTE: the CodeSourcery (for Windows), devkitARM, and Raisonance toolchains are
@@ -99,7 +99,7 @@ IDEs
   NuttX is built using command-line make.  It can be used with an IDE, but some
   effort will be required to create the project (There is a simple RIDE project
   in the RIDE subdirectory).
-  
+
   Makefile Build
   --------------
   Under Eclipse, it is pretty easy to set up an "empty makefile project" and
@@ -196,7 +196,7 @@ NXFLAT Toolchain
   tools -- just the NXFLAT tools.  The buildroot with the NXFLAT tools can
   be downloaded from the NuttX SourceForge download site
   (https://sourceforge.net/projects/nuttx/files/).
- 
+
   This GNU toolchain builds and executes in the Linux or Cygwin environment.
 
   1. You must have already configured Nuttx in <some-dir>/nuttx.
@@ -245,7 +245,7 @@ DFU and JTAG
 
   The DFU SE PC-based software is available from the STMicro website,
   http://www.st.com.  General usage instructions:
-  
+
   1. Convert the NuttX Intel Hex file (nuttx.hex) into a special DFU
      file (nuttx.dfu)... see below for details.
   2. Connect the STM3210E-EVAL board to your computer using a USB
@@ -389,7 +389,7 @@ RTC
       CONFIG_RTC_FREQUENCY - If CONFIG_RTC_HIRES is defined, then the
       frequency of the high resolution RTC must be provided.  If CONFIG_RTC_HIRES
       is not defined, CONFIG_RTC_FREQUENCY is assumed to be one.
-    CONFIG_RTC_ALARM - Enable if the RTC hardware supports setting of an alarm. 
+    CONFIG_RTC_ALARM - Enable if the RTC hardware supports setting of an alarm.
       A callback function will be executed when the alarm goes off
 
   In hi-res mode, the STM32 RTC operates only at 16384Hz.  Overflow interrupts
@@ -448,7 +448,7 @@ STM3210E-EVAL-specific Configuration Options
        configuration features.
 
        CONFIG_ARCH_BOARD_STM32_CUSTOM_CLOCKCONFIG=n
- 
+
     CONFIG_ARCH_BOARD - Identifies the configs subdirectory and
        hence, the board that supports the particular chip or SoC.
 
@@ -464,13 +464,13 @@ STM3210E-EVAL-specific Configuration Options
     CONFIG_ENDIAN_BIG - define if big endian (default is little
        endian)
 
-    CONFIG_DRAM_SIZE - Describes the installed DRAM (SRAM in this case):
+    CONFIG_RAM_SIZE - Describes the installed DRAM (SRAM in this case):
 
-       CONFIG_DRAM_SIZE=0x00010000 (64Kb)
+       CONFIG_RAM_SIZE=0x00010000 (64Kb)
 
-    CONFIG_DRAM_START - The start address of installed DRAM
+    CONFIG_RAM_START - The start address of installed DRAM
 
-       CONFIG_DRAM_START=0x20000000
+       CONFIG_RAM_START=0x20000000
 
     CONFIG_ARCH_IRQPRIO - The STM32F103Z supports interrupt prioritization
 
@@ -564,14 +564,14 @@ STM3210E-EVAL-specific Configuration Options
   configuration settings:
 
     CONFIG_STM32_TIMx_CHANNEL - Specifies the timer output channel {1,..,4}
- 
+
   NOTE: The STM32 timers are each capable of generating different signals on
   each of the four channels with different duty cycles.  That capability is
   not supported by this driver:  Only one output channel per timer.
 
   Alternate pin mappings.  The STM3210E-EVAL board requires only CAN1 remapping
   On the STM3210E-EVAL board pin PB9 is wired as TX and pin PB8 is wired as RX.
-  Which then makes the proper connection through the CAN transiver SN65HVD230 
+  Which then makes the proper connection through the CAN transiver SN65HVD230
   out to the CAN D-type 9-pn male connector where pin 2 is CANL and pin 7 is CANH.
 
     CONFIG_STM32_TIM1_FULL_REMAP
@@ -621,7 +621,7 @@ STM3210E-EVAL-specific Configuration Options
     CONFIG_SDIO_DMA - Support DMA data transfers.  Requires CONFIG_STM32_SDIO
       and CONFIG_STM32_DMA2.
     CONFIG_SDIO_PRI - Select SDIO interrupt prority.  Default: 128
-    CONFIG_SDIO_DMAPRIO - Select SDIO DMA interrupt priority. 
+    CONFIG_SDIO_DMAPRIO - Select SDIO DMA interrupt priority.
       Default:  Medium
     CONFIG_SDIO_WIDTH_D1_ONLY - Select 1-bit transfer mode.  Default:
       4-bit transfer mode.
@@ -658,14 +658,14 @@ STM3210E-EVAL-specific Configuration Options
       portrait" orientation support.  In this orientation, the
       STM3210E-EVAL's LCD ribbon cable is at the top of the display.
       Default is 320x240 "landscape" orientation.
-    CONFIG_LCD_BACKLIGHT - Define to support a backlight.
-    CONFIG_LCD_PWM - If CONFIG_STM32_TIM1 is also defined, then an
+    CONFIG_STM3210E_LCD_BACKLIGHT - Define to support a backlight.
+    CONFIG_STM3210E_LCD_PWM - If CONFIG_STM32_TIM1 is also defined, then an
       adjustable backlight will be provided using timer 1 to generate
       various pulse widthes.  The granularity of the settings is
-      determined by CONFIG_LCD_MAXPOWER.  If CONFIG_LCD_PWM (or
+      determined by CONFIG_LCD_MAXPOWER.  If CONFIG_STM3210E_LCD_PWM (or
       CONFIG_STM32_TIM1) is not defined, then a simple on/off backlight
       is provided.
-    CONFIG_LCD_RDSHIFT - When reading 16-bit gram data, there appears
+    CONFIG_STM3210E_LCD_RDSHIFT - When reading 16-bit gram data, there appears
       to be a shift in the returned data.  This value fixes the offset.
       Default 5.
 
@@ -673,9 +673,9 @@ STM3210E-EVAL-specific Configuration Options
     ID value.  However, code size can be reduced by suppressing support for
     individual LCDs using:
 
-    CONFIG_STM32_AM240320_DISABLE
-    CONFIG_STM32_SPFD5408B_DISABLE
-    CONFIG_STM32_R61580_DISABLE
+    CONFIG_STM3210E_AM240320_DISABLE
+    CONFIG_STM3210E_SPFD5408B_DISABLE
+    CONFIG_STM3210E_R61580_DISABLE
 
 Configurations
 ==============
@@ -695,15 +695,15 @@ Where <subdir> is one of the following:
 
     Uses apps/examples/buttons to exercise STM3210E-EVAL buttons and
     button interrupts.
- 
-    CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
+
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y  : CodeSourcery under Windows
 
   composite
   ---------
 
     This configuration exercises a composite USB interface consisting
     of a CDC/ACM device and a USB mass storage device.  This configuration
-    uses apps/examples/composite.
+    uses apps/system/composite.
 
   nsh and nsh2:
   ------------
@@ -714,8 +714,9 @@ Where <subdir> is one of the following:
     =========== ======================= ================================
                 nsh                     nsh2
     =========== ======================= ================================
-    Toolchain:  NuttX buildroot for     Codesourcery for Windows (1)
-                Linux or Cygwin (1,2)
+    Platform    Windows with Cygwin (2) Windows with Cygwin (2)
+    ----------- ----------------------- --------------------------------
+    Toolchain:  NuttX buildroot (1)     Codesourcery for Windows (1)
     ----------- ----------------------- --------------------------------
     Loader:     DfuSe                   DfuSe
     ----------- ----------------------- --------------------------------
@@ -736,7 +737,7 @@ Where <subdir> is one of the following:
     ----------- ----------------------- --------------------------------
     Built-in    None                    apps/examples/nx
     Apps                                apps/examples/nxhello
-                                        apps/examples/usbstorage (5)
+                                        apps/system/usbmsc (5)
                                         apps/system/i2c
     =========== ======================= ================================
 
@@ -769,30 +770,139 @@ Where <subdir> is one of the following:
 
         Failure to do this could result in corruption of the SD card format.
 
-    The nsh2 contains support for some built-in applications that can be
-    enabled by make some additional minor changes:
+    1. Both configurations use the mconf-based configuration tool.  To
+       change these configurations using that tool, you should:
 
-    (1) examples/can.  The CAN test example can be enabled by changing the
-        following settings in nsh2/defconfig:
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
 
-        CONFIG_CAN=y             # Enable CAN "upper-half" driver support
-        CONFIG_STM32_CAN1=y      # Enable STM32 CAN1 "lower-half" driver support
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
 
-        The default CAN settings may need to change in your board board
-        configuration:
+    2. The nsh2 contains support for some built-in applications that can be
+       enabled by make some additional minor changes:
 
-        CONFIG_CAN_EXTID=y       # Support extended IDs
-        CONFIG_CAN1_BAUD=250000  # Bit rate: 250 KHz
-        CONFIG_CAN_TSEG1=12      # 80% sample point
-        CONFIG_CAN_TSEG2=3
+       a. examples/can.  The CAN test example can be enabled by changing the
+          following settings in nsh2/defconfig:
+
+          CONFIG_CAN=y             : Enable CAN "upper-half" driver support
+          CONFIG_STM32_CAN1=y      : Enable STM32 CAN1 "lower-half" driver support
+
+          The default CAN settings may need to change in your board board
+          configuration:
+
+          CONFIG_CAN_EXTID=y       : Support extended IDs
+          CONFIG_CAN1_BAUD=250000  : Bit rate: 250 KHz
+          CONFIG_CAN_TSEG1=12      : 80% sample point
+          CONFIG_CAN_TSEG2=3
   nx:
   ---
     An example using the NuttX graphics system (NX).  This example
     focuses on general window controls, movement, mouse and keyboard
     input.
 
-      CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
+      CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y  : CodeSourcery under Windows
       CONFIG_LCD_RPORTRAIT=y        : 240x320 reverse portrait
+
+    NOTES:
+
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. If you configured the multi-used NX server (which is disabled
+       by default), then you would also need:
+
+         CONFIG_EXAMPLES_NX_CLIENTPRIO=80
+         CONFIG_EXAMPLES_NX_NOTIFYSIGNO=4
+         CONFIG_EXAMPLES_NX_SERVERPRIO=120
+         CONFIG_EXAMPLES_NX_STACKSIZE=2048
+
+    3. This example provides a framework for a number of other standalone
+       graphics tests.
+
+       a. apps/examples/nxlines:  The NXLINES graphic example illustrates
+          drawing of fat lines in various orientations.  You can modify
+          this configuration so to support the NXLINES example by making
+          the following modifications to the NuttX configuration file:
+
+          Provide the new start-up entry point:
+
+            CONFIG_USER_ENTRYPOINT="nxlines_main"
+
+          Disable apps/examples/nx:
+
+            CONFIG_EXAMPLES_NX=n
+
+          Enable and configure apps/nxlines/nxlines:
+
+            CONFIG_EXAMPLES_NXLINES=y
+            CONFIG_EXAMPLES_NXLINES_VPLANE=0
+            CONFIG_EXAMPLES_NXLINES_DEVNO=0
+            CONFIG_EXAMPLES_NXLINES_DEFAULT_COLORS=n
+            CONFIG_EXAMPLES_NXLINES_BGCOLOR=0x0320
+            CONFIG_EXAMPLES_NXLINES_LINEWIDTH=16
+            CONFIG_EXAMPLES_NXLINES_LINECOLOR=0xffe0
+            CONFIG_EXAMPLES_NXLINES_BORDERWIDTH=4
+            CONFIG_EXAMPLES_NXLINES_BORDERCOLOR=0xffe0
+            CONFIG_EXAMPLES_NXLINES_CIRCLECOLOR=0xf7bb
+            CONFIG_EXAMPLES_NXLINES_BPP=16
+            CONFIG_EXAMPLES_NXLINES_EXTERNINIT=n
+
+       b. apps/examples/nxtext:  Another example using the NuttX graphics
+          system (NX).   This example focuses on placing text on the
+          background while pop-up windows occur.  Text should continue to
+          update normally with  or without the popup windows present.
+
+          You can modify this configuration so to support the NXLINES
+          example by making the following modifications to the NuttX
+          configuration file:
+
+          Provide the new start-up entry point:
+
+            CONFIG_USER_ENTRYPOINT="nxtext_main"
+
+          Disable apps/examples/nx:
+
+            CONFIG_EXAMPLES_NX=n
+
+          Enable an NX font:
+
+            CONFIG_NXFONT_SERIF22X28B=y
+
+          Enable and configure apps/nxlines/nxtext:
+
+            CONFIG_EXAMPLES_NXTEXT=y
+            CONFIG_EXAMPLES_NXTEXT_VPLANE=0
+            CONFIG_EXAMPLES_NXTEXT_DEVNO=0
+            CONFIG_EXAMPLES_NXTEXT_BPP=16
+            CONFIG_EXAMPLES_NXTEXT_BMCACHE=512
+            CONFIG_EXAMPLES_NXTEXT_GLCACHE=16
+            CONFIG_EXAMPLES_NXTEXT_DEFAULT_COLORS=n
+            CONFIG_EXAMPLES_NXTEXT_BGCOLOR=0x0011
+            CONFIG_EXAMPLES_NXTEXT_BGFONTCOLOR=0xffdf
+            CONFIG_EXAMPLES_NXTEXT_PUCOLOR=0xfd20
+            CONFIG_EXAMPLES_NXTEXT_PUFONTCOLOR=0x001f
+            CONFIG_EXAMPLES_NXTEXT_DEFAULT_FONT=n
+            CONFIG_EXAMPLES_NXTEXT_BGFONTID=11
+            CONFIG_EXAMPLES_NXTEXT_PUFONTID=1
+            CONFIG_EXAMPLES_NXTEXT_EXTERNINIT=n
+
+          If you configured the multi-used NX server (which is disabled
+          by default), then you would also need:
+
+            CONFIG_EXAMPLES_NXTEXT_STACKSIZE=2048
+            CONFIG_EXAMPLES_NXTEXT_CLIENTPRIO=80
+            CONFIG_EXAMPLES_NXTEXT_SERVERPRIO=120
+            CONFIG_EXAMPLES_NXTEXT_NOTIFYSIGNO=4
+
+        c. Others could be similar configured:  apps/examples/nxhello,
+            nximage, ...
 
   nxconsole:
   ----------
@@ -800,59 +910,40 @@ Where <subdir> is one of the following:
     from the other, however, in that it uses the NxConsole driver to host
     the NSH shell.
 
-    Some of the differences in this configuration include these settings
-    in the defconfig file:
+    NOTES:
 
-    These select NX Multi-User mode:
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
 
-      CONFG_NX_MULTIUSER=y
-      CONFIG_DISABLE_MQUEUE=n
- 
-    The following definition in the defconfig file to enables the NxConsole
-    driver:
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
 
-      CONFIG_NXCONSOLE=y
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
 
-    The appconfig file selects examples/nxconsole instead of examples/nsh:
+    2. Some of the differences in this configuration include these settings
+       in the defconfig file:
 
-      CONFIGURED_APPS += examples/nxconsole
+       These select NX Multi-User mode:
 
-    Other configuration settings:
+         CONFG_NX_MULTIUSER=y
+         CONFIG_DISABLE_MQUEUE=n
 
-      CONFIG_STM32_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin
-      CONFIG_LCD_LANDSCAPE=y        : 320x240 landscape
+       The following definition in the defconfig file to enables the NxConsole
+       driver:
 
-  nxlines:
-  ------
-    Another example using the NuttX graphics system (NX).   This
-    example focuses on placing lines on the background in various
-    orientations.
+         CONFIG_NXCONSOLE=y
 
-      CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
-      CONFIG_LCD_RPORTRAIT=y        : 240x320 reverse portrait
+       And this selects apps/examples/nxconsole instead of apps/examples/nsh:
 
-  nxtext:
-  ------
-    Another example using the NuttX graphics system (NX).   This
-    example focuses on placing text on the background while pop-up
-    windows occur.  Text should continue to update normally with
-    or without the popup windows present.
+         CONFIG_EXAMPLES_NXCONSOLE=y
 
-      CONFIG_STM32_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin
-      CONFIG_LCD_RPORTRAIT=y        : 240x320 reverse portrait
+       Other configuration settings of interest:
 
-    NOTE:  When I tried building this example with the CodeSourcery
-    tools, I got a hardfault inside of its libgcc.  I haven't
-    retested since then, but beware if you choose to change the
-    toolchain.
-
-  ostest:
-  ------
-    This configuration directory, performs a simple OS test using
-    examples/ostest.  By default, this project assumes that you are
-    using the DFU bootloader.
-
-      CONFIG_STM32_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin
+         CONFIG_HOST_WINDOWS=y               : Windows
+         CONFIG_WINDOWS_CYGWIN=y             : with Cygwin
+         CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y : NuttX buildroot under Linux or Cygwin
+         CONFIG_LCD_LANDSCAPE=y              : 320x240 landscape
 
   pm:
   --
@@ -863,50 +954,60 @@ Where <subdir> is one of the following:
     configuration should provide some guideline for power management in your
     STM32 application.
 
-      CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
+    NOTES:
 
-    CONFIG_PM_CUSTOMINIT and CONFIG_IDLE_CUSTOM are necessary parts of the
-    PM configuration:
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
 
-      CONFIG_PM_CUSTOMINIT=y
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
 
-    CONFIG_PM_CUSTOMINIT moves the PM initialization from arch/arm/src/stm32/stm32_pminitialiaze.c
-    to configs/stm3210-eval/src/up_pm.c.  This allows us to support board-
-    specific PM initialization.
-    
-      CONFIG_IDLE_CUSTOM=y
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
 
-    The bulk of the PM activities occur in the IDLE loop.  The IDLE loop is
-    special because it is what runs when there is no other task running.  Therefore
-    when the IDLE executes, we can be assure that nothing else is going on; this
-    is the ideal condition for doing reduced power management.
+    2. Default configuration is Cygwin under windows using the CodeSourcery
+       toolchain:
 
-    The configuration CONFIG_IDLE_CUSTOM allows us to "steal" the normal STM32
-    IDLE loop (of arch/arm/src/stm32/stm32_idle.c) and replace this with our own
-    custom IDLE loop (at configs/stm3210-eval/src/up_idle.c).
+         CONFIG_HOST_WINDOWS=y                   : Windows
+         CONFIG_WINDOWS_CYGWIN=y                 : Cygwin
+         CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y : CodeSourcery under Windows
 
-    Here are some additional things to note in the configuration:
+    3. CONFIG_ARCH_CUSTOM_PMINIT and CONFIG_ARCH_IDLE_CUSTOM are necessary
+       parts of the PM configuration:
 
-      CONFIG_PM_BUTTONS=y
-    
-    CONFIG_PM_BUTTONS enables button support for PM testing.  Buttons can drive
-    EXTI interrupts and EXTI interrrupts can be used to wakeup for certain reduced
-    power modes (STOP mode).  The use of the buttons here is for PM testing purposes
-    only; buttons would normally be part the application code and CONFIG_PM_BUTTONS
-    would not be defined.
+         CONFIG_ARCH_CUSTOM_PMINIT=y
 
-      CONFIG_RTC_ALARM=y
+       CONFIG_ARCH_CUSTOM_PMINIT moves the PM initialization from
+       arch/arm/src/stm32/stm32_pminitialiaze.c to configs/stm3210-eval/src/stm32_pm.c.
+       This allows us to support board-specific PM initialization.
 
-    The RTC alarm is used to wake up from STOP mode and to transition to
-    STANDBY mode.  This used of the RTC alarm could conflict with other uses of
-    the RTC alarm in your application.
+         CONFIG_ARCH_IDLE_CUSTOM=y
 
-  RIDE
-  ----
-    This configuration builds a trivial bring-up binary.  It is
-    useful only because it words with the RIDE7 IDE and R-Link debugger.
+       The bulk of the PM activities occur in the IDLE loop.  The IDLE loop
+       is special because it is what runs when there is no other task running.
+       Therefore when the IDLE executes, we can be assure that nothing else
+       is going on; this is the ideal condition for doing reduced power
+       management.
 
-      CONFIG_STM32_RAISONANCE=y     : Raisonance RIDE7 under Windows
+       The configuration CONFIG_ARCH_IDLE_CUSTOM allows us to "steal" the
+       normal STM32 IDLE loop (of arch/arm/src/stm32/stm32_idle.c) and replace
+       this with our own custom IDLE loop (at configs/stm3210-eval/src/up_idle.c).
+
+    4. Here are some additional things to note in the configuration:
+
+        CONFIG_PM_BUTTONS=y
+
+       CONFIG_PM_BUTTONS enables button support for PM testing.  Buttons can
+       drive EXTI interrupts and EXTI interrrupts can be used to wakeup for
+       certain reduced power modes (STOP mode).  The use of the buttons here
+       is for PM testing purposes only; buttons would normally be part the
+       application code and CONFIG_PM_BUTTONS would not be defined.
+
+         CONFIG_RTC_ALARM=y
+
+       The RTC alarm is used to wake up from STOP mode and to transition to
+       STANDBY mode.  This used of the RTC alarm could conflict with other
+       uses of the RTC alarm in your application.
 
   usbserial:
   ---------
@@ -914,7 +1015,7 @@ Where <subdir> is one of the following:
     driver at examples/usbserial.  See examples/README.txt for
     more information.
 
-      CONFIG_STM32_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin
+      CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin
 
     USB debug output can be enabled as by changing the following
     settings in the configuration file:
@@ -949,20 +1050,33 @@ Where <subdir> is one of the following:
       +CONFIG_CDCACM=y
 
     The example can also be converted to use the alternative
-    USB serial example at apps/examples/usbterm by changing the 
+    USB serial example at apps/examples/usbterm by changing the
     following:
 
-      -CONFIGURED_APPS += examples/usbserial
-      +CONFIGURED_APPS += examples/usbterm
+      -CONFIG_EXAMPLES_USBSERIAL=y
+      +CONFIG_EXAMPLES_USBSERIAL=n
 
-    In either the original appconfig file (before configuring)
-    or in the final apps/.config file (after configuring).
+      -CONFIG_EXAMPLES_USBTERM=n
+      +CONFIG_EXAMPLES_USBTERM=y
 
-  usbstorage:
-  ----------
+  usbmsc:
+  -------
     This configuration directory exercises the USB mass storage
-    class driver at examples/usbstorage.  See examples/README.txt for
+    class driver at system/usbmsc.  See examples/README.txt for
     more information.
 
-      CONFIG_STM32_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin
+    NOTES:
 
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. Build environment (can be easily reconfigured):
+
+       CONFIG_HOST_LINUX=y                  : Linux (or Cygwin)
+       CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y  : NuttX buildroot under Linux or Cygwin

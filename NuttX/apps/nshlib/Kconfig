@@ -6,12 +6,38 @@
 config NSH_LIBRARY
 	bool "NSH Library"
 	default n
-	select SYSTEM_READLINE
 	---help---
-		Build the NSH support library.  This is used, for example, by examples/nsh
-		in order to implement the full NuttShell (NSH).
+		Build the NSH support library.  This is used, for example, by
+		examples/nsh in order to implement the full NuttShell (NSH).
 
 if NSH_LIBRARY
+
+choice
+	prompt "Command Line Editor"
+	default NSH_READLINE if DEFAULT_SMALL
+	default NSH_CLE if !DEFAULT_SMALL
+
+config NSH_READLINE
+	bool "Minimal readline()"
+	select SYSTEM_READLINE
+	---help---
+		Selects the minimal implementation of readline().  This minimal
+		implementation provides on backspace for command line editing.
+
+config NSH_CLE
+	bool "Command Line Editor"
+	select SYSTEM_CLE
+	---help---
+		Selects the more extensive, EMACS-like command line editor.
+		Select this option only if (1) you don't mind a modest increase
+		in the FLASH footprint, and (2) you work with a terminal that
+		supports extensive VT100 editing commands.
+
+		Selecting this option will add probably 1.5-2KB to the FLASH
+		footprint.
+
+endchoice
+
 config NSH_BUILTIN_APPS
 	bool "Enable built-in applications"
 	default n
@@ -33,14 +59,21 @@ config NSH_FILE_APPS
 
 menu "Disable Individual commands"
 
+config NSH_DISABLE_ADDROUTE
+	bool "Disable addroute"
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
+
 config NSH_DISABLE_BASE64DEC
 	bool "Disable base64dec"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 	depends on NETUTILS_CODECS && CODECS_BASE64
 
 config NSH_DISABLE_BASE64ENC
 	bool "Disable base64enc"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 	depends on NETUTILS_CODECS && CODECS_BASE64
 
 config NSH_DISABLE_CAT
@@ -55,9 +88,25 @@ config NSH_DISABLE_CP
 	bool "Disable cp"
 	default n
 
+config NSH_DISABLE_CMP
+	bool "Disable cmp"
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
+
 config NSH_DISABLE_DD
 	bool "Disable dd"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
+
+config NSH_DISABLE_DF
+	bool "Disable df"
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
+
+config NSH_DISABLE_DELROUTE
+	bool "Disable delroute"
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_ECHO
 	bool "Disable echo"
@@ -65,11 +114,13 @@ config NSH_DISABLE_ECHO
 
 config NSH_DISABLE_EXEC
 	bool "Disable exec"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_EXIT
 	bool "Disable exit"
-	default n
+	default y if DEFAULT_SMALL && !NSH_TELNET
+	default n if !DEFAULT_SMALL || NSH_TELNET
 
 config NSH_DISABLE_FREE
 	bool "Disable free"
@@ -77,7 +128,8 @@ config NSH_DISABLE_FREE
 
 config NSH_DISABLE_GET
 	bool "Disable get"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_HELP
 	bool "Disable help"
@@ -85,7 +137,8 @@ config NSH_DISABLE_HELP
 
 config NSH_DISABLE_HEXDUMP
 	bool "Disable hexdump"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_IFCONFIG
 	bool "Disable ifconfig"
@@ -97,7 +150,8 @@ config NSH_DISABLE_KILL
 
 config NSH_DISABLE_LOSETUP
 	bool "Disable losetup"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_LS
 	bool "Disable ls"
@@ -109,7 +163,8 @@ config NSH_DISABLE_MB
 
 config NSH_DISABLE_MD5
 	bool "Disable md5"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 	depends on NETUTILS_CODECS && CODECS_HASH_MD5
 
 config NSH_DISABLE_MKDIR
@@ -118,15 +173,19 @@ config NSH_DISABLE_MKDIR
 
 config NSH_DISABLE_MKFATFS
 	bool "Disable mkfatfs"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
+	depends on FS_FAT
 
 config NSH_DISABLE_MKFIFO
 	bool "Disable mkfifo"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_MKRD
 	bool "Disable mkrd"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_MH
 	bool "Disable mh"
@@ -143,18 +202,22 @@ config NSH_DISABLE_MW
 config NSH_DISABLE_NSFMOUNT
 	bool "Disable nfsmount"
 	default n
+	depends on NFS
 
 config NSH_DISABLE_PS
 	bool "Disable ps"
 	default n
+	depends on !NUTTX_KERNEL
 
 config NSH_DISABLE_PING
 	bool "Disable ping"
 	default n
+	depends on NET_ICMP
 
 config NSH_DISABLE_PUT
 	bool "Disable put"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_PWD
 	bool "Disable pwd"
@@ -194,12 +257,14 @@ config NSH_DISABLE_UNSET
 
 config NSH_DISABLE_URLDECODE
 	bool "Disable urldecode"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 	depends on NETUTILS_CODECS && CODECS_URLCODE
 
 config NSH_DISABLE_URLENCODE
 	bool "Disable urlencode"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 	depends on NETUTILS_CODECS && CODECS_URLCODE
 
 config NSH_DISABLE_USLEEP
@@ -208,11 +273,13 @@ config NSH_DISABLE_USLEEP
 
 config NSH_DISABLE_WGET
 	bool "Disable wget"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_XD
 	bool "Disable xd"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 endmenu
 
@@ -220,20 +287,34 @@ menu "Configure Command Options"
 
 config NSH_CMDOPT_DF_H
 	bool "df: Enable [-h] man-readable format"
-	default n
+	default n if DEFAULT_SMALL
+	default y if !DEFAULT_SMALL
+	depends on !NSH_DISABLE_DF
 
 config NSH_CODECS_BUFSIZE
 	int "File buffer size used by CODEC commands"
 	default 128
 
+config NSH_CMDOPT_HEXDUMP
+	bool "hexdump: Enable 'skip' and 'count' parameters"
+	default n if DEFAULT_SMALL
+	default y if !DEFAULT_SMALL
+	depends on !NSH_DISABLE_HEXDUMP
+
+config NSH_PROC_MOUNTPOUNT
+	string "procfs mountpoint"
+	default "/proc"
+	depends on FS_PROCFS
+
 endmenu
 
 config NSH_FILEIOSIZE
 	int "NSH I/O buffer size"
-	default 1024
+	default 512 if DEFAULT_SMALL
+	default 1024 if !DEFAULT_SMALL
 	---help---
 		Size of a static I/O buffer used for file access (ignored if
-		there is no filesystem). Default is 1024.
+		there is no filesystem). Default is 512/1024.
 
 config NSH_STRERROR
 	bool "Use strerror()"
@@ -247,10 +328,51 @@ config NSH_STRERROR
 
 config NSH_LINELEN
 	int "Max command line length"
-	default 80
+	default 64 if DEFAULT_SMALL
+	default 80 if !DEFAULT_SMALL
 	---help---
 		The maximum length of one command line and of one output line.
-		Default: 80
+		Default: 64/80
+
+config NSH_DISABLE_SEMICOLON
+	bool "Disable multiple commands per line"
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
+	---help---
+		By default, you can enter multiple NSH commands on a line with each
+		command separated by a semicolon.  You can disable this feature to
+		save a little memory on FLASH challenged platforms.
+
+config NSH_CMDPARMS
+	bool "Enable commands as parameters"
+	default n if DEFAULT_SMALL
+	default y if !DEFAULT_SMALL
+	depends on !DISABLE_MOUNTPOINT
+	---help---
+		If selected, then the output from commands, from file applications, and
+		from NSH built-in commands can be used as arguments to other
+		commands.  The entity to be executed is identified by enclosing the
+		command line in back quotes.  For example,
+
+			set FOO `myprogram $BAR`
+
+		Will execute the program named myprogram passing it the value of the
+		environment variable BAR.  The value of the environment variable FOO
+		is then set output of myprogram on stdout.
+
+		Because this feature commits significant resources, it is disabled by
+		default.
+
+config NSH_TMPDIR
+	string "Temporary file directory"
+	default "/tmp"
+	depends on NSH_CMDPARMS
+		---help---
+		If NSH_CMDPARMS is selected, then function output will be retained
+		in a temporary file.  In that case, this string must be provided to
+		specify the full path to a directory where temporary files can be
+		created.  This would be a good application of RAM disk: To provide
+		temporary storage for function output.
 
 config NSH_MAXARGUMENTS
 	int "Maximum number of command arguments"
@@ -258,6 +380,23 @@ config NSH_MAXARGUMENTS
 	---help---
 		The maximum number of NSH command arguments.
 		Default: 6
+
+config NSH_ARGCAT
+	bool "Concatenation of argument strings"
+	default n if DEFAULT_SMALL
+	default y if !DEFAULT_SMALL
+	---help---
+		Support concatenation of strings with environment variables or command
+		output.  For example:
+
+			set FOO XYZ
+			set BAR 123
+			set FOOBAR ABC_${FOO}_${BAR}
+
+		would set the environment variable FOO to XYZ, BAR to 123 and FOOBAR
+		to ABC_XYZ_123.  If NSH_ARGCAT is not selected, then a slightly small
+		FLASH footprint results but then also only simple environment
+		variables like $FOO can be used on the command line.
 
 config NSH_NESTDEPTH
 	int "Maximum command nesting"
@@ -268,16 +407,41 @@ config NSH_NESTDEPTH
 
 config NSH_DISABLESCRIPT
 	bool "Disable script support"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 	---help---
 		This can be set to 'y' to suppress support for scripting.  This
 		setting disables the 'sh', 'test', and '[' commands and the
 		if-then[-else]-fi construct.  This would only be set on systems
 		where a minimal footprint is a necessity and scripting is not.
 
+if !NSH_DISABLESCRIPT
+
+config NSH_DISABLE_ITEF
+	bool "Disable if-then-else-fi"
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
+	---help---
+		This can be set to 'y' to suppress support for if-then-else-fi
+		sequences in scripts.  This would only be set on systems where
+		some minimal scripting is required but if-then-else-fi is not.
+
+config NSH_DISABLE_LOOPS
+	bool "Disable loops"
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
+	---help---
+		This can be set to 'y' to suppress support for while-do-done and
+		until-do-done sequences in scripts.  This would only be set on
+		systems where some minimal scripting is required but looping
+		is not.
+
+endif # !NSH_DISABLESCRIPT
+
 config NSH_DISABLEBG
 	bool "Disable background commands"
-	default n
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 	---help---
 		This can be set to 'y' to suppress support for background
 		commands.  This setting disables the 'nice' command prefix and
@@ -304,7 +468,7 @@ config NSH_ROMFSETC
 		at /etc/init.d/rcS.  The default startup script will mount
 		a FAT FS RAMDISK at /tmp but the logic is easily extensible.
 
-endif
+endif # NSH_LIBRARY
 
 if NSH_ROMFSETC
 
@@ -349,7 +513,7 @@ config NSH_ROMFSDEVNO
 	int "ROMFS block device minor number"
 	default 0
 	---help---
-		This is the minor number of the ROMFS block device.  The default is 
+		This is the minor number of the ROMFS block device.  The default is
 		'0' corresponding to /dev/ram0.
 
 config NSH_ROMFSSECTSIZE
@@ -364,7 +528,6 @@ config NSH_ROMFSSECTSIZE
 config NSH_ARCHROMFS
 	bool "Architecture-specific ROMFS header"
 	default n
-	depends on NSH_ROMFSETC
 	---help---
 		Enable this option to provide an architecture-specific ROMFS
 		header at <arch/board/nsh_romfsimg.h>. Note that this header
@@ -408,9 +571,10 @@ config NSH_FATMOUNTPT
 		will mount a FAT FS under /tmp. This is the location where the FAT
 		FS will be mounted.  Default is "/tmp".
 
-endif
+endif # NSH_ROMFSETC
 
 if NSH_LIBRARY
+
 config NSH_CONSOLE
 	bool "Use console"
 	default y
@@ -462,6 +626,7 @@ config USBDEV_MINOR
 		minor number may also need to be provided. Default: 0
 
 comment "USB Trace Support"
+
 config NSH_USBDEV_TRACE
 	bool "Enable Builtin USB Trace Support"
 	default n
@@ -508,7 +673,7 @@ config NSH_USBDEV_TRACEINTERRUPTS
 	---help---
 		Show interrupt-related events
 
-endif
+endif # NSH_USBDEV_TRACE
 
 config NSH_CONDEV
 	bool "Default console device"
@@ -541,17 +706,19 @@ config NSH_ARCHINIT
 
 config NSH_TELNET
 	bool "Use Telnet console"
-	default n
-	depends on NET && NET_TCP
+	default n if DEFAULT_SMALL
+	default y if !DEFAULT_SMALL
+	depends on NETUTILS_TELNETD
 	---help---
 		If NSH_TELNET is set to 'y', then a TELENET
 		server front-end is selected.  When this option is provided,
 		you may log into NuttX remotely using telnet in order to
 		access NSH.
 
-endif
+endif # NSH_LIBRARY
 
 if NSH_TELNET
+
 config NSH_TELNETD_PORT
 	int "Telnet port number"
 	default 23
@@ -617,13 +784,13 @@ config NSH_TELNET_FAILCOUNT
 	---help---
 		Number of login retry attempts.
 
-endif
-endif
+endif # NSH_TELNET_LOGIN
+endif # NSH_TELNET
 
 config NSH_DHCPC
 	bool "Use DHCP to get IP address"
 	default n
-	depends on NSH_LIBRARY && NET && NET_UDP && NET_BROADCAST
+	depends on NSH_LIBRARY && NETUTILS_DHCPC
 	---help---
 		Obtain the IP address via DHCP.
 
@@ -632,7 +799,7 @@ config NSH_DHCPC
 
 config NSH_IPADDR
 	hex "Target IP address"
-	default 0xa0000002
+	default 0x0a000002
 	depends on NSH_LIBRARY && NET && !NSH_DHCPC
 	---help---
 		If NSH_DHCPC is NOT set, then the static IP address must be provided.
@@ -641,8 +808,8 @@ config NSH_IPADDR
 
 config NSH_DRIPADDR
 	hex "Router IP address"
-	default 0xa0000001
-	depends on NSH_LIBRARY && NET && !NSH_DHCPC
+	default 0x0a000001
+	depends on NSH_LIBRARY && NET
 	---help---
 		Default router IP address (aka, Gateway).  This is a 32-bit integer
 		value in host order.  So, as an example, 0x10000001 would be 10.0.0.1.
@@ -650,7 +817,7 @@ config NSH_DRIPADDR
 config NSH_NETMASK
 	hex "Network mask"
 	default 0xffffff00
-	depends on NSH_LIBRARY && NET && !NSH_DHCPC
+	depends on NSH_LIBRARY && NET
 	---help---
 		Network mask.  This is a 32-bit integer value in host order.  So, as
 		an example, 0xffffff00 would be 255.255.255.0.
@@ -658,7 +825,7 @@ config NSH_NETMASK
 config NSH_DNS
 	bool "Use DNS"
 	default n
-	depends on NSH_LIBRARY && NET && NET_UDP && NET_BROADCAST
+	depends on NSH_LIBRARY && NETUTILS_RESOLV
 	---help---
 		Configure to use a DNS.
 
@@ -685,4 +852,3 @@ config NSH_MAX_ROUNDTRIP
 	---help---
 		This is the maximum round trip for a response to a ICMP ECHO request.
 		It is in units of deciseconds.  The default is 20 (2 seconds).
-

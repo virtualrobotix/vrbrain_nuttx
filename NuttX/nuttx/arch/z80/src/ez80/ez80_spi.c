@@ -45,7 +45,7 @@
 
 #include <arch/board/board.h>
 #include <nuttx/arch.h>
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <arch/io.h>
 
 #include "up_internal.h"
@@ -174,7 +174,7 @@ static uint32_t spi_setfrequency(FAR struct spi_dev_s *dev, uint32_t frequency)
    *
    *   BRG >= System Clock Frequency / (2 * SPIR)
    */
- 
+
   uint32_t brg = ((EZ80_SYS_CLK_FREQ+1)/2 + frequency - 1) / frequency;
 
   /* "When configured as a Master, the 16-bit divisor value must be between
@@ -284,7 +284,7 @@ static uint8_t spi_waitspif(void)
  * Name: spi_transfer
  *
  * Description:
- *   Send one byte on SPI, return th response
+ *   Send one byte on SPI, return the response
  *
  * Input Parameters:
  *   ch - the byte to send
@@ -300,7 +300,7 @@ static uint8_t spi_transfer(uint8_t ch)
 
   /* Send the byte, repeating if some error occurs */
 
-  for(;;)
+  for (;;)
     {
       outp(EZ80_SPI_TSR, ch);
 
@@ -361,7 +361,7 @@ static void spi_sndblock(FAR struct spi_dev_s *dev, FAR const void *buffer,
   FAR const uint8_t *ptr = (FAR const uint8_t*)buffer;
   uint8_t response;
 
-  /* Loop while thre are bytes remaining to be sent */
+  /* Loop while there are bytes remaining to be sent */
 
   while (buflen-- > 0)
     {
@@ -392,7 +392,6 @@ static void spi_sndblock(FAR struct spi_dev_s *dev, FAR const void *buffer,
 static void spi_recvblock(FAR struct spi_dev_s *dev, FAR void *buffer, size_t buflen)
 {
   FAR uint8_t *ptr = (FAR uint8_t*)buffer;
-  uint8_t response;
 
   /* Loop while thre are bytes remaining to be sent */
 

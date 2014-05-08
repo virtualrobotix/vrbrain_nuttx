@@ -1,7 +1,7 @@
 /************************************************************************
- * up_irqtest.c
+ * arch/8051/src/up_irqtest.c
  *
- *   Copyright (C) 2007, 2011 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007, 2011, 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,7 +72,7 @@ bool g_irqtest;
 volatile uint8_t g_irqtos;
 uint8_t g_irqregs[REGS_SIZE];
 int g_nirqs;
-FAR struct xcptcontext *g_irqcontext; 
+FAR struct xcptcontext *g_irqcontext;
 
 /************************************************************************
  * Private Functions
@@ -160,13 +160,12 @@ void os_start(void)
 
   IE = 0;
 
-  /* Then verify all of the interrupt */
+  /* Then verify all of the interrupts */
 
   g_irqtest = false;
 
   up_extint0();
-  up_timer0();
-#ifndef CONFIG_8052_TIMER2
+#ifdef CONFIG_ARCH_8051_NOSYSTIMER
   up_timer0();
 #endif
   up_extint1();
@@ -208,7 +207,7 @@ void os_start(void)
 
   _up_puts("Test complete");
   _up_putnl();
-  for(;;);
+  for (;;);
 }
 
 /************************************************************************
@@ -251,23 +250,23 @@ void up_dumpframe(FAR struct xcptcontext *context)
 }
 
 /************************************************************************
- * Name: up_ledinit, up_ledon, up_ledoff
+ * Name: board_led_initialize, board_led_on, board_led_off
  *
  * Description:
  *   "Fake" LED routines if needed
  *
  ************************************************************************/
 
-void up_ledinit(void)
+void board_led_initialize(void)
 {
 }
 
-void up_ledon(uint8_t led)
+void board_led_on(uint8_t led)
 {
   led;
 }
 
-void up_ledoff(uint8_t led)
+void board_led_off(uint8_t led)
 {
   led;
 }

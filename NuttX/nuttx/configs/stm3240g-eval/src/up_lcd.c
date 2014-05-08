@@ -36,10 +36,10 @@
  **************************************************************************************/
 /* This driver supports the following LCDs on the STM324xG_EVAL board:
  *
- *   AM-240320L8TNQW00H (LCD_ILI9320 or LCD_ILI9321) OR 
+ *   AM-240320L8TNQW00H (LCD_ILI9320 or LCD_ILI9321) OR
  *   AM-240320D5TOQW01H (LCD_ILI9325)
  */
- 
+
 /**************************************************************************************
  * Included Files
  **************************************************************************************/
@@ -54,7 +54,7 @@
 #include <debug.h>
 
 #include <nuttx/arch.h>
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <nuttx/lcd/lcd.h>
 
 #include <arch/board/board.h>
@@ -63,15 +63,15 @@
 #include "stm32.h"
 #include "stm3240g-internal.h"
 
-#if !defined(CONFIG_STM32_ILI9320_DISABLE) || !defined(CONFIG_STM32_ILI9325_DISABLE)
+#if !defined(CONFIG_STM3240G_ILI9320_DISABLE) || !defined(CONFIG_STM3240G_ILI9325_DISABLE)
 
 /**************************************************************************************
  * Pre-processor Definitions
  **************************************************************************************/
 /* Configuration **********************************************************************/
-/* CONFIG_STM32_ILI9320_DISABLE may be defined to disabled the AM-240320L8TNQW00H
+/* CONFIG_STM3240G_ILI9320_DISABLE may be defined to disabled the AM-240320L8TNQW00H
  *  (LCD_ILI9320 or LCD_ILI9321)
- * CONFIG_STM32_ILI9325_DISABLE  may be defined to disabled the AM-240320D5TOQW01H
+ * CONFIG_STM3240G_ILI9325_DISABLE may be defined to disabled the AM-240320D5TOQW01H
  *  (LCD_ILI9325)
  */
 
@@ -126,7 +126,7 @@
 /* Display/Color Properties ***********************************************************/
 /* Display Resolution */
 
-#if defined(CONFIG_LCD_LANDSCAPE) || defined(CONFIG_LCD_RLANDSCAPE) 
+#if defined(CONFIG_LCD_LANDSCAPE) || defined(CONFIG_LCD_RLANDSCAPE)
 #  define STM3240G_XRES       320
 #  define STM3240G_YRES       240
 #else
@@ -386,7 +386,7 @@ static const struct fb_videoinfo_s g_videoinfo =
 
 /* This is the standard, NuttX Plane information object */
 
-static const struct lcd_planeinfo_s g_planeinfo = 
+static const struct lcd_planeinfo_s g_planeinfo =
 {
   .putrun = stm3240g_putrun,       /* Put a run into LCD memory */
   .getrun = stm3240g_getrun,       /* Get a run from LCD memory */
@@ -396,12 +396,12 @@ static const struct lcd_planeinfo_s g_planeinfo =
 
 /* This is the standard, NuttX LCD driver object */
 
-static struct stm3240g_dev_s g_lcddev = 
+static struct stm3240g_dev_s g_lcddev =
 {
   .dev =
   {
     /* LCD Configuration */
- 
+
     .getvideoinfo = stm3240g_getvideoinfo,
     .getplaneinfo = stm3240g_getplaneinfo,
 
@@ -492,7 +492,7 @@ static inline void stm3240g_writegram(uint16_t rgbval)
  *   - ILI932x: Discard first dummy read; no shift in the return data
  *
  **************************************************************************************/
- 
+
 static void stm3240g_readnosetup(FAR uint16_t *accum)
 {
   /* Read-ahead one pixel */
@@ -507,7 +507,7 @@ static void stm3240g_readnosetup(FAR uint16_t *accum)
  *   Read one correctly aligned pixel from the GRAM memory.  Possibly shifting the
  *   data and possibly swapping red and green components.
  *
- *   - ILI932x: Unknown -- assuming colors are in the color order 
+ *   - ILI932x: Unknown -- assuming colors are in the color order
  *
  **************************************************************************************/
 
@@ -582,7 +582,7 @@ static int stm3240g_putrun(fb_coord_t row, fb_coord_t col, FAR const uint8_t *bu
 {
   FAR const uint16_t *src = (FAR const uint16_t*)buffer;
   int i;
- 
+
   /* Buffer must be provided and aligned to a 16-bit address boundary */
 
   lcdvdbg("row: %d col: %d npixels: %d\n", row, col, npixels);
@@ -659,7 +659,7 @@ static int stm3240g_putrun(fb_coord_t row, fb_coord_t col, FAR const uint8_t *bu
    */
 
   row = (STM3240G_YRES-1) - row;
-  
+
   /* Then write the GRAM data, manually incrementing Y (which is col) */
 
   for (i = 0; i < npixels; i++)
@@ -700,7 +700,7 @@ static int stm3240g_getrun(fb_coord_t row, fb_coord_t col, FAR uint8_t *buffer,
   uint16_t (*readgram)(FAR uint16_t *accum);
   uint16_t accum;
   int i;
- 
+
   /* Buffer must be provided and aligned to a 16-bit address boundary */
 
   lcdvdbg("row: %d col: %d npixels: %d\n", row, col, npixels);
@@ -719,7 +719,7 @@ static int stm3240g_getrun(fb_coord_t row, fb_coord_t col, FAR uint8_t *buffer,
      default:  /* Shouldn't happen */
        return -ENOSYS;
    }
- 
+
   /* Read the run from GRAM. */
 
 #ifdef CONFIG_LCD_LANDSCAPE
@@ -796,7 +796,7 @@ static int stm3240g_getrun(fb_coord_t row, fb_coord_t col, FAR uint8_t *buffer,
    */
 
   row = (STM3240G_YRES-1) - row;
-  
+
   /* Then write the GRAM data, manually incrementing Y (which is col) */
 
   for (i = 0; i < npixels; i++)
@@ -880,7 +880,7 @@ static int stm3240g_poweroff(void)
 {
   /* Turn the display off */
 
-  stm3240g_writereg(LCD_REG_7, 0); 
+  stm3240g_writereg(LCD_REG_7, 0);
 
   /* Remember the power off state */
 
@@ -908,7 +908,7 @@ static int stm3240g_setpower(struct lcd_dev_s *dev, int power)
     {
       /* Then turn the display on */
 
-#if !defined(CONFIG_STM32_ILI9320_DISABLE) || !defined(CONFIG_STM32_ILI9325_DISABLE)
+#if !defined(CONFIG_STM3240G_ILI9320_DISABLE) || !defined(CONFIG_STM3240G_ILI9325_DISABLE)
       stm3240g_writereg(LCD_REG_7, 0x0173);
 #endif
       g_lcddev.power = power;
@@ -970,18 +970,18 @@ static inline void stm3240g_lcdinitialize(void)
 
   /* Check if the ID is for the STM32_ILI9320 (or ILI9321) or STM32_ILI9325 */
 
-#if !defined(CONFIG_STM32_ILI9320_DISABLE) && !defined(CONFIG_STM32_ILI9325_DISABLE)
+#if !defined(CONFIG_STM3240G_ILI9320_DISABLE) && !defined(CONFIG_STM3240G_ILI9325_DISABLE)
   if (id == ILI9320_ID || id == ILI9321_ID || id == ILI9325_ID)
-#elif !defined(CONFIG_STM32_ILI9320_DISABLE) && defined(CONFIG_STM32_ILI9325_DISABLE)
+#elif !defined(CONFIG_STM3240G_ILI9320_DISABLE) && defined(CONFIG_STM3240G_ILI9325_DISABLE)
   if (id == ILI9320_ID || id == ILI9321_ID)
-#else /* if defined(CONFIG_STM32_ILI9320_DISABLE) && !defined(CONFIG_STM32_ILI9325_DISABLE)) */
+#else /* if defined(CONFIG_STM3240G_ILI9320_DISABLE) && !defined(CONFIG_STM3240G_ILI9325_DISABLE)) */
   if (id == ILI9325_ID)
 #endif
     {
       /* Save the LCD type (not actually used at for anything important) */
 
-#if !defined(CONFIG_STM32_ILI9320_DISABLE)
-# if !defined(CONFIG_STM32_ILI9325_DISABLE)
+#if !defined(CONFIG_STM3240G_ILI9320_DISABLE)
+# if !defined(CONFIG_STM3240G_ILI9325_DISABLE)
       if (id == ILI9325_ID)
         {
           g_lcddev.type = LCD_TYPE_ILI9325;
@@ -992,7 +992,7 @@ static inline void stm3240g_lcdinitialize(void)
           g_lcddev.type = LCD_TYPE_ILI9320;
           stm3240g_writereg(LCD_REG_229, 0x8000); /* Set the internal vcore voltage */
         }
-#else /* if !defined(CONFIG_STM32_ILI9325_DISABLE) */
+#else /* if !defined(CONFIG_STM3240G_ILI9325_DISABLE) */
       g_lcddev.type = LCD_TYPE_ILI9325;
 #endif
       lcddbg("LCD type: %d\n", g_lcddev.type);
@@ -1036,8 +1036,8 @@ static inline void stm3240g_lcdinitialize(void)
 
       /* Adjust the Gamma Curve (ILI9320/1) */
 
-#if !defined(CONFIG_STM32_ILI9320_DISABLE)
-# if !defined(CONFIG_STM32_ILI9325_DISABLE)
+#if !defined(CONFIG_STM3240G_ILI9320_DISABLE)
+# if !defined(CONFIG_STM3240G_ILI9325_DISABLE)
     if (g_lcddev.type == LCD_TYPE_ILI9320)
 # endif
       {
@@ -1055,8 +1055,8 @@ static inline void stm3240g_lcdinitialize(void)
 #endif
       /* Adjust the Gamma Curve (ILI9325) */
 
-#if !defined(CONFIG_STM32_ILI9325_DISABLE)
-# if !defined(CONFIG_STM32_ILI9320_DISABLE)
+#if !defined(CONFIG_STM3240G_ILI9325_DISABLE)
+# if !defined(CONFIG_STM3240G_ILI9320_DISABLE)
     else
 # endif
       {
@@ -1197,8 +1197,8 @@ void up_lcduninitialize(void)
 void stm3240g_lcdclear(uint16_t color)
 {
   uint32_t i = 0;
-  
-  stm3240g_setcursor(0, STM3240G_XRES-1); 
+
+  stm3240g_setcursor(0, STM3240G_XRES-1);
   stm3240g_gramselect();
   for (i = 0; i < STM3240G_XRES * STM3240G_YRES; i++)
     {
@@ -1206,4 +1206,4 @@ void stm3240g_lcdclear(uint16_t color)
     }
 }
 
-#endif /* !CONFIG_STM32_ILI9320_DISABLE || !CONFIG_STM32_ILI9325_DISABLE */
+#endif /* !CONFIG_STM3240G_ILI9320_DISABLE || !CONFIG_STM3240G_ILI9325_DISABLE */

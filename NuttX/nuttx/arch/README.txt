@@ -171,7 +171,7 @@ arch/arm - ARM-based micro-controllers
         is complete on the basic port (timer, serial console, SPI).
 
     arch/arm/include/lm and arch/arm/src/lm
-        These directories contain support for the Luminary LM3S/4F family. The 
+        These directories contain support for the Luminary LM3S/4F family. The
         initial, release of this port was included in NuttX version 0.4.6.  The
         current port includes timer, serial console, Ethernet, SSI, and microSD
         support. There are working configurations the NuttX OS test, to run the
@@ -211,7 +211,7 @@ arch/arm - ARM-based micro-controllers
         STATUS: The basic AT91SAM3U port was released in NuttX version 5.1.
         The basic port includes boot-up logic, interrupt driven serial
         console, and system timer interrupts. That release passes the
-        NuttX OS test and is proven to have a valid OS implementation. A 
+        NuttX OS test and is proven to have a valid OS implementation. A
         onfiguration to support the NuttShell is also included.
 
     arch/arm/include/stm32 and arch/arm/src/stm32
@@ -234,7 +234,7 @@ arch/avr
     MCU families.  STATUS:  Under development.
 
     arch/avr/include/avr and arch/avr/src/avr
-      Common support for all 8-bit VR MCUs
+      Common support for all 8-bit AVR MCUs
 
     arch/avr/include/atmega and arch/avr/src/atmega
       Support specifically for the AVR ATMega family (specifically only for
@@ -258,10 +258,6 @@ arch/hc
       STATUS:  Fragments of this port were first released in nuttx-5.0 and
       the port was "code-complete" as nuttx-5.18.  However, the final
       verification effort has been stalled because of higher priority tasks.
-
-arch/m68322
-    A work in progress.
-    STATUS:  Stalled for the time being.
 
 arch/mips
     This directory is dedicated to ports to the MIPS family.

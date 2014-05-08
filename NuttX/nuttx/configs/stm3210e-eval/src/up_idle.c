@@ -68,8 +68,8 @@
  */
 
 #if defined(CONFIG_ARCH_LEDS) && defined(LED_IDLE)
-#  define BEGIN_IDLE() up_ledon(LED_IDLE)
-#  define END_IDLE()   up_ledoff(LED_IDLE)
+#  define BEGIN_IDLE() board_led_on(LED_IDLE)
+#  define END_IDLE()   board_led_off(LED_IDLE)
 #else
 #  define BEGIN_IDLE()
 #  define END_IDLE()
@@ -260,7 +260,7 @@ static void up_idlepm(void)
    * Logically, this code belongs at the end of the PM_STANDBY case below,
    * does not work in the position for some unkown reason.
    */
- 
+
   if (oldstate == PM_STANDBY)
     {
       /* Were we awakened by the alarm? */

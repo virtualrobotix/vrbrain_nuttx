@@ -79,7 +79,7 @@ static inline int fs_checkfd(FAR struct tcb_s *tcb, int fd, int oflags)
    * called attempts to explictly stdin with fdopen(0) but stdin has
    * been closed.
    */
-  
+
   inode = flist->fl_files[fd].f_inode;
   if (!inode)
     {
@@ -153,7 +153,7 @@ FAR struct file_struct *fs_fdopen(int fd, int oflags, FAR struct tcb_s *tcb)
    * Is this fd in the range of valid file descriptors?  Socket descriptors
    * lie in a different range.
    */
- 
+
 #if CONFIG_NFILE_DESCRIPTORS > 0
   if ((unsigned int)fd >= CONFIG_NFILE_DESCRIPTORS)
 #endif
@@ -210,7 +210,7 @@ FAR struct file_struct *fs_fdopen(int fd, int oflags, FAR struct tcb_s *tcb)
   for (i = 0 ; i < CONFIG_NFILE_STREAMS; i++)
     {
       stream = &slist->sl_streams[i];
-      if (stream->fs_filedes < 0)
+      if (stream->fs_fd < 0)
         {
           /* Zero the structure */
 
@@ -245,7 +245,7 @@ FAR struct file_struct *fs_fdopen(int fd, int oflags, FAR struct tcb_s *tcb)
            * file descriptor locks this stream.
            */
 
-          stream->fs_filedes = fd;
+          stream->fs_fd      = fd;
           stream->fs_oflags  = (uint16_t)oflags;
 
           sem_post(&slist->sl_sem);

@@ -46,8 +46,8 @@
 #include <errno.h>
 
 #ifdef CONFIG_STM32_SPI1
-#  include <nuttx/spi.h>
-#  include <nuttx/mtd.h>
+#  include <nuttx/spi/spi.h>
+#  include <nuttx/mtd/mtd.h>
 #endif
 
 #ifdef CONFIG_STM32_SDIO
@@ -206,7 +206,7 @@ int nsh_archinitialize(void)
       message("nsh_archinitialize: Failed to bind SDIO to the MMC/SD driver: %d\n", ret);
       return ret;
     }
-  
+
   /* Then let's guess and say that there is a card in the slot.  I need to check to
    * see if the STM3220G-EVAL board supports a GPIO to detect if there is a card in
    * the slot.

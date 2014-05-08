@@ -45,6 +45,7 @@
 #include <string.h>
 
 #include <net/if.h>
+#include <arpa/inet.h>
 
 #include <apps/netutils/telnetd.h>
 #include <apps/netutils/uiplib.h>
@@ -163,7 +164,7 @@ int shell_session(int argc, char *argv[])
   printf("uIP command shell -- NuttX style\n");
   printf("Type '?' and return for help\n");
 
-  for(;;)
+  for (;;)
     {
       printf(SHELL_PROMPT);
       fflush(stdout);

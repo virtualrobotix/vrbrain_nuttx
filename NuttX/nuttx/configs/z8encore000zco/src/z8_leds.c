@@ -148,7 +148,7 @@ static const struct z8_ledbits_s g_ledarray[10][4] =
 static void z8_putled134(FAR const struct z8_ledbits_s *bits, uint8_t addr)
 {
   uint8_t porte;
-  
+
   porte = bits->cathode;
   putreg8(porte, PEOD);          /* Load porte data */
   putreg8(bits->anode, PGOD);    /* Load portg data */
@@ -195,15 +195,15 @@ static void z8_putarray(FAR const struct z8_ledarray_s *array)
  ****************************************************************************/
 
 /****************************************************************************
- * Name: up_ledinit
+ * Name: board_led_initialize
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_LEDS
-void up_ledinit(void)
+void board_led_initialize(void)
 {
   putreg8(0x00, PEAF);          /* PE Alt func = Port */
   putreg8(0x00, PGAF);          /* PG Alt func = Port */
-                      
+
   putreg8(0x00, PEOC);          /* PE Out Ctrl = push-pull */
   putreg8(0x00, PGOC);          /* PG Out Ctrl = push-pull */
 
@@ -213,15 +213,15 @@ void up_ledinit(void)
 /*putreg8(0x00, PGDD);           * PA Data Dir = output */
   putreg8(0x01, PGADDR);        /* PA Data Dir = output */
   putreg8(0x00, PGCTL);         /* OUTPUT */
-  
+
   z8_putarray(&g_ledarray[0][0]);
 }
 
 /****************************************************************************
- * Name: up_ledon
+ * Name: board_led_on
  ****************************************************************************/
 
-void up_ledon(int led)
+void board_led_on(int led)
 {
   if ((unsigned)led <= 8)
     {
@@ -230,14 +230,14 @@ void up_ledon(int led)
 }
 
 /****************************************************************************
- * Name: up_ledoff
+ * Name: board_led_off
  ****************************************************************************/
 
-void up_ledoff(int led)
+void board_led_off(int led)
 {
   if (led >= 1)
     {
-      up_ledon(led-1);
+      board_led_on(led-1);
     }
 }
 #endif /* CONFIG_ARCH_LEDS */

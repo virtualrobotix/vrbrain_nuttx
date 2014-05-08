@@ -89,7 +89,7 @@
 /* PLL0.  PLL0 is used to generate the CPU clock divider input (PLLCLK).
  *
  *  Source clock:               Main oscillator
- *  PLL0 Multiplier value (M):  20 
+ *  PLL0 Multiplier value (M):  20
  *  PLL0 Pre-divider value (N): 1
  *
  *  PLL0CLK = (2 * 20 * SYSCLK) / 1 = 480MHz
@@ -166,7 +166,7 @@
 #define LED_ASSERTION              2  /*  N/C  ON  = In an assertion */
 #define LED_PANIC                  2  /*  N/C  ON  = Oops! We crashed. (flashing) */
 #define LED_IDLE                   3  /*  OFF  N/C = LPC17 in sleep mode (LED1 glowing) */
- 
+
 /* Button definitions ***************************************************************/
 /* The LPC1766-STK supports several buttons.  All will read "1" when open and "0"
  * when closed
@@ -397,61 +397,6 @@ EXTERN void lpc17_ledinit(void);
 EXTERN void lpc17_setled(int led, bool ledon);
 EXTERN void lpc17_setleds(uint8_t ledset);
 #endif
-
-/************************************************************************************
- * Name: up_buttoninit
- *
- * Description:
- *   up_buttoninit() must be called to initialize button resources.  After that,
- *   up_buttons() may be called to collect the current state of all buttons or
- *   up_irqbutton() may be called to register button interrupt handlers.
- *
- ************************************************************************************/
-
-#ifdef CONFIG_ARCH_BUTTONS
-EXTERN void up_buttoninit(void);
-
-/************************************************************************************
- * Name: up_buttons
- *
- * Description:
- *   up_buttoninit() must be called to initialize button resources.  After that,
- *   up_buttons() may be called to collect the current state of all buttons.
- *
- *   After up_buttoninit() has been called, up_buttons() may be called to collect
- *   the state of all buttons.  up_buttons() returns an 8-bit bit set with each bit
- *   associated with a button.  See the BOARD_BUTTON_*_BIT and BOARD_JOYSTICK_*_BIT
- *   definitions above for the meaning of each bit.
- *
- ************************************************************************************/
-
-EXTERN uint8_t up_buttons(void);
-
-/************************************************************************************
- * Button support.
- *
- * Description:
- *   up_buttoninit() must be called to initialize button resources.  After that,
- *   up_irqbutton() may be called to register button interrupt handlers.
- *
- *   up_irqbutton() may be called to register an interrupt handler that will be called
- *   when a button is depressed or released.  The ID value is a button enumeration
- *   value that uniquely identifies a button resource. See the BOARD_BUTTON_* and
- *   BOARD_JOYSTICK_* definitions in above for the meaning of enumeration values
- *   The previous interrupt handler address is returned (so that it may restored, if
- *   so desired).
- *
- *   Note that up_irqbutton() also enables button interrupts.  Button interrupts
- *   will remain enabled after the interrupt handler is attached. Interrupts may
- *   be disabled (and detached) by calling up_irqbutton with irqhandler equal to
- *   NULL.
- *
- ************************************************************************************/
-
-#if defined(CONFIG_ARCH_IRQBUTTONS) && defined(CONFIG_GPIO_IRQ)
-EXTERN xcpt_t up_irqbutton(int id, xcpt_t irqhandler);
-#endif
-#endif /* CONFIG_ARCH_BUTTONS */
 
 #undef EXTERN
 #if defined(__cplusplus)

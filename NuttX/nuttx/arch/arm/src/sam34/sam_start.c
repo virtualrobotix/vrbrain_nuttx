@@ -112,7 +112,7 @@ void __start(void)
       *dest++ = 0;
     }
 
-  /* Move the intialized data section from his temporary holding spot in
+  /* Move the initialized data section from his temporary holding spot in
    * FLASH into the correct place in SRAM.  The correct place in SRAM is
    * give by _sdata and _edata.  The temporary location is in FLASH at the
    * end of all of the other read-only data (.text, .rodata) at _eronly.
@@ -170,6 +170,17 @@ void __start(void)
 
   sam_boardinitialize();
   showprogress('D');
+
+#ifdef CONFIG_SAM34_CMCC
+  /* Enable the Cortex-M Cache
+   *
+   * REVISIT:  This logic is complete but I have not yet tried to enable it.
+   * I have some questions about how the cache will effect memory mapped
+   * register accesses.
+   */
+
+  sam_cmcc_enable();
+#endif
 
   /* Then start NuttX */
 

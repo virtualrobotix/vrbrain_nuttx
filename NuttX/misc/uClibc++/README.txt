@@ -20,6 +20,7 @@ Contents:
   o Building NuttX with uClibc++
   o Callbacks
   o RGMP
+  o FAQ
 
 Installation of uClibc++
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -98,7 +99,7 @@ is still required.  This logic would handle both cases:
   endif
 
 To get the required libraries into to the NuttX build, it is necessary to add
-them to EXTRA_LIBS and to EXTRA_LIBPATHS.  
+them to EXTRA_LIBS and to EXTRA_LIBPATHS.
 
   LIBSUPXX = ${shell $(CC) --print-file-name=libsupc++.a}
   EXTRA_LIBPATHS = -L "${shell dirname "$(LIBSUPXX)"}"
@@ -180,3 +181,41 @@ Command to compile and run NUTTX:
   $ cd ..
   $ make
   $ rgmp_run
+
+FAQ
+^^^
+
+Collected from http://www.nuttx.org/doku.php?id=wiki:howtos:build-uclibcpp:
+
+Undefined reference to _impure_ptr
+----------------------------------
+Problem: When building uClibc++ I encounter an undefined reference to
+_impure_ptr like:
+
+  LD: nuttx
+  .../arm-none-eabi/lib/armv7e-m\libsupc++.a(vterminate.o): In function
+  `__gnu_cxx::__verbose_terminate_handler()':
+  vterminate.cc:(.text._ZN9__gnu_cxx27__verbose_terminate_handlerEv+0xfc):
+  undefined reference to `_impure_ptr'
+
+Solution: No good solution is known. The following works, however:
+
+Locate Get the directory where you can find libsupc++:
+
+  arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -print-file-name=libsupc++.a
+
+Go to that directory and save a copy of vterminate.o (in case you want to
+restore it later):
+
+  cd <the-directory-containing-libsupc++.a>
+  arm-none-eabi-ar.exe -x libsupc++.a vterminate.o
+
+Then remove vterminate.o from the library. At build time, the uClibc++
+package will provide a usable replacement vterminate.o.
+
+  arm-none-eabi-ar.exe -d libsupc++.a vterminate.o
+
+Now NuttX should link with no problem. If you want to restore the
+vterminate.o that you removed from libsupc++, you can do that with:
+
+  arm-none-eabi-ar.exe rcs libsupc++.a vterminate.o

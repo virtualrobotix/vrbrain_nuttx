@@ -97,7 +97,6 @@ int nxflat_init(const char *filename, struct nxflat_loadinfo_s *loadinfo)
 {
   uint32_t datastart;
   uint32_t dataend;
-  uint32_t bssstart;
   uint32_t bssend;
   int      ret;
 
@@ -114,7 +113,7 @@ int nxflat_init(const char *filename, struct nxflat_loadinfo_s *loadinfo)
     {
       int errval = errno;
       bdbg("Failed to open NXFLAT binary %s: %d\n", filename, errval);
-      return -errval;      
+      return -errval;
     }
 
   /* Read the NXFLAT header from offset 0 */
@@ -144,7 +143,7 @@ int nxflat_init(const char *filename, struct nxflat_loadinfo_s *loadinfo)
       return -ENOEXEC;
     }
 
-  /* Save all of the input values in the loadinfo structure 
+  /* Save all of the input values in the loadinfo structure
    * and extract some additional information from the xflat
    * header.  Note that the information in the xflat header is in
    * network order.
@@ -152,7 +151,6 @@ int nxflat_init(const char *filename, struct nxflat_loadinfo_s *loadinfo)
 
   datastart             = ntohl(loadinfo->header.h_datastart);
   dataend               = ntohl(loadinfo->header.h_dataend);
-  bssstart              = dataend;
   bssend                = ntohl(loadinfo->header.h_bssend);
 
   /* And put this information into the loadinfo structure as well.

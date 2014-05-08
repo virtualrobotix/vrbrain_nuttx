@@ -120,21 +120,21 @@ Switches and Jumpers
 ^^^^^^^^^^^^^^^^^^^^
 ISP/UART0
   JP1 - DTE/DCE selection
-  JP2 - 
-  JP5 - 
+  JP2 -
+  JP5 -
   J11 - STK500 Enable
 
 ADC
-  JP8 - 
-  JP9 - 
+  JP8 -
+  JP9 -
 
 Networking
-  JP10 - 
+  JP10 -
 
 RS-485
-  J8 - 
-  J9 - 
-  J10 - 
+  J8 -
+  J9 -
+  J10 -
 
 Atmel AVRISP mkII Connection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -149,7 +149,7 @@ Atmel AVRISP mkII Connection
 
   (ISP10PIN Connector)
   ------------------- -------------------------
-  
+
          1  2
     MOSI o  o Vcc   - ISP-PDI: PE0/PDI/RX0 via 74HC5053
      LED o  o GND   - ISP-PROG: J11/GND, to 74HC5053 and LED
@@ -241,7 +241,7 @@ Windows Native Toolchains
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
   The WinAVR toolchain is a Windows native toolchain. There are several
-  limitations to using a Windows native toolchain in a Cygwin environment. 
+  limitations to using a Windows native toolchain in a Cygwin environment.
   The three biggest are:
 
   1. The Windows toolchain cannot follow Cygwin paths.  Path conversions are
@@ -341,14 +341,14 @@ Build Notes:
   the flowing point library, then you may have to build avr-lib from sources.
   Below are instructions for building avr-lib from fresh sources:
 
-  1. Download the avr-libc package from: 
+  1. Download the avr-libc package from:
 
      http://savannah.nongnu.org/projects/avr-libc/
 
      I am using avr-lib-1.7.1.tar.bz2
 
-  2. Upack the tarball and cd into the 
- 
+  2. Upack the tarball and cd into the
+
      tar jxf avr-lib-1.7.1.tar.bz2
      cd avr-lib-1.7.1
 
@@ -385,7 +385,7 @@ Amber Web Server Configuration Options
 
     CONFIG_ARCH_architecture - For use in C code:
 
-       CONFIG_ARCH_ATMEGA=y
+       CONFIG_ARCH_CHIP_ATMEGA=y
 
     CONFIG_ARCH_CHIP - Identifies the arch/*/chip subdirectory
 
@@ -411,13 +411,13 @@ Amber Web Server Configuration Options
     CONFIG_ENDIAN_BIG - define if big endian (default is little
        endian)
 
-    CONFIG_DRAM_SIZE - Describes the installed DRAM.  One of:
+    CONFIG_RAM_SIZE - Describes the installed DRAM.  One of:
 
-       CONFIG_DRAM_SIZE=(8*1024) - (8Kb)
+       CONFIG_RAM_SIZE=(8*1024) - (8Kb)
 
-    CONFIG_DRAM_START - The start address of installed SRAM
+    CONFIG_RAM_START - The start address of installed SRAM
 
-       CONFIG_DRAM_START=0x800100
+       CONFIG_RAM_START=0x800100
 
     CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
        have LEDs
@@ -490,19 +490,42 @@ Amber Web Server Configuration Options
 Configurations
 ^^^^^^^^^^^^^^
 
-Each Amber Web Server configuration is maintained in a sub-directory and can
-be selected as follow:
+Common Configuration Notes
+--------------------------
 
-    cd tools
-    ./configure.sh amber/<subdir>
-    cd -
-    . ./setenv.sh
+  1. Each Amber Web Server configuration is maintained in a sub-directory and
+     can be selected as follow:
 
-NOTE: You must also copy avr-libc header files, perhaps like:
+       cd tools
+       ./configure.sh amber/<subdir>
+       cd -
+       . ./setenv.sh
 
-     cp -a /cygdrive/c/WinAVR/include/avr include/.
+     Where <subdir> is one of the configuration sub-directories described in
+     the following paragraph.
 
-Where <subdir> is one of the following:
+     NOTE: You must also copy avr-libc header files, perhaps like:
+
+       cp -a /cygdrive/c/WinAVR/include/avr include/.
+
+  2. These configurations use the mconf-based configuration tool.  To
+     change a configurations using that tool, you should:
+
+     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+        and misc/tools/
+
+     b. Execute 'make menuconfig' in nuttx/ in order to start the
+        reconfiguration process.
+
+  3. By default, all configurations assume the NuttX Buildroot toolchain
+     under Cygwin with Windows.  This is easily reconfigured:
+
+        CONFIG_HOST_WINDOWS=y
+        CONFIG_WINDOWS_CYGWIN=y
+        CONFIG_AVR_BUILDROOT=y
+
+Configuration Sub-Directories
+-----------------------------
 
   hello:
     The simple apps/examples/hello "Hello, World!" example.

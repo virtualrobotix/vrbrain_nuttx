@@ -148,12 +148,12 @@ static const struct led_setting_s g_ledoffvalues[LED_NVALUES] =
   {LED_NC,  LED_NC,  LED_NC,  LED_OFF},
   {LED_NC,  LED_NC,  LED_NC,  LED_OFF},
   {LED_NC,  LED_NC,  LED_NC,  LED_OFF},
-  {LED_NC,  LED_NC,  LED_NC,  LED_OFF}, 
+  {LED_NC,  LED_NC,  LED_NC,  LED_OFF},
   {LED_NC,  LED_NC,  LED_OFF, LED_OFF},
   {LED_OFF, LED_NC,  LED_NC,  LED_OFF},
 };
 
-/* If CONFIG_ARCH_LEDS is not defined, the the user can control the LEDs in
+/* If CONFIG_ARCH_LEDS is not defined, then the user can control the LEDs in
  * any way.  The following array simply maps the PIC32MX_STARTERKIT_LEDn
  * index values to the correct LED pin configuration.
  */
@@ -238,11 +238,11 @@ void pic32mx_setleds(uint8_t ledset)
 #endif
 
 /****************************************************************************
- * Name: up_ledon
+ * Name: board_led_on
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_LEDS
-void up_ledon(int led)
+void board_led_on(int led)
 {
   if ((unsigned)led < LED_NVALUES)
     {
@@ -252,11 +252,11 @@ void up_ledon(int led)
 #endif
 
 /****************************************************************************
- * Name: up_ledoff
+ * Name: board_led_off
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_LEDS
-void up_ledoff(int led)
+void board_led_off(int led)
 {
   if ((unsigned)led < LED_NVALUES)
     {

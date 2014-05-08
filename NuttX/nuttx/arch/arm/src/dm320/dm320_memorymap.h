@@ -67,7 +67,7 @@
  *    section address for most regions can be overriden if the same setting is
  *    defined in the board.h file (These defaults correspond to the product Neuros
  *    OSD memory configuration).
- *    
+ *
  * 2. The DM320 only has a single control line for external peripherals. To support
  *    more than one peripheral, most hardware will use external memory decode logic,
  *    so that physical memory regions is in the board-specific files.
@@ -125,7 +125,7 @@
 #define DM320_CFI_NSECTIONS          16         /*  16Mb  16 sections    -- */
 #define   DM320_CFI_SIZE             (16*1024*1024)
 #define DM320_SSFDC_NSECTIONS        16         /*  16Mb  16 sections    -- */
-#define   DM320_SSFDC_SIZE           (16*1024*1024) 
+#define   DM320_SSFDC_SIZE           (16*1024*1024)
 #define DM320_CE1_NSECTIONS          16         /*  16Mb  16 sections    -- */
 #define   DM320_CE1_SIZE             (16*1024*1024)
 #define DM320_CE2_NSECTIONS          16         /*  16Mb  16 sections    -- */
@@ -137,8 +137,8 @@
 
 /* DM320 Virtual Memory Map */
 
-#if CONFIG_DRAM_VSTART != 0x00000000
-# error "Invalid setting for CONFIG_DRAM_VSTART"
+#if CONFIG_RAM_VSTART != 0x00000000
+# error "Invalid setting for CONFIG_RAM_VSTART"
 #endif
 
 /* Section/Region Name               Virt Address  End        Size  CW */
@@ -176,6 +176,7 @@
  */
 
 #define NUTTX_START_VADDR            (DM320_SDRAM_VADDR+PGTABLE_SIZE)
+#define NUTTX_START_PADDR            (DM320_SDRAM_PADDR+PGTABLE_SIZE)
 
 /* Section MMU Flags                 Flags              CW */
 #define DM320_FLASH_MMUFLAGS         MMU_IOFLAGS     /* -- */

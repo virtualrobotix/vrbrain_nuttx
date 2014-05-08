@@ -217,7 +217,7 @@ int can_main(int argc, char *argv[])
     nbytes = write(fd, &txmsg, msgsize);
     if (nbytes != msgsize)
       {
-        message("ERROR: write(%d) returned %d\n", msgsize, nbytes);
+        message("ERROR: write(%ld) returned %ld\n", (long)msgsize, (long)nbytes);
         errval = 3;
         goto errout_with_dev;
       }
@@ -234,14 +234,14 @@ int can_main(int argc, char *argv[])
     nbytes = read(fd, &rxmsg, msgsize);
     if (nbytes < CAN_MSGLEN(0) || nbytes > msgsize)
       {
-        message("ERROR: read(%d) returned %d\n", msgsize, nbytes);
+        message("ERROR: read(%ld) returned %ld\n", (long)msgsize, (long)nbytes);
         errval = 4;
         goto errout_with_dev;
       }
 #endif
 
 #ifndef CONFIG_EXAMPLES_CAN_READONLY
-    message("  ID: %4d DLC: %d\n", rxmsg.cm_hdr.id, rxmsg.cm_hdr.dlc);
+    message("  ID: %4d DLC: %d\n", rxmsg.cm_hdr.ch_id, rxmsg.cm_hdr.ch_dlc);
 #endif
 
     /* Verify that the received messages are the same */
@@ -250,9 +250,9 @@ int can_main(int argc, char *argv[])
     if (memcmp(&txmsg.cm_hdr, &rxmsg.cm_hdr, sizeof(struct can_hdr_s)) != 0)
       {
         message("ERROR: Sent header does not match received header:\n");
-        lib_dumpbuffer("Sent header", (FAR const uint8_t*)&txmsg.cm_hdr, 
+        lib_dumpbuffer("Sent header", (FAR const uint8_t*)&txmsg.cm_hdr,
                        sizeof(struct can_hdr_s));
-        lib_dumpbuffer("Received header", (FAR const uint8_t*)&rxmsg.cm_hdr, 
+        lib_dumpbuffer("Received header", (FAR const uint8_t*)&rxmsg.cm_hdr,
                        sizeof(struct can_hdr_s));
         errval = 4;
         goto errout_with_dev;
@@ -270,7 +270,7 @@ int can_main(int argc, char *argv[])
       }
 
     /* Report success */
-  
+
     message("  ID: %4d DLC: %d -- OK\n", msgid, msgdlc);
 #endif
 
@@ -278,7 +278,7 @@ int can_main(int argc, char *argv[])
 
 #ifndef CONFIG_EXAMPLES_CAN_READONLY
     msgdata += msgdlc;
- 
+
     if (++msgid >= MAX_ID)
       {
         msgid = 1;

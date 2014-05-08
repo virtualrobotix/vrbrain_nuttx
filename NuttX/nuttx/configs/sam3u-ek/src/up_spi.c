@@ -44,7 +44,7 @@
 #include <debug.h>
 #include <errno.h>
 
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <arch/board/board.h>
 
 #include "up_arch.h"
@@ -53,7 +53,7 @@
 #include "sam_spi.h"
 #include "sam3u-ek.h"
 
-#ifdef CONFIG_SAM34_SPI
+#ifdef CONFIG_SAM34_SPI0
 
 /************************************************************************************
  * Definitions
@@ -89,7 +89,7 @@
  * Name: sam_spiinitialize
  *
  * Description:
- *   Called to configure SPI chip select GPIO pins for the SAM3U10E-EVAL board.
+ *   Called to configure SPI chip select GPIO pins for the SAM3U-EK board.
  *
  ************************************************************************************/
 
@@ -107,30 +107,27 @@ void weak_function sam_spiinitialize(void)
 }
 
 /****************************************************************************
- * Name:  sam_spicsnumber, sam_spiselect, sam_spistatus, and sam_spicmddata
+ * Name:  sam_spi0select, sam_spi0status, and sam_spic0mddata
  *
  * Description:
  *   These external functions must be provided by board-specific logic.  They
  *   include:
  *
- *   o sam_spicsnumber and sam_spiselect which are helper functions to
- *     manage the board-specific aspects of the unique SAM3U chip select
- *     architecture.
- *   o sam_spistatus and sam_spicmddata:  Implementations of the status
+ *   o sam_spi0select is a functions tomanage the board-specific chip selects
+ *   o sam_spi0status and sam_spic0mddata:  Implementations of the status
  *     and cmddata methods of the SPI interface defined by struct spi_ops_
- *     (see include/nuttx/spi.h). All other methods including
- *     up_spiinitialize()) are provided by common SAM3U logic.
+ *     (see include/nuttx/spi/spi.h). All other methods including
+ *     up_spiinitialize()) are provided by common SAM3/4 logic.
  *
  *  To use this common SPI logic on your board:
  *
  *   1. Provide logic in sam_boardinitialize() to configure SPI chip select
  *      pins.
- *   2. Provide sam_spicsnumber(), sam_spiselect() and sam_spistatus()
- *      functions in your board-specific logic.  These functions will perform
- *      chip selection and status operations using GPIOs in the way your board
- *      is configured.
+ *   2. Provide sam_spi0select() and sam_spi0status() functions in your board-
+ *      specific logic.  These functions will perform chip selection and
+ *      status operations using GPIOs in the way your board is configured.
  *   2. If CONFIG_SPI_CMDDATA is defined in the NuttX configuration, provide
- *      sam_spicmddata() functions in your board-specific logic.  This
+ *      sam_spic0mddata() functions in your board-specific logic.  This
  *      function will perform cmd/data selection operations using GPIOs in
  *      the way your board is configured.
  *   3. Add a call to up_spiinitialize() in your low level application
@@ -143,42 +140,7 @@ void weak_function sam_spiinitialize(void)
  ****************************************************************************/
 
 /****************************************************************************
- * Name: sam_spicsnumber
- *
- * Description:
- *   The SAM3U has 4 CS registers for controlling device features.  This
- *   function must be provided by board-specific code.  Given a logical device
- *   ID, this function returns a number from 0 to 3 that identifies one of
- *   these SAM3U CS resources.
- *
- * Input Parameters:
- *   devid - Identifies the (logical) device
- *
- * Returned Values:
- *   On success, a CS number from 0 to 3 is returned; A negated errno may
- *   be returned on a failure.
- *
- ****************************************************************************/
-
-int sam_spicsnumber(enum spi_dev_e devid)
-{
-  int cs = -EINVAL;
-
-#if defined(CONFIG_INPUT) && defined(CONFIG_INPUT_ADS7843E)
-  if (devid == SPIDEV_TOUCHSCREEN)
-    {
-      /* Assert the CS pin to the OLED display */
-
-      cs = 2;
-    }
-#endif
-
-  spidbg("devid: %d CS: %d\n", (int)devid, cs);
-  return cs;
-}
-
-/****************************************************************************
- * Name: sam_spiselect
+ * Name: sam_spi0select
  *
  * Description:
  *   PIO chip select pins may be programmed by the board specific logic in
@@ -202,7 +164,7 @@ int sam_spicsnumber(enum spi_dev_e devid)
  *
  ****************************************************************************/
 
-void sam_spiselect(enum spi_dev_e devid, bool selected)
+void sam_spi0select(enum spi_dev_e devid, bool selected)
 {
   /* The touchscreen chip select is implemented as a GPIO OUTPUT that must
    * be controlled by this function.  This is because the ADS7843E driver
@@ -221,7 +183,7 @@ void sam_spiselect(enum spi_dev_e devid, bool selected)
 }
 
 /****************************************************************************
- * Name: sam_spistatus
+ * Name: sam_spi0status
  *
  * Description:
  *   Return status information associated with the SPI device.
@@ -230,13 +192,13 @@ void sam_spiselect(enum spi_dev_e devid, bool selected)
  *   devid - Identifies the (logical) device
  *
  * Returned Values:
- *   Bit-encoded SPI status (see include/nuttx/spi.h.
+ *   Bit-encoded SPI status (see include/nuttx/spi/spi.h.
  *
  ****************************************************************************/
 
-uint8_t sam_spistatus(FAR struct spi_dev_s *dev, enum spi_dev_e devid)
+uint8_t sam_spi0status(FAR struct spi_dev_s *dev, enum spi_dev_e devid)
 {
   return 0;
 }
 
-#endif /* CONFIG_SAM34_SPI */
+#endif /* CONFIG_SAM34_SPI0 */

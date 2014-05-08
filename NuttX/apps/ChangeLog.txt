@@ -196,7 +196,7 @@
 	  backspace or a DEL character as a backspace (i.e., deleting the character
 	  to the left of the cursor).  This makes NSH less dependent on particular
 	  keyboard mappings of the Backspace key.  Submitted by Mike Smith.
-	* apps/examples/cdcacm:  An example that illustrates how the CDC/ACM driver
+	* apps/system/cdcacm:  An example that illustrates how the CDC/ACM driver
 	  may to connected and disconnected through software control.
 	* apps/examples/nsh/nsh_main.c:  If available, call up_cxxinitialize() to
 	  initialize all statically defined C++ classes.
@@ -533,7 +533,7 @@
 	  parameter.  Was limiting the range to <= count.  From Ken
 	  Petit (2014-4-24).
 
-6.28 2013-xx-xx Gregory Nutt <gnutt@nuttx.org>
+6.28 2013-06-14 Gregory Nutt <gnutt@nuttx.org>
 
 	* apps/examples/mtdpart:  Provides a simple test of MTD partitions.
 	* apps/nshlib/nsh_mntcmds.c:  Add a -h option to the df command to show
@@ -544,7 +544,7 @@
 	  flash_eraseall NSH command  (Ken Pettit, 2013-5-1).
 	* apps/examples/flash_test and apps/examples/smart_test:  Add tests of
 	  the SMART block driver and file system  (Ken Pettit, 2013-5-1).
-	* apps/examples/mtdpart:  Extended to the test.  The original test
+	* apps/examples/mtdpart:  Extended the test.  The original test
 	  coverage was superficial (2013-5-3).
 	* apps/examples/smart:  This is an adaptation of the NXFFS stress
 	  test for the SMART file system (Ken Pettit, 2013-5-3).
@@ -559,7 +559,7 @@
 	  UDP discover utility.  From Max Holtzberg (2013-5-21).
 	* apps/examples/tcpecho:  Added a simple single threaded, poll based
  	  TCP echo server based on W. Richard Stevens UNIX Network Programming
-	  Book.  Contributed by Max Holtberg (2013-5-22).
+	  Book.  Contributed by Max Holtzberg (2013-5-22).
 	* apps/examples/slcd:  Add an example for testing alphanumeric,
 	  segment LCDs (2013-5-24).
 	* apps/examples/slcd:  Extend SLCD test to handle multi-line displays
@@ -577,4 +577,287 @@
 	* Standardize on CONFIG_NSH_BUILTIN_APPS.  Remove all other variants
 	  of the build-as-an-NSH-application configuration settings
 	  (2013-6-12).
+
+6.29 2013-07-31 Gregory Nutt <gnutt@nuttx.org>
+
+	* apps/examples/nsh, cxxtest, and helloxx:  C++ initializers should be
+	  set once and, preferably, in the context of the task that uses any C++
+	  statically initialized classes.  These only becomes an issue if cxxtest
+	  or helloxx are built as NSH builtin applications.  Then you want the
+	  initialization done in cxxtext or helloxx and not in NSH (and certainly
+	  not twice).  Added configuration options to control who does the C++
+	  initialization.  NSH now does not do C++ initialization be default and
+	  must be configured to do otherwise.  Converely, cxxtest and helloxx
+	  will do C++ initialization unless configured do otherwise (2013-6-21).
+	* apps/examples/cxxtext:  Add ostream test as provided by Michael
+	  (2013-6-21).
+	* apps/examples/nxhello:  Minor fix for compilation error when the
+	  display resolution is low (< 8bpp) due to a typo that has been there
+	  for a long time (2013-6-23).
+	* apps/examplex/nxhello:  Correct default colors when in Y1 code mode.
+	  (2013-6-24).
+	* apps/system/Make.defs and Kconfig:  The RAM test was not correctly built
+	  into the configuration and build system (2013-6-26).
+	* apps/examples/composite/composite_main.c:  SourceForge But Ticket #19.
+	  Change to prevent some false alarm debug assertions (From Chia Cheng
+	  Tao, 2013-7-9).
+	* apps/system/zmodem:  Add configuration support and a build framework
+	  for the Zmodem sz and rz command (which exist but have not yet been
+	  checked in) (2013-7-12).
+	* apps/system/zmodem:  The 'sz' command is now complete and seems
+	  functional (given on light testing).  The rz command logic exists but
+	  is still untested and not yet checked in  (2013-7-13).
+	* apps/system/zmodem:  The 'rz' command is now complete and functional
+	  under certain conditaions.  There are, however, some data overrun
+	  issues that I am still uncertain how should be handled (2012-7-15).
+	* apps/system/zmodem/Makefile.host and host/: The Zmodem utilities
+	  can now be built to execute on a Linux host.
+	* apps/nshlib/nsh_fscmds.c:  Add a 'cmp' command that can be used to
+	  compare two files for equivalence.  Returns an indication if the files
+	  differ.  Contributed by Andrew Tridgell (via Lorenz Meier) (2013-7-18).
+
+6.30 2013-09-14 Gregory Nutt <gnutt@nuttx.org>
+
+	* apps/examples/composite/:  SourceForge bug #19: Fix a typo that can
+	  cause a configuration error.  From CCTSAO (2013-9-4).
+	* apps/examples/cc3000.  Initial support for the TI CC3000 network module
+	  on the Freescale Freedom-KL25Z board from Alan Carvalho de Assis.
+	  Includes the test to verify the CC3000 (2013-9-3).
+	* apps/examples/usbmsc:  apps/examples/usbstorage renamed usbmsc.
+	  Change submitted by CCTSAO (2013-6-5).
+	* apps/examples/pwm:  Clean-up some configuration confusion (2013-9-5).
+	* apps/netutils/dhcpd/dhcpd.c:  Fix calculation of the next lease
+	  address.  SourceForge bug #21 from Paolo Messina (2013-9-6).
+	* apps/examples/usbmsc:  Don't try to control USB trace if we are
+	  an NSH built-in task.  In that case our attempts are inadequate
+	  and only interfere with with other logic that is attempting to
+	  to do the same thing (in NSH or in the USB monitor) (2013-9-6).
+	* apps/examples/usbmsc:  IMPORTANT bug fix: Change how the msconn
+	  works.  Because of recent changes the msconn command was hanging.
+	  This was because the USB MSC start-up logic creates a pthread;
+	  Now waitpid() will wait until all members of the task group
+	  exit.  So NSH was hanging in waitpid when msconn started even
+	  though msconn returned.  The USB MSC logic really should not use
+	  a pthread, but we are stuck with that for now.  The work-around
+	  is the msconn now daemonizes itself so that it so that the pthread
+	  is created in a different task group (2013-9-7).
+	* apps/system/usbmonitor:  The USB monitor has been extended so
+	  that it can be used with USB device or host trace data (2013-9-9).
+	* apps/nshlib/nsh_fscmds.c:  Fix NSH listing output for the case
+	  of a single file.  Provided by Lorenz Meier (2013-9-13).
+
+6.31 2013-10-28 Gregory Nutt <gnutt@nuttx.org>
+
+	* apps/nshlib/nsh_netcmds.c:  Remove a warning when DHCP is not
+	  enabled (2013-9-17).
+	* apps/nshlib/Kconfig:  Default IP address should be 0x0a000001
+	  (10.0.0.1), not 0xa0000001 (160.0.0.1).  Ditto for the gateway
+	  (2013-9017).
+	* apps/examples/ostest/Kconfig:  Add configuration options for
+	  the FPU test.  There are still many OS test configuration
+	  options that do not appear in Kconfig (2013-9-18).
+	* apps/examples/cc3000:  Condition the CC3000 example on having
+	  selected the CC3000 device.  Otherwise, you are prompted for
+	  this option on each 'make oldconfig' (2013-9-18).
+	* apps/system/usbmonitor/usbmonitor.c:  Fix some bad conditional
+	  compilation probably introduced on 2013-9-9 (2013-9-23).
+	* apps/system/stackmonitor:  Add a daemon that can be used to
+	  monitor stack usage by all threads (2013-9-24).
+	* system/usbmsc:  Move examples/usbmsc to system/usbmsc (2013-9-25).
+	* system/cdcacm:  Move examples/cdcacm to system/cdcacm (2013-9-25).
+	* system/composite:  Move examples/composite to system/composite
+	  (2013-9-25).
+	* apps/nshlib and apps/readline:  Numerous changes to get NSH
+	  working with no file system.  Basically this suppresses I/O
+	  redirection and replaces file I/O with calls to low-level
+	  console read/write functions.  Suggested by Alan Carvalho de Assis
+	  in a somewhat different form. (2013-9-30).
+	* apps/nshlib/nsm_routecmds.c:  Add addroute and delroute
+	  commands (2013-10-5).
+	* apps/system/i2ctool/Kconfig:  Fix default I2C frequency:  400KHz
+	  instead of 4MHz.  Suggested by Max Kriegleder (2013-10-10).
+	* apps/system/info/Kconfig and Makefile:  Increase stack size.
+	  Ken Petit reports that this simple command can exceed its 768
+	  stack size under certain conditions.  The size is marginal and
+	  has been increased to 1024 by default but is also now configurable
+	  (2013-10-14).
+	* apps/Makefile:  Need to include external/Make.defs if we want
+	  allow external applications to participate in the NuttX
+	  configuration.  Suggested by gdi@embedders.org (2013-10-14).
+	* apps/examples/cc3300: Updates as part of larger re-organizaion
+	  of CC3000 logic by David Sidrane (2013-10-16).
+	* apps/examples/random:  Add a simple test that dumps values from
+	  /dev/random (2013-10-20).
+	* apps/examples/cc3000:  Extensions and enhancements from David
+	  Sidrane (2013-10-23).
+	* apps/netutils/telnetd/telnetd_driver.c:  Missing argument to
+	  debug statement can cause crashes in certain error conditions.
+	  From David Sidrane (2013-10-24).
+	* apps/examples/cc3000:  Updates from David Sidrane.  Plus
+	  some kruft removal (2013-10-24).
+	* apps/examples/can/can_main.c:  Correct an error in a debug
+	  statement.  From Martin Lederhilger (2013-10-24).
+	* apps/examples/adc:  Add support so that a ADC driven by
+	  software triggering can be tested (2013-10-25).
+	* apps/examples/cc3000:  Updates from David Sidrane (2013-10-25).
+	* apps/system/nxplayer:  Implements a command line media
+	  player.  From Ken Pettit (2013-10-27).
+	* apps/system/nxplayer: Add logic to verify the audio sub-format.
+	  From Ken Pettit (2013-10-28).
+
+6.32 2013-12-07 Gregory Nutt <gnutt@nuttx.org>
+
+	* apps/platform:  A new home for board-specific application code
+	  (2013-10-30).
+	* apps/include/platform/configdata.h:  Define an interface that can be
+	  used to manage platform-specific storage of configuration data
+	  (2013-10-30).
+	* apps/examples/cc3000: Fine tuning of memory usage from David Sidrane
+	  (2013-10-30).
+	* apps/platform/mikroe-stm32f4: Now supports storage of configuration
+	  data.  From Ken Pettit (2013-10-30).
+	* apps/nshlib/nsh_dbgcmds.c and others:  Add skip= and count=
+	  options to the hexdump command.  From Ken Pettit (2013-11-1).
+	* apps/platform/mikroe-stm32f4:  Now uses /dev/config for configuration
+	  data storage.  From Ken Pettit (2013-11-1).
+	* apps/platform/Makefile:  Was not dealing with the bin sub-directory
+	  correctly (2013-11-2).
+	* apps/examples/configdata:  A unit test for the MTD configuration
+	  data driver from Ken Pettit (2013-11-4).
+	* apps/platform/mikroe-stm32f4:  Updated to use new MTD configuration
+	  driver features.  From Ken Pettit (2013-11-1).
+	* apps/nshlib/nsh.h:  Allow USB trace without a USB console. From
+	  David Sidrane (2013-11-06).
+	* apps/system/composite/composite_main.c:  The wrong handle was getting
+	  nullified.  From David Sidrane (2013-11-7).
+	* apps/system/nxplayer: Play thread stack size is now configurable.  All
+	  NxPlayer threads now have names assigned via pthread_setname_np().
+	  From Ken Pettit (2013-11-10).
+	* apps/examples/i2schar:  The beginning of an I2S test based on the I2S
+	  character driver (2013-11-10).
+	* apps/nshlib/nsh_mntcmds.c:  Mount command updates from Ken Pettit
+	  (2013-11-17).
+	* apps/examples/hidkbd/hidkbd_main.c:  Now calls a function named
+	  arch_usbhost_initialize() that must be provided by the platform-
+	  specific code (2013-11-29).
+	* apps/nshlib/nsh_fscmds.c:  Add an option to the mkfatfs command to
+	  specify FAT12, FAT16, or FAT32 (2013-12-5).
+
+6.33 2014-01-30 Gregory Nutt <gnutt@nuttx.org>
+
+	* apps/nshlib/nsh_mntcmds.c:  Modified the df -h logic to eliminate
+	  truncating numbers in conversion (like 7900 -> 7M).  From Ken
+	  Pettit (2013-12-12).
+	* Moved configs/stm3240g-eval/src/up_cxxinitialize.c to
+	  apps/platform/stm3240g-eval/up_cxxinitialize.c:  Now it is available
+	  in user-space in the kernel mode build (2013-12-29).
+	* apps/examples/mount/Kconfig:  Fill in empty Kconfig file (2013-12-31).
+	* builtin/Makefile: Fixes for native Windows build from Max Holtzberg
+	  (2014-1-4).
+	* apps/netutils/dhcpc/Kconfig, resolv/Kconfig, telnetd/Kconfig, and
+	  apps/nshlib/Kconfig:  Refactor some configuration dependencies:  NSH
+	  features should depend on netutil selections; netutil selections
+	  should depend on networking selections. (2014-1-9).
+	* apps/nshlib/nsh_command.c:  Separate NSH command handling from NSH
+	  line parsing.  This re-partitioning simplifies the logic and will
+	  enable some things to come (2014-1-10).
+	* apps/nshlib/nsh_parse.c:  Will now support multiple commands on a
+	  command line, each separated with a semi-colon (2014-1-10).
+	* apps/nshlib/nsh_parse.c:  Put the logic that executes a command
+	  after parsing parameters into a separate file so that it can be
+	  reused (2014-1-10).
+	* apps/nshlib/nsh_parse.c:  Add initial support of commands enclosed
+	  in back quotes as command arguments.  Functionality still incomplete
+	  on initial commit (2014-1-10).
+	* Logic to support commands enclosed in back quotes is functional
+	  but not thoroughly tested (2014-1-11).
+	* apps/nshlib/nsh_parse.c:  Can now handle arguments that are
+	  concatenations of constant strings, command return data, application
+	  return data, and environment variables (2014-1-11).
+	* apps/nshlib/nsh_parse.c:  Fix a memory leak ... forgot to close
+	  a temporary file (2013-1-12).
+	* apps/system/inifile:  A simple INI file parser (perhaps too simple).
+	  This is code that I wrote a long time ago and have used many time but
+	  is untested in its current incarnation (2014-1-15).
+	* aps/nshlib/nsh_parse.c:  Recent changes broke redirection of output
+	  (2014-1-14).
+	* apps/nshlib/nsh_parse.c:  Add true and false commands (2014-1-17)
+	* apps/nshlib/nsh.h and nsh_parse.c:  Re-name and re-organize some
+	  if-then-else related structures to better support forthcoming until
+	  and while loops (2014-1-17).
+	* apps/nshlib/nsh_script.c:  Now saves the FILE stream for the script
+	  file in the vtbl structure so that it can be accessed by forthcoming
+	  while and until logic (2014-1-17).
+	* apps/nshlib/nsh.h, nsh_command.c, nsh_parse.c, and nsh_script.c:  Add
+	  support for while-do-done and until-do-done loops.  These only work
+	  when executing a script file because they depend on the ability to seek
+	  in the file to implement the looping behaviors (2014-1-17).
+	* apps/nshlib/nsh_parse.c:  Loosen up if-then-else-fi syntax to allow
+	  a command to be on the same line as the then and else tokens like:
+	  "if true; then echo true; else echo false; fi".  Much more like bash!
+	  (2014-1-17).
+	* apps/nshlib/Kconfig, README.txt, nsh.h, nsh_command.c, and
+	  nsh_script.c:  Add an option to conditionally compile out support for
+	  loop and for if-then-else-fi sequence (2014-1-17).
+	* apps/nshlib/nsh.h, nsh_command.c, and nsh_parse.c:  Add a break
+	  command that can be executed with a loop to terminate the loop
+	  immediately (2014-1-17).
+	* apps/system/vi:  Add support for a tiny, VI work-alike editor.  This
+	  is still very much a work-in-progress on initial check-in (2014-1-20).
+	* apps/netutils/uiplib:  Support new definitions and state passing for
+	  network device status. From Maz Holtzberg (2014-1-21).
+	* apps/system/vi:  Tiny VI is basically functional.  All commands seem
+	  to work.  There are still some display artifacts and probably several
+	  untested conditions (2014-1-21).
+
+7.1 2014-03-15 Gregory Nutt <gnutt@nuttx.org>
+
+	* apps/system/cle:  Add a EMACS-like command line editor.  This CLE,
+	  is really more like readline than the NuttX readline is!  (2014-02-02).
+	* apps/nshlib: Use of the standard tiny readline (about .25KB) is now
+	  an option and can be replaces with the EMACX-like CLE (about 2KB)
+	  (2014-02-02).
+	* Several changes to restore Windows native build (2014-2-7)
+	* apps/examples/touchscreen:  Can now be configured to work with a mouse
+	  interface as well (2014-2-10).
+	* Several files changes based on complaints from the tool CppCheck.  Some
+	  latent bugs were fixed (and most likely some new typos were introduced)
+	  (2014-2-10).
+	* apps/examples/nximage/Kconfig and apps/examples/uip/Kconfig: Incomplete
+	  Kconfig files fleshed out by Alan Carvalho de Assis (2014-2-18).
+	* apps/nshlib: 'rmdir' can now be used in the pseudo-filesystem.  Hence,
+	  the command needs to be available even if there are no write-able
+	  filesystem enabled (2014-2-19).
+	* apps/nshlib: 'mkdir' can now be used in the pseudo-filesystem.  Hence,
+	  the command needs to be available even if there are no write-able
+	  filesystem enabled (2014-2-19).
+	* apps/nshlib: 'mv' can now be used in the pseudo-filesystem.  Hence,
+	  the 'mv' command needs to be available even if there are no write-able
+	  filesystem enabled (2014-2-19).
+	* apps/nshlib: 'rm' can now be used to remove nodes from the pseudo-
+	  filesystem.  Hence, the 'rm' command needs to be available even if there
+	  are no write-able filesystem enabled (2014-2-20).
+	* CONFIG_DISABLE_PSEUDOFS_OPERATIONS: This new configuration setting
+	  basically backs out the recent changes to mv, rm, mkdir, and rmdir
+	  (2014-2-20).
+	* nshlib/Kconfig:  Use CONFIG_DEFAULT_SMALL in selecting default
+	  settings (2014-2-20).
+	* nshlib/nsh_telnetd.c:  Use strncpy vs strcpy to avoid overruning the
+	  username and password buffers.  From Bertold Van den Bergh (2014-2-22).
+	* nshlib/Kconfig, nsh_proccmds.c:  If the CPU load feature and the procfs
+	  features are enabled, then show CPU load used by each thread in the
+	  'ps' command (2014-2-27).
+	* nshlib/nsh_fscmds.c:  Add a newline after printing the file in the
+	  'cat' command.  This prevents the NSH prompt from be in the same line
+	  as the final line of the file in the case where there is no newline
+	  at the end of the file (2014-2-27).
+	* netutils/dhcpd/dhcpd.c: allocipaddr() should not call ntohl(), the
+	  returned IP address is already in host order.
+	* apps/netutils/dhcpd/Kconfig: Add missing DHCPD configuration
+	  settings(2014-3-3).
+	* Support for the legacy configuration mechanism (using appconfig files)
+	  is removed.  Only the newer configuration using the kconfig-frontends
+	  tools is now supported (2014-3-6).
+
+7.2 2014-xx-xx Gregory Nutt <gnutt@nuttx.org>
 

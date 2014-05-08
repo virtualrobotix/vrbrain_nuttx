@@ -1,5 +1,5 @@
 /************************************************************************************************
- * arch/arm/src/sam34/chip/sam42_vectors.h
+ * arch/arm/src/sam34/chip/sam4s_vectors.h
  *
  *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -37,7 +37,7 @@
  * Pre-processor Definitions
  ************************************************************************************************/
 /* This file is included by sam_vectors.S.  It provides the macro VECTOR that
- * supplies ach SAM3U vector in terms of a (lower-case) ISR label and an
+ * supplies ach SAM4S vector in terms of a (lower-case) ISR label and an
  * (upper-case) IRQ number as defined in arch/arm/include/sam/sam3u_irq.h.
  * sam_vectors.S will defined the VECTOR in different ways in order to generate
  * the interrupt vectors and handlers in their final form.
@@ -75,7 +75,7 @@
   VECTOR(sam_hsmci, SAM_IRQ_HSMCI)    /* Vector 16+18: High Speed Multimedia Card Interface */
   VECTOR(sam_twi0, SAM_IRQ_TWI0)      /* Vector 16+19: Two-Wire Interface 0 */
   VECTOR(sam_twi1, SAM_IRQ_TWI1)      /* Vector 16+20: Two-Wire Interface 1 */
-  VECTOR(sam_spi, SAM_PID_SPI)        /* Vector 16+21: Serial Peripheral Interface */
+  VECTOR(sam_spi0, SAM_IRQ_SPI0)      /* Vector 16+21: Serial Peripheral Interface */
   VECTOR(sam_ssc, SAM_IRQ_SSC)        /* Vector 16+22: Synchronous Serial Controller */
   VECTOR(sam_tc0, SAM_IRQ_TC0)        /* Vector 16+23: Timer Counter 0 */
   VECTOR(sam_tc1, SAM_IRQ_TC1)        /* Vector 16+24: Timer Counter 1 */

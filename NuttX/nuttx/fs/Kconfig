@@ -9,6 +9,25 @@ config DISABLE_MOUNTPOINT
 	bool "Disable support for mount points"
 	default n
 
+config DISABLE_PSEUDOFS_OPERATIONS
+	bool "Disable pseudo-filesystem operations"
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
+	---help---
+		Disable certain operations on pseudo-file systems include mkdir,
+		rmdir, unlink, and rename.  These are necessary for the logical
+		completeness of the illusion created by the pseudo-filesystem.
+		However, in practical embedded system, they are seldom needed and
+		you can save a little FLASH space by disabling the capability.
+
+config FS_READABLE
+	bool
+	default n
+
+config FS_WRITABLE
+	bool
+	default n
+
 source fs/mmap/Kconfig
 source fs/fat/Kconfig
 source fs/nfs/Kconfig
@@ -16,6 +35,7 @@ source fs/nxffs/Kconfig
 source fs/romfs/Kconfig
 source fs/smartfs/Kconfig
 source fs/binfs/Kconfig
+source fs/procfs/Kconfig
 
 comment "System Logging"
 

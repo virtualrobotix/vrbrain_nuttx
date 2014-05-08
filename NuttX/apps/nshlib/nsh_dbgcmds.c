@@ -89,7 +89,7 @@ struct dbgmem_s
  * Name: mem_parse
  ****************************************************************************/
 
-int mem_parse(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv,
+static int mem_parse(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv,
               struct dbgmem_s *mem)
 {
   char *pcvalue = strchr(argv[1], '=');
@@ -148,8 +148,8 @@ int cmd_mb(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   struct dbgmem_s mem;
   volatile uint8_t *ptr;
+  unsigned int i;
   int ret;
-  int i;
 
   ret = mem_parse(vtbl, argc, argv, &mem);
   if (ret == 0)
@@ -188,6 +188,7 @@ int cmd_mb(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
           nsh_output(vtbl, "\n", *ptr);
         }
     }
+
   return ret;
 }
 #endif
@@ -201,15 +202,17 @@ int cmd_mh(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   struct dbgmem_s mem;
   volatile uint16_t *ptr;
+  unsigned int i;
   int ret;
-  int i;
 
   ret = mem_parse(vtbl, argc, argv, &mem);
   if (ret == 0)
     {
       /* Loop for the number of requested bytes */
 
-      for (i = 0, ptr = (volatile uint16_t*)mem.dm_addr; i < mem.dm_count; i += 2, ptr++)
+      for (i = 0, ptr = (volatile uint16_t*)mem.dm_addr;
+           i < mem.dm_count;
+           i += 2, ptr++)
         {
           /* Print the value at the address */
 
@@ -241,6 +244,7 @@ int cmd_mh(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
           nsh_output(vtbl, "\n", *ptr);
         }
     }
+
   return ret;
 }
 #endif
@@ -254,8 +258,8 @@ int cmd_mw(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   struct dbgmem_s mem;
   volatile uint32_t *ptr;
+  unsigned int i;
   int ret;
-  int i;
 
   ret = mem_parse(vtbl, argc, argv, &mem);
   if (ret == 0)
@@ -286,6 +290,7 @@ int cmd_mw(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
           nsh_output(vtbl, "\n", *ptr);
         }
     }
+
   return ret;
 }
 #endif
@@ -327,6 +332,7 @@ void nsh_dumpbuffer(FAR struct nsh_vtbl_s *vtbl, const char *msg,
               sprintf(&line[strlen(line)], "%c", ch >= 0x20 && ch <= 0x7e ? ch : '.');
             }
         }
+
       nsh_output(vtbl, "%s\n", line);
     }
 }
@@ -369,10 +375,16 @@ int cmd_hexdump(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   uint8_t buffer[IOBUFFERSIZE];
   char msg[32];
-  int position;
+  off_t position;
   int fd;
   int ret = OK;
-  
+#ifdef CONFIG_NSH_CMDOPT_HEXDUMP
+  off_t skip = 0;
+  off_t count = 0xfffffff;
+  off_t dumpbytes;
+  int x;
+#endif
+
   /* Open the file for reading */
 
   fd = open(argv[1], O_RDONLY);
@@ -381,33 +393,101 @@ int cmd_hexdump(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       nsh_output(vtbl, g_fmtcmdfailed, "hexdump", "open", NSH_ERRNO);
       return ERROR;
     }
-  
+
+#ifdef CONFIG_NSH_CMDOPT_HEXDUMP
+  for (x = 2; x < argc; x++)
+    {
+      if (strncmp(argv[x], "skip=", 5) == 0)
+        {
+          skip = atoi(&argv[x][5]);
+        }
+      else if (strncmp(argv[x], "count=", 6) == 0)
+        {
+          count = atoi(&argv[x][6]);
+        }
+    }
+#endif
+
   position = 0;
   for (;;)
-  {
-    int nbytesread = read(fd, buffer, IOBUFFERSIZE);
+    {
+      int nbytesread = read(fd, buffer, IOBUFFERSIZE);
 
-    /* Check for read errors */
+      /* Check for read errors */
 
-    if (nbytesread < 0)
-      {
-        int errval = errno;
-        nsh_output(vtbl, g_fmtcmdfailed, "hexdump", "read", NSH_ERRNO_OF(errval));
-        ret = ERROR;
-        break;
-      }
-    else if (nbytesread > 0)
-      {
-        snprintf(msg, sizeof(msg), "%s at %08x", argv[1], position);
-        nsh_dumpbuffer(vtbl, msg, buffer, nbytesread);
-        position += nbytesread;
-      }
-    else
-      {
-        break; // EOF
-      }
-  }
-  
+      if (nbytesread < 0)
+        {
+          int errval = errno;
+          nsh_output(vtbl, g_fmtcmdfailed, "hexdump", "read",
+                     NSH_ERRNO_OF(errval));
+          ret = ERROR;
+          break;
+        }
+      else if (nbytesread > 0)
+        {
+#ifdef CONFIG_NSH_CMDOPT_HEXDUMP
+          if (position < skip)
+            {
+              /* Skip bytes until we reach the skip point */
+
+              position += nbytesread;
+              if (position > skip)
+                {
+                  dumpbytes = position - skip;
+                  if (dumpbytes > count)
+                    {
+                      dumpbytes = count;
+                    }
+
+                  snprintf(msg, sizeof(msg), "%s at %08x", argv[1], skip);
+                  nsh_dumpbuffer(vtbl, msg,
+                                 &buffer[nbytesread - (position-skip)],
+                                 dumpbytes);
+
+                  if (count > dumpbytes)
+                    {
+                      count -= dumpbytes;
+                    }
+                  else
+                    {
+                      break;
+                    }
+                }
+
+              /* Don't print if we are in skip mode */
+
+              continue;
+            }
+
+          /* Limit dumpbuffer to count if less than a full buffer needed */
+
+          if (nbytesread > count)
+            {
+              nbytesread = count;
+            }
+#endif
+
+          snprintf(msg, sizeof(msg), "%s at %08x", argv[1], position);
+          nsh_dumpbuffer(vtbl, msg, buffer, nbytesread);
+          position += nbytesread;
+
+#ifdef CONFIG_NSH_CMDOPT_HEXDUMP
+          if (count > nbytesread)
+            {
+              count -= nbytesread;
+            }
+          else
+            {
+              break;
+            }
+#endif
+        }
+      else
+        {
+          break; // EOF
+        }
+    }
+
   (void)close(fd);
   return ret;
 }

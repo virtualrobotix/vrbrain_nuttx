@@ -451,7 +451,7 @@ int nx_runinstance(FAR const char *mqname, FAR NX_DRIVERTYPE *dev)
            {
              FAR struct nxsvrmsg_getrectangle_s *getmsg = (FAR struct nxsvrmsg_getrectangle_s *)buffer;
              nxbe_getrectangle(getmsg->wnd, &getmsg->rect, getmsg->plane, getmsg->dest, getmsg->deststride);
-             
+
              if (getmsg->sem_done)
               {
                 sem_post(getmsg->sem_done);
@@ -476,7 +476,7 @@ int nx_runinstance(FAR const char *mqname, FAR NX_DRIVERTYPE *dev)
            {
              FAR struct nxsvrmsg_bitmap_s *bmpmsg = (FAR struct nxsvrmsg_bitmap_s *)buffer;
              nxbe_bitmap(bmpmsg->wnd, &bmpmsg->dest, bmpmsg->src, &bmpmsg->origin, bmpmsg->stride);
-             
+
              if (bmpmsg->sem_done)
               {
                 sem_post(bmpmsg->sem_done);
@@ -509,7 +509,14 @@ int nx_runinstance(FAR const char *mqname, FAR NX_DRIVERTYPE *dev)
            break;
 #endif
 
-         /* Messages sent to the backgound window ***************************/
+         case NX_SVRMSG_REDRAWREQ: /* Request re-drawing of rectangular region */
+           {
+             FAR struct nxsvrmsg_redrawreq_s *redrawmsg = (FAR struct nxsvrmsg_redrawreq_s *)buffer;
+             nxfe_redrawreq(redrawmsg->wnd, &redrawmsg->rect);
+           }
+           break;
+
+         /* Messages sent to the background window **************************/
 
          case NX_CLIMSG_REDRAW: /* Re-draw the background window */
             {

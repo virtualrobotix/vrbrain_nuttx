@@ -73,7 +73,7 @@
 /****************************************************************************
  * Included Files
  ****************************************************************************/
- 
+
 #include <nuttx/config.h>
 
 #include <stdint.h>
@@ -97,7 +97,8 @@ namespace NXWidgets
 
   // Global RLE Paletted Bitmaps
 
-  extern const struct SRlePaletteBitmap g_nuttxBitmap;
+  extern const struct SRlePaletteBitmap g_nuttxBitmap160x160;
+  extern const struct SRlePaletteBitmap g_nuttxBitmap320x320;
 
   // Global Simple Bitmaps
 

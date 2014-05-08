@@ -244,7 +244,7 @@ static uart_dev_t g_uart1port =
 /****************************************************************************
  * Name: z8_putuart
  ****************************************************************************/
- 
+
 static inline void z8_putuart(FAR struct z8_uart_s *priv, uint8_t value,
                               uint8_t offset)
 {
@@ -254,7 +254,7 @@ static inline void z8_putuart(FAR struct z8_uart_s *priv, uint8_t value,
 /****************************************************************************
  * Name: z8_getuart
  ****************************************************************************/
- 
+
 static inline uint8_t z8_getuart(FAR struct z8_uart_s *priv, uint8_t offset)
 {
   return getreg8(*(priv->uartbase + offset));
@@ -284,8 +284,7 @@ static uint8_t z8_disableuartirq(FAR struct uart_dev_s *dev)
 
 static void z8_restoreuartirq(FAR struct uart_dev_s *dev, uint8_t state)
 {
-  struct z8_uart_s *priv  = (struct z8_uart_s*)dev->priv;
-  irqstate_t          flags = irqsave();
+  irqstate_t flags = irqsave();
 
   z8_txint(dev, (state & STATE_TXENABLED) ? true : false);
   z8_rxint(dev, (state & STATE_RXENABLED) ? true : false);
@@ -322,8 +321,7 @@ static void z8_consoleput(uint8_t ch)
 
 void z8_uartconfigure(void)
 {
-  uint16_t brg;
-  uint8_t  val;
+  uint8_t val;
 
   /* Configure GPIO Port A pins 4 & 5 for alternate function */
 
@@ -340,7 +338,7 @@ void z8_uartconfigure(void)
 
 #ifdef EZ8_UART1
   /* Configure GPIO Port D pins 4 & 5 for alternate function */
-  
+
   putreg8(0x02, PAADDR);
   val = getreg8(PDCTL) | 0x30;    /* Set bits in alternate function register */
   putreg8(val, PDCTL);
@@ -421,7 +419,6 @@ static int z8_setup(FAR struct uart_dev_s *dev)
 
 static void z8_shutdown(FAR struct uart_dev_s *dev)
 {
-  struct z8_uart_s *priv = (struct z8_uart_s*)dev->priv;
   (void)z8_disableuartirq(dev);
 }
 
@@ -762,7 +759,7 @@ int up_putc(int ch)
   uint8_t  state;
 
   /* Keep interrupts disabled so that we do not interfere with normal
-   * driver operation 
+   * driver operation
    */
 
   state = z8_disableuartirq(&CONSOLE_DEV);

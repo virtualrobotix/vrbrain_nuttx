@@ -34,7 +34,7 @@ pwm.c
 ramdisk.c
   Can be used to set up a block of memory or (read-only) FLASH as
   a block driver that can be mounted as a files system.  See
-  include/nuttx/ramdisk.h.
+  include/nuttx/fs/ramdisk.h.
 
 ramlog.c
   This is a driver that was intended to support debugging output,
@@ -85,7 +85,7 @@ mmcsd/
 mtd/
   Memory Technology Device (MTD) drivers.  Some simple drivers for
   memory technologies like FLASH, EEPROM, NVRAM, etc.  See
-  include/nuttx/mtd.h
+  include/nuttx/mtd/mtd.h
 
   (Note: This is a simple memory interface and should not be
   confused with the "real" MTD developed at infradead.org.  This

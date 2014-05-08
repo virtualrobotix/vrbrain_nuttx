@@ -47,7 +47,7 @@
 #include "up_internal.h"
 #include "chip.h"
 
-#ifdef CONFIG_ARCH_LCD
+#ifdef CONFIG_LCD
 
 /************************************************************************************
  * Definitions
@@ -93,7 +93,7 @@ static uint8_t g_line[LCD_NCHARS];    /* The content of lines 2 */
 static void up_lcddelay(uint16_t count)
 {
   uint32_t counter = (uint16_t)count << 8;
-  while(counter--)
+  while (counter--)
     {
       asm("\tnop\n\tnop\n\tnop\n" : :); /* 3 NOPs */
     }
@@ -116,6 +116,7 @@ static inline void up_setrs(bool data)
     {
       regval &= ~(1 << 0); /* Low = control */
     }
+
   putreg8(regval, M16C_P6);
 }
 
@@ -128,7 +129,7 @@ static inline void up_seten(void)
   /* Set bit 1 of port 6 */
 
   register uint8_t regval = getreg8(M16C_P6);
-  regval = (1 << 1);
+  regval |= (1 << 1);
   putreg8(regval, M16C_P6);
 }
 
@@ -279,4 +280,4 @@ void up_lcdputc(char ch)
     }
 }
 
-#endif /* CONFIG_ARCH_LCD */
+#endif /* CONFIG_LCD */

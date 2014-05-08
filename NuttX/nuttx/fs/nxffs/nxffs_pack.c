@@ -1,7 +1,7 @@
 /****************************************************************************
  * fs/nxffs/nxffs_pack.c
  *
- *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011, 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * References: Linux/Documentation/filesystems/romfs.txt
@@ -260,7 +260,7 @@ static inline off_t nxffs_mediacheck(FAR struct nxffs_volume_s *volume,
  *   pack   - The volume packing state structure.
  *   froffset - On input, this is the location where we should be searching
  *     for the location to begin packing.  On successful return, froffset
- *     will be set the the offset in FLASH where the first inode should be
+ *     will be set to the offset in FLASH where the first inode should be
  *     copied to.  If -ENOSPC is returned -- meaning that the FLASH is full
  *     --  then no packing can be performed. In this case, then the free
  *     flash offset is returned through this location.
@@ -286,7 +286,7 @@ static inline int nxffs_startpos(FAR struct nxffs_volume_s *volume,
    * compacting.
    */
 
-  for(;;)
+  for (;;)
     {
       /* Is there wasted space between the offset where the we could have
        * valid data and the offset to the beginning of the first valid
@@ -335,7 +335,7 @@ static inline int nxffs_startpos(FAR struct nxffs_volume_s *volume,
           ret = nxffs_nextblock(volume, offset, &blkentry);
           if (ret < 0)
             {
-              fdbg("Failed to find next data block: %d\n", -ret);
+              fdbg("ERROR: Failed to find next data block: %d\n", -ret);
               return ret;
             }
 
@@ -425,8 +425,9 @@ static int nxffs_srcsetup(FAR struct nxffs_volume_s *volume,
       int ret = nxffs_rdblkhdr(volume, offset, &pack->src.blklen);
       if (ret < 0)
         {
-          fdbg("Failed to verify the data block header: %d\n", -ret);
+          fdbg("ERROR: Failed to verify the data block header: %d\n", -ret);
         }
+
       return ret;
     }
 
@@ -470,7 +471,7 @@ static int nxffs_destsetup(FAR struct nxffs_volume_s *volume,
     {
       /* Is there room for an inode structure in this block?  */
 
-      if(pack->iooffset + SIZEOF_NXFFS_INODE_HDR > volume->geo.blocksize)
+      if (pack->iooffset + SIZEOF_NXFFS_INODE_HDR > volume->geo.blocksize)
         {
           /* No.. that inode name will not fit in this block. Return an
            * indication that we are at the end of the block and try again
@@ -709,7 +710,7 @@ static int nxffs_wrinodehdr(FAR struct nxffs_volume_s *volume,
       ret = nxffs_updateinode(volume, &pack->dest.entry);
       if (ret < 0)
         {
-          fdbg("Failed to update inode info: %s\n", -ret);
+          fdbg("ERROR: Failed to update inode info: %s\n", -ret);
         }
     }
 
@@ -852,7 +853,7 @@ static int nxffs_endsrcblock(FAR struct nxffs_volume_s *volume,
   ret    = nxffs_nextblock(volume, offset, &blkentry);
   if (ret < 0)
     {
-      fdbg("Failed to find next data block: %d\n", -ret);
+      fdbg("ERROR: Failed to find next data block: %d\n", -ret);
       return ret;
     }
 
@@ -896,7 +897,7 @@ static inline int nxffs_packblock(FAR struct nxffs_volume_s *volume,
       ret = nxffs_srcsetup(volume, pack, pack->src.entry.doffset);
       if (ret < 0)
         {
-          fdbg("Failed to configure the src stream: %d\n", -ret);
+          fdbg("ERROR: Failed to configure the src stream: %d\n", -ret);
           return ret;
         }
     }
@@ -922,7 +923,7 @@ static inline int nxffs_packblock(FAR struct nxffs_volume_s *volume,
         }
       else
         {
-          fdbg("Failed to configure the dest stream: %d\n", -ret);
+          fdbg("ERROR: Failed to configure the dest stream: %d\n", -ret);
           return ret;
         }
     }
@@ -939,7 +940,7 @@ static inline int nxffs_packblock(FAR struct nxffs_volume_s *volume,
       nxffs_packtransfer(volume, pack);
 
       /* Now, either the (1) src block has been fully transferred, (2) all
-       * of the source data has been transferred, or (3) the the destination
+       * of the source data has been transferred, or (3) the destination
        * block is full, .. or all three.
        *
        * Check if all of the bytes in the source inode have been transferred.
@@ -997,7 +998,7 @@ static inline int nxffs_packblock(FAR struct nxffs_volume_s *volume,
 
               return OK;
             }
- 
+
           /* Configure the destination stream */
 
           ret = nxffs_destsetup(volume, pack);
@@ -1014,7 +1015,7 @@ static inline int nxffs_packblock(FAR struct nxffs_volume_s *volume,
                 }
               else
                 {
-                  fdbg("Failed to configure the dest stream: %d\n", -ret);
+                  fdbg("ERROR: Failed to configure the dest stream: %d\n", -ret);
                   return ret;
                 }
             }
@@ -1121,7 +1122,7 @@ nxffs_setupwriter(FAR struct nxffs_volume_s *volume,
  *
  *   Writing is performed at the end of the free FLASH region and this
  *   implemenation is restricted to a single writer.  The new inode is not
- *   written to FLASH until the the writer is closed and so will not be
+ *   written to FLASH until the writer is closed and so will not be
  *   found by nxffs_packblock().
  *
  * Input Parameters:
@@ -1149,7 +1150,7 @@ static inline int nxffs_packwriter(FAR struct nxffs_volume_s *volume,
       ret = nxffs_srcsetup(volume, pack, pack->src.entry.doffset);
       if (ret < 0)
         {
-          fdbg("Failed to configure the src stream: %d\n", -ret);
+          fdbg("ERROR: Failed to configure the src stream: %d\n", -ret);
           return ret;
         }
     }
@@ -1175,7 +1176,7 @@ static inline int nxffs_packwriter(FAR struct nxffs_volume_s *volume,
         }
       else
         {
-          fdbg("Failed to configure the dest stream: %d\n", -ret);
+          fdbg("ERROR: Failed to configure the dest stream: %d\n", -ret);
           return ret;
         }
     }
@@ -1192,7 +1193,7 @@ static inline int nxffs_packwriter(FAR struct nxffs_volume_s *volume,
        nxffs_packtransfer(volume, pack);
 
        /* Now, either the (1) src block has been fully transferred, (2) all
-        * of the source data has been transferred, or (3) the the destination
+        * of the source data has been transferred, or (3) the destination
         * block is full, .. or all three.
         *
         * Check if all of the bytes in the source inode have been transferred.
@@ -1275,7 +1276,7 @@ int nxffs_pack(FAR struct nxffs_volume_s *volume)
   off_t block;
   bool packed;
   int i;
-  int ret;
+  int ret = OK;
 
   /* Get the offset to the first valid inode entry */
 
@@ -1287,7 +1288,7 @@ int nxffs_pack(FAR struct nxffs_volume_s *volume)
     {
       /* Offset zero is only returned if no valid blocks were found on the
        * FLASH media or if there are no valid inode entries on the FLASH after
-       * the first valid block.  There are two possibilities:  (1) there 
+       * the first valid block.  There are two possibilities:  (1) there
        * really is nothing on the FLASH, or (2) there is a file being written
        * to the FLASH now.
        */
@@ -1383,14 +1384,14 @@ int nxffs_pack(FAR struct nxffs_volume_s *volume)
         }
       else
         {
-          fvdbg("Failed to find a packing position: %d\n", -ret);
+          fdbg("ERROR: Failed to find a packing position: %d\n", -ret);
           return ret;
         }
     }
 
   /* Otherwise, begin pack at this src/dest block combination.  Initialize
    * ioblock and iooffset with the position of the first inode header.  In
-   * this case, the FLASH offset to the first inode header is return in 
+   * this case, the FLASH offset to the first inode header is return in
    * iooffset.
    */
 
@@ -1408,20 +1409,54 @@ start_pack:
        eblock < volume->geo.neraseblocks;
        eblock++)
     {
+      /* Get the starting block number of the erase block */
+
+      pack.block0 = eblock * volume->blkper;
+
+#ifndef CONFIG_NXFFS_NAND
       /* Read the erase block into the pack buffer.  We need to do this even
        * if we are overwriting the entire block so that we skip over
        * previously marked bad blocks.
        */
 
-      pack.block0 = eblock * volume->blkper;
       ret = MTD_BREAD(volume->mtd, pack.block0, volume->blkper, volume->pack);
       if (ret < 0)
         {
-          fdbg("Failed to read erase block %d: %d\n", eblock, -ret);
+          fdbg("ERROR: Failed to read erase block %d: %d\n", eblock,-ret);
           goto errout_with_pack;
         }
 
-      /* Pack each I/O block */
+#else
+      /* Read the entire erase block into the pack buffer, one-block-at-a-
+       * time.  We need to do this even if we are overwriting the entire
+       * block so that (1) we skip over previously marked bad blocks, and
+       * (2) we can handle individual block read failures.
+       *
+       * For most FLASH, a read failure indicates a fatal hardware failure.
+       * But for NAND FLASH, the read failure probably indicates a block
+       * with uncorrectable bit errors.
+       */
+
+      /* Read each I/O block */
+
+      for (i = 0, block = pack.block0, pack.iobuffer = volume->pack;
+           i < volume->blkper;
+           i++, block++, pack.iobuffer += volume->geo.blocksize)
+        {
+          /* Read the next block in the erase block */
+
+          ret = MTD_BREAD(volume->mtd, block, 1, pack.iobuffer);
+          if (ret < 0)
+            {
+              /* Force a the block to be an NXFFS bad block */
+
+              fdbg("ERROR: Failed to read block %d: %d\n", block, ret);
+              nxffs_blkinit(volume, pack.iobuffer, BLOCK_STATE_BAD);
+            }
+        }
+#endif
+
+      /* Now pack each I/O block */
 
       for (i = 0, block = pack.block0, pack.iobuffer = volume->pack;
            i < volume->blkper;
@@ -1473,7 +1508,7 @@ start_pack:
                                  /* Writing is performed at the end of the free
                                   * FLASH region and this implemenation is restricted
                                   * to a single writer.  The new inode is not
-                                  * written to FLASH until the the writer is closed
+                                  * written to FLASH until the writer is closed
                                   * and so will not be found by nxffs_packblock().
                                   */
 
@@ -1483,7 +1518,7 @@ start_pack:
                                {
                                  /* Otherwise, something really bad happened */
 
-                                 fdbg("Failed to pack into block %d: %d\n",
+                                 fdbg("ERROR: Failed to pack into block %d: %d\n",
                                       block, ret);
                                  goto errout_with_pack;
                                }
@@ -1515,7 +1550,7 @@ start_pack:
                                {
                                  /* Otherwise, something really bad happened */
 
-                                 fdbg("Failed to pack into block %d: %d\n",
+                                 fdbg("ERROR: Failed to pack into block %d: %d\n",
                                       block, ret);
                                  goto errout_with_pack;
                                }
@@ -1549,7 +1584,7 @@ start_pack:
       ret = MTD_ERASE(volume->mtd, eblock, 1);
       if (ret < 0)
         {
-          fdbg("Failed to erase block %d [%d]: %d\n",
+          fdbg("ERROR: Failed to erase block %d [%d]: %d\n",
                eblock, pack.block0, -ret);
           goto errout_with_pack;
         }
@@ -1559,7 +1594,7 @@ start_pack:
       ret = MTD_BWRITE(volume->mtd, pack.block0, volume->blkper, volume->pack);
       if (ret < 0)
         {
-          fdbg("Failed to write erase block %d [%]: %d\n",
+          fdbg("ERROR: Failed to write erase block %d [%d]: %d\n",
                eblock, pack.block0, -ret);
           goto errout_with_pack;
         }

@@ -103,7 +103,7 @@ struct elf_loadinfo_s
    * The alloc[] array in struct binary_s will hold memory that persists after
    * the ELF module has been loaded.
    */
- 
+
   uintptr_t         elfalloc;    /* Memory allocated when ELF file was loaded */
   size_t            elfsize;     /* Size of the ELF memory allocation */
   off_t             filelen;     /* Length of the entire ELF file */
@@ -112,7 +112,7 @@ struct elf_loadinfo_s
   uint8_t           *iobuffer;   /* File I/O buffer */
 
   /* Constructors and destructors */
-  
+
 #ifdef CONFIG_BINFMT_CONSTRUCTORS
   FAR void          *ctoralloc;  /* Memory allocated for ctors */
   FAR void          *dtoralloc;  /* Memory allocated dtors */
@@ -126,7 +126,7 @@ struct elf_loadinfo_s
    *
    * addrenv - This is the handle created by up_addrenv_create() that can be
    *   used to manage the tasks address space.
-   * oldenv  - This is a value returned by up_addrenv_select() that must be 
+   * oldenv  - This is a value returned by up_addrenv_select() that must be
    *   used to restore the current hardware address environment.
    */
 
@@ -226,7 +226,7 @@ EXTERN int elf_bind(FAR struct elf_loadinfo_s *loadinfo,
  * Description:
  *   This function unloads the object from memory. This essentially undoes
  *   the actions of elf_load.  It is called only under certain error
- *   conditions after the the module has been loaded but not yet started.
+ *   conditions after the module has been loaded but not yet started.
  *
  * Returned Value:
  *   0 (OK) is returned on success and a negated errno is returned on

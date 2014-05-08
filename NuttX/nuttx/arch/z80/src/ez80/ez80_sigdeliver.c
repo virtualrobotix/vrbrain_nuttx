@@ -92,7 +92,7 @@ void up_sigdeliver(void)
 
   int saved_errno = rtcb->pterrno;
 
-  up_ledon(LED_SIGNAL);
+  board_led_on(LED_SIGNAL);
 
   sdbg("rtcb=%p sigdeliver=%p sigpendactionq.head=%p\n",
         rtcb, rtcb->xcp.sigdeliver, rtcb->sigpendactionq.head);
@@ -105,7 +105,7 @@ void up_sigdeliver(void)
   regs[XCPT_I]  = rtcb->xcp.saved_i;
 
   /* Get a local copy of the sigdeliver function pointer.  We do this so
-   * that we can nullify the sigdeliver function pointer in the TCB and 
+   * that we can nullify the sigdeliver function pointer in the TCB and
    * accept more signal deliveries while processing the current pending
    * signals.
    */
@@ -134,7 +134,7 @@ void up_sigdeliver(void)
    * execution.
    */
 
-  up_ledoff(LED_SIGNAL);
+  board_led_off(LED_SIGNAL);
   ez80_restorecontext(regs);
 #endif
 }

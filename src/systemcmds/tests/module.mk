@@ -35,7 +35,9 @@ SRCS			 = test_adc.c \
 			   test_conv.cpp \
 			   test_mount.c \
 			   test_mtd.c
-else
+endif
+
+ifneq ($(findstring VRBRAIN_V4, $(CONFIG_BOARD)),)
 SRCS			 = test_adc.c \
 			   test_hrt.c \
 			   test_led.c \
@@ -44,4 +46,24 @@ SRCS			 = test_adc.c \
 			   test_rc.c \
 			   test_mtd.c \
 			   test_buzzer.c
+endif
+
+ifneq ($(findstring VRBRAIN_V5, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   tests_main.c \
+			   test_rc.c \
+			   test_mtd.c \
+			   test_buzzer.c
+endif
+
+ifneq ($(findstring VRHERO_V1, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   test_mtd.c \
+			   tests_main.c
 endif

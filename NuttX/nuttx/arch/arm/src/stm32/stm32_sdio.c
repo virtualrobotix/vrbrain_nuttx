@@ -1,7 +1,7 @@
 /****************************************************************************
  * arch/arm/src/stm32/stm32_sdio.c
  *
- *   Copyright (C) 2009, 2011-2012 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2009, 2011-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -203,7 +203,7 @@
 #  error "Unknown STM32 DMA"
 #endif
 
-/* SDIO DMA Channel/Stream selection.  For the the case of the STM32 F4, there
+/* SDIO DMA Channel/Stream selection.  For the case of the STM32 F4, there
  * are multiple DMA stream options that must be dis-ambiguated in the board.h
  * file.
  */
@@ -248,15 +248,16 @@
                             SDIO_MASK_CMDRENDIE)
 #define SDIO_XFRDONE_MASK  (0)
 
-#define SDIO_CMDDONE_ICR   (SDIO_ICR_CMDSENTC)
+#define SDIO_CMDDONE_ICR   (SDIO_ICR_CMDSENTC|SDIO_ICR_DBCKENDC)
 #define SDIO_RESPDONE_ICR  (SDIO_ICR_CTIMEOUTC|SDIO_ICR_CCRCFAILC|\
-                            SDIO_ICR_CMDRENDC)
+                            SDIO_ICR_CMDRENDC|SDIO_ICR_DBCKENDC)
 #define SDIO_XFRDONE_ICR   (SDIO_ICR_DATAENDC|SDIO_ICR_DCRCFAILC|\
                             SDIO_ICR_DTIMEOUTC|SDIO_ICR_RXOVERRC|\
-                            SDIO_ICR_TXUNDERRC|SDIO_ICR_STBITERRC)
+                            SDIO_ICR_TXUNDERRC|SDIO_ICR_STBITERRC|\
+                            SDIO_ICR_DBCKENDC)
 
 #define SDIO_WAITALL_ICR   (SDIO_CMDDONE_ICR|SDIO_RESPDONE_ICR|\
-                            SDIO_XFRDONE_ICR)
+                            SDIO_XFRDONE_ICR|SDIO_ICR_DBCKENDC)
 
 /* Let's wait until we have both SDIO transfer complete and DMA complete. */
 
@@ -291,7 +292,7 @@
 struct stm32_dev_s
 {
   struct sdio_dev_s  dev;        /* Standard, base SDIO interface */
-  
+
   /* STM32-specific extensions */
   /* Event support */
 
@@ -482,6 +483,9 @@ struct stm32_dev_s g_sdiodev =
     .clock            = stm32_clock,
     .attach           = stm32_attach,
     .sendcmd          = stm32_sendcmd,
+#ifdef CONFIG_SDIO_BLOCKSETUP
+    .blocksetup       = stm32_blocksetup, /* Not implemented yet */
+#endif
     .recvsetup        = stm32_recvsetup,
     .sendsetup        = stm32_sendsetup,
     .cancel           = stm32_cancel,
@@ -569,7 +573,7 @@ static void stm32_takesem(struct stm32_dev_s *priv)
 static inline void stm32_setclkcr(uint32_t clkcr)
 {
   uint32_t regval = getreg32(STM32_SDIO_CLKCR);
-    
+
   /* Clear CLKDIV, PWRSAV, BYPASS, WIDBUS, NEGEDGE, HWFC_EN bits */
 
   regval &= ~(SDIO_CLKCR_CLKDIV_MASK|SDIO_CLKCR_PWRSAV|SDIO_CLKCR_BYPASS|
@@ -681,7 +685,7 @@ static void stm32_setpwrctrl(uint32_t pwrctrl)
  *
  * Description:
  *   Return the current value of the  the PWRCTRL field of the SDIO POWER
- *   register.  This function can be used to see the the SDIO is power ON
+ *   register.  This function can be used to see if the SDIO is powered ON
  *   or OFF
  *
  * Input Parameters:
@@ -951,7 +955,7 @@ static void stm32_dataconfig(uint32_t timeout, uint32_t dlen, uint32_t dctrl)
  * Name: stm32_datadisable
  *
  * Description:
- *   Disable the the SDIO data path setup by stm32_dataconfig() and
+ *   Disable the SDIO data path setup by stm32_dataconfig() and
  *   disable DMA.
  *
  ****************************************************************************/
@@ -1019,11 +1023,11 @@ static void stm32_sendfifo(struct stm32_dev_s *priv)
            int i;
 
            data.w = 0;
-           for (i = 0; i < priv->remaining; i++)
+           for (i = 0; i < (int)priv->remaining; i++)
              {
                 data.b[i] = *ptr++;
              }
- 
+
            /* Now the transfer is finished */
 
            priv->remaining = 0;
@@ -1081,7 +1085,7 @@ static void stm32_recvfifo(struct stm32_dev_s *priv)
           uint8_t *ptr = (uint8_t*)priv->buffer;
           int i;
 
-          for (i = 0; i < priv->remaining; i++)
+          for (i = 0; i < (int)priv->remaining; i++)
             {
                *ptr++ = data.b[i];
             }
@@ -1191,7 +1195,7 @@ static void stm32_endtransfer(struct stm32_dev_s *priv, sdio_eventset_t wkupeven
   stm32_configxfrints(priv, 0);
 
   /* Clearing pending interrupt status on all transfer related interrupts */
- 
+
   putreg32(SDIO_XFRDONE_ICR, STM32_SDIO_ICR);
 
   /* If this was a DMA transfer, make sure that DMA is stopped */
@@ -1451,7 +1455,7 @@ static int stm32_interrupt(int irq, void *context)
 
 #ifdef CONFIG_SDIO_MUXBUS
 static int stm32_lock(FAR struct sdio_dev_s *dev, bool lock)
-{  
+{
   /* Single SDIO instance so there is only one possibility.  The multiplex
    * bus is part of board support package.
    */
@@ -1597,7 +1601,7 @@ static void stm32_clock(FAR struct sdio_dev_s *dev, enum sdio_clock_e rate)
 
       /* Enable in initial ID mode clocking (<400KHz) */
 
-      case CLOCK_IDMODE:            
+      case CLOCK_IDMODE:
         clckr = (STM32_CLCKCR_INIT | SDIO_CLKCR_CLKEN);
         break;
 
@@ -1730,7 +1734,7 @@ static int stm32_sendcmd(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32_t arg)
 
   cmdidx  = (cmd & MMCSD_CMDIDX_MASK) >> MMCSD_CMDIDX_SHIFT;
   regval |= cmdidx | SDIO_CMD_CPSMEN;
-  
+
   fvdbg("cmd: %08x arg: %08x regval: %08x\n", cmd, arg, regval);
 
   /* Write the SDIO CMD */
@@ -1879,7 +1883,7 @@ static int stm32_cancel(FAR struct sdio_dev_s *dev)
   /* Clearing pending interrupt status on all transfer- and event- related
    * interrupts
    */
- 
+
   putreg32(SDIO_WAITALL_ICR, STM32_SDIO_ICR);
 
   /* Cancel any watchdog timeout */
@@ -2118,7 +2122,7 @@ static int stm32_recvlong(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32_t rlo
           ret = -EIO;
         }
     }
-    
+
   /* Return the long response */
 
   putreg32(SDIO_RESPDONE_ICR|SDIO_CMDDONE_ICR, STM32_SDIO_ICR);
@@ -2215,7 +2219,7 @@ static void stm32_waitenable(FAR struct sdio_dev_s *dev,
 {
   struct stm32_dev_s *priv = (struct stm32_dev_s*)dev;
   uint32_t waitmask;
- 
+
   DEBUGASSERT(priv != NULL);
 
   /* Disable event-related interrupts */
@@ -2329,7 +2333,7 @@ static sdio_eventset_t stm32_eventwait(FAR struct sdio_dev_s *dev,
 
       stm32_takesem(priv);
       wkupevent = priv->wkupevent;
- 
+
       /* Check if the event has occurred.  When the event has occurred, then
        * evenset will be set to 0 and wkupevent will be set to a nonzero value.
        */
@@ -2523,6 +2527,8 @@ static int stm32_dmarecvsetup(FAR struct sdio_dev_s *dev, FAR uint8_t *buffer,
 
   stm32_datadisable();
 
+  /* Initialize register sampling */
+
   stm32_sampleinit();
   stm32_sample(priv, SAMPLENDX_BEFORE_SETUP);
 
@@ -2580,7 +2586,6 @@ static int stm32_dmasendsetup(FAR struct sdio_dev_s *dev,
 {
   struct stm32_dev_s *priv = (struct stm32_dev_s *)dev;
   uint32_t dblocksize;
-  int ret = -EINVAL;
 
   DEBUGASSERT(priv != NULL && buffer != NULL && buflen > 0);
   DEBUGASSERT(stm32_dmapreflight(dev, buffer, buflen) == 0);
@@ -2588,6 +2593,8 @@ static int stm32_dmasendsetup(FAR struct sdio_dev_s *dev,
   /* Reset the DPSM configuration */
 
   stm32_datadisable();
+
+  /* Initialize register sampling */
 
   stm32_sampleinit();
   stm32_sample(priv, SAMPLENDX_BEFORE_SETUP);
@@ -2765,7 +2772,7 @@ FAR struct sdio_dev_s *sdio_initialize(int slotno)
 
   /* Configure GPIOs for 4-bit, wide-bus operation (the chip is capable of
    * 8-bit wide bus operation but D4-D7 are not configured).
-   * 
+   *
    * If bus is multiplexed then there is a custom bus configuration utility
    * in the scope of the board support package.
    */
@@ -2799,7 +2806,7 @@ FAR struct sdio_dev_s *sdio_initialize(int slotno)
  *
  * Input Parameters:
  *   dev        - An instance of the SDIO driver device state structure.
- *   cardinslot - true is a card has been detected in the slot; false if a 
+ *   cardinslot - true is a card has been detected in the slot; false if a
  *                card has been removed from the slot.  Only transitions
  *                (inserted->removed or removed->inserted should be reported)
  *
@@ -2826,9 +2833,10 @@ void sdio_mediachange(FAR struct sdio_dev_s *dev, bool cardinslot)
     {
       priv->cdstatus &= ~SDIO_STATUS_PRESENT;
     }
-  fvdbg("cdstatus OLD: %02x NEW: %02x\n", cdstatus, priv->cdstatus);
 
   irqrestore(flags);
+
+  fvdbg("cdstatus OLD: %02x NEW: %02x\n", cdstatus, priv->cdstatus);
 
   /* Perform any requested callback if the status has changed */
 

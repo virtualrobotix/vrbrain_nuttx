@@ -48,7 +48,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 /* If a dynamic timeout is selected, then a non-negative, non-zero micro-
- * seconds per byte vale must be provided as well.
+ * seconds per byte value must be provided as well.
  */
 
 #ifdef CONFIG_STM32_I2C_DYNTIMEO
@@ -64,7 +64,7 @@
 
 #define I2C_READBIT          0x01
 
-/* Conver 7- to 8-bit address */
+/* Convert 7- to 8-bit address */
 
 #define I2C_ADDR8(a)         ((a) << 1)
 #define I2C_WRITEADDR8(a)    I2C_ADDR8(a)
@@ -81,7 +81,7 @@
 #define I2C_READADDR10H(a)   (I2C_ADDR10H(a) | I2C_READBIT)
 #define I2C_READADDR10L(a)   I2C_ADDR10L(a)
 
-/* Bit definitions for the flags field in struct i2c_ops_s */
+/* Bit definitions for the flags field in struct i2c_msg_s */
 
 #define I2C_M_READ           0x0001          /* read data, from slave to master */
 #define I2C_M_TEN            0x0002          /* ten bit address */
@@ -133,9 +133,9 @@
  *   Set our own I2C address. Calling this function enables Slave mode and
  *   disables Master mode on given instance (note that I2C is a bus, where
  *   multiple masters and slave may be handled by one device driver).
- * 
- *   One may register callback to be notifyed about reception. During the
- *   slave mode reception, the function READ and WRITE must be used to 
+ *
+ *   One may register a callback to be notified about reception. During the
+ *   slave mode reception, the function READ and WRITE must be used to
  *   to handle reads and writes from a master.
  *
  * Input Parameters:
@@ -146,7 +146,7 @@
  *
  * Returned Value:
  *   OK on valid address and if the same address has not been assigned
- *   to other existance sharing the same port. Otherwise ERROR is returned.
+ *   to another instance sharing the same port. Otherwise ERROR is returned.
  *
  ****************************************************************************/
 
@@ -199,7 +199,7 @@
  *
  * Description:
  *   Send a block of data on I2C using the previously selected I2C
- *   frequency and slave address, followed by restarted read access. 
+ *   frequency and slave address, followed by restarted read access.
  *   It provides a convenient wrapper to the transfer function.
  *
  * Input Parameters:
@@ -220,9 +220,9 @@
  * Name: I2C_TRANSFER
  *
  * Description:
- *   Perform a sequence of I2C transfers, each transfer is started with a 
- *   START and the final transfer is completed with a STOP. Each sequence 
- *   will be an 'atomic'  operation in the sense that any other I2C actions 
+ *   Perform a sequence of I2C transfers, each transfer is started with a
+ *   START and the final transfer is completed with a STOP. Each sequence
+ *   will be an 'atomic'  operation in the sense that any other I2C actions
  *   will be serialized and pend until this read completes. Optional.
  *
  * Input Parameters:
@@ -265,7 +265,7 @@ struct i2c_ops_s
 };
 
 /* I2C transaction segment beginning with a START.  A number of these can
- * be transfered together to form an arbitrary sequence of write/read transfer
+ * be transferred together to form an arbitrary sequence of write/read transfer
  * to an I2C slave device.
  */
 
@@ -278,7 +278,7 @@ struct i2c_msg_s
 };
 
 /* I2C private data.  This structure only defines the initial fields of the
- * structure visible to the I2C client.  The specific implementation may 
+ * structure visible to the I2C client.  The specific implementation may
  * add additional, device specific fields after the vtable.
  */
 
@@ -305,14 +305,14 @@ extern "C" {
  * Description:
  *   Initialize the selected I2C port. And return a unique instance of struct
  *   struct i2c_dev_s.  This function may be called to obtain multiple
- *   instances of the interface, each of which may be set up with a 
+ *   instances of the interface, each of which may be set up with a
  *   different frequency and slave address.
  *
  * Input Parameter:
- *   Port number (for hardware that has mutiple I2C interfaces)
+ *   Port number (for hardware that has multiple I2C interfaces)
  *
  * Returned Value:
- *   Valid I2C device structre reference on succcess; a NULL on failure
+ *   Valid I2C device structure reference on succcess; a NULL on failure
  *
  ****************************************************************************/
 
@@ -325,11 +325,11 @@ EXTERN FAR struct i2c_dev_s *up_i2cinitialize(int port);
  *   De-initialize the selected I2C port, and power down the device.
  *
  * Input Parameter:
- *   Device structure as returned by the up_i2cinitalize()
+ *   Device structure as returned by the up_i2cinitialize()
  *
  * Returned Value:
- *   OK on success, ERROR when internal reference count missmatch or dev
- *   points to invalid hardware device. 
+ *   OK on success, ERROR when internal reference count mismatch or dev
+ *   points to invalid hardware device.
  *
  ****************************************************************************/
 

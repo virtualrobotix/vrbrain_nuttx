@@ -44,7 +44,7 @@
 #include <debug.h>
 #include <errno.h>
 
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <nuttx/mmcsd.h>
 
 /****************************************************************************
@@ -125,10 +125,9 @@
 
 int nsh_archinitialize(void)
 {
+#ifdef NSH_HAVEMMCSD
   FAR struct spi_dev_s *spi;
   int ret;
-
-#ifdef NSH_HAVEMMCSD
 
   /* Get the SPI port */
 

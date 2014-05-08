@@ -37,7 +37,7 @@
 
 CFLAGS		+= -I$(TOPDIR)/sched
 
-ASRCS		= 
+ASRCS		=
 AOBJS		= $(ASRCS:.S=$(OBJEXT))
 
 CSRCS		= up_boot.c up_leds.c up_buttons.c up_spi.c up_usbdev.c
@@ -76,15 +76,15 @@ ifeq ($(CONFIG_WATCHDOG),y)
 CSRCS		+= up_watchdog.c
 endif
 
-ifeq ($(CONFIG_PM_CUSTOMINIT),y)
+ifeq ($(CONFIG_ARCH_CUSTOM_PMINIT),y)
 CSRCS		+= up_pm.c
 endif
 
 ifeq ($(CONFIG_PM_BUTTONS),y)
-CSRCS		+= up_pmbuttons.c 
+CSRCS		+= up_pmbuttons.c
 endif
 
-ifeq ($(CONFIG_IDLE_CUSTOM),y)
+ifeq ($(CONFIG_ARCH_IDLE_CUSTOM),y)
 CSRCS		+= up_idle.c
 endif
 

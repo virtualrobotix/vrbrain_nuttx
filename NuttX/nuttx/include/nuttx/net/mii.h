@@ -1,7 +1,7 @@
 /****************************************************************************
  * include/nuttx/net/mii.h
  *
- *   Copyright (C) 2008-2010, 2012 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2008-2010, 2012-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -84,21 +84,6 @@
 #define MII_DP83840_10BTSR           0x1b      /* 10BASE-T status register */
 #define MII_DP83840_10BTCR           0x1c      /* 10BASE-T configuration register */
 
-/* National Semiconductor DP83848C: 0x8-0x15, 0x13, 0x1c reserved */
-
-#define MII_DP83848C_PHYSTS          0x10      /* RO PHY Status Register */
-#define MII_DP83848C_MICR            0x11      /* RW MII Interrupt Control Register */
-#define MII_DP83848C_MISR            0x12      /* RO MII Interrupt Status Register */
-#define MII_DP83848C_FCSCR           0x14      /* RO False Carrier Sense Counter Register */
-#define MII_DP83848C_RECR            0x15      /* RO Receive Error Counter Register */
-#define MII_DP83848C_PCSR            0x16      /* RW PCS Sub-Layer Configuration and Status Register */
-#define MII_DP83848C_RBR             0x17      /* RW RMII and Bypass Register */
-#define MII_DP83848C_LEDCR           0x18      /* RW LED Direct Control Register */
-#define MII_DP83848C_PHYCR           0x19      /* RW PHY Control Register */
-#define MII_DP83848C_10BTSCR         0x1a      /* RW 10Base-T Status/Control Register */
-#define MII_DP83848C_CDCTRL1         0x1b      /* RW CD Test Control Register and BIST Extensions Register */
-#define MII_DP83848C_EDCR            0x1e      /* RW Energy Detect */
-
 /* Am79c874: 0x08-0x0f, 0x14, 0x16, 0x19-0x1f reserved */
 
 #define MII_AM79C874_NPADVERTISE     0x07      /* Auto-negotiation next page advertisement */
@@ -125,20 +110,32 @@
 #define MII_KS8721_INTCS             0x1b      /* Interrupt control/status register */
 #define MII_KS8721_10BTCR            0x1f      /* 10BASE-TX PHY control register */
 
-/* National Semiconductor DP83848C PHY Extended Registers */
+/* Micrel KSZ805:  0x11, 0x15-0x18, 0x1b, 0x1d, 0x1e-0x1f */
 
-#define MII_DP83848C_STS             0x10      /* Status Register */
-#define MII_DP83848C_MICR            0x11      /* MII Interrupt Control Register */
-#define MII_DP83848C_MISR            0x12      /* MII Interrupt Status Register */
-#define MII_DP83848C_FCSCR           0x14      /* False Carrier Sense Counter */
-#define MII_DP83848C_RECR            0x15      /* Receive Error Counter */
-#define MII_DP83848C_PCSR            0x16      /* PCS Sublayer Config. and Status */
-#define MII_DP83848C_RBR             0x17      /* RMII and Bypass Register */
-#define MII_DP83848C_LEDCR           0x18      /* LED Direct Control Register */
-#define MII_DP83848C_PHYCR           0x19      /* PHY Control Register */
-#define MII_DP83848C_10BTSCR         0x1a      /* 10Base-T Status/Control Register */
-#define MII_DP83848C_CDCTRL1         0x1b      /* CD Test Control and BIST Extens */
-#define MII_DP83848C_EDCR            0x1d      /* Energy Detect Control Register */
+#define MII_KSZ8051_AFEC1            0x11      /* AFE Control 1  */
+#define MII_KSZ8051_RXERR            0x15      /* RXERR Counter */
+#define MII_KSZ8051_OMSO             0x16      /* Operation Mode Strap Override */
+#define MII_KSZ8051_OMSS             0x17      /* Operation Mode Strap Status */
+#define MII_KSZ8051_XCTRL            0x18      /* Expanded Control */
+#define MII_KSZ8051_INT              0x1b      /* Interrupt Control/Status */
+#define MII_KSZ8051_LINKMD           0x1d      /* LinkMD(c) Control/Status */
+#define MII_KSZ8051_PHYCTRL1         0x1e      /* PHY Control 1 */
+#define MII_KSZ8051_PHYCTRL2         0x1f      /* PHY Control 2 */
+
+/* National Semiconductor DP83848C PHY Extended Registers. 0x8-0x15, 0x13, 0x1c reserved */
+
+#define MII_DP83848C_STS             0x10      /* RO PHY Status Register */
+#define MII_DP83848C_MICR            0x11      /* RW MII Interrupt Control Register */
+#define MII_DP83848C_MISR            0x12      /* RO MII Interrupt Status Register */
+#define MII_DP83848C_FCSCR           0x14      /* RO False Carrier Sense Counter Register */
+#define MII_DP83848C_RECR            0x15      /* RO Receive Error Counter Register */
+#define MII_DP83848C_PCSR            0x16      /* RW PCS Sub-Layer Configuration and Status Register */
+#define MII_DP83848C_RBR             0x17      /* RW RMII and Bypass Register */
+#define MII_DP83848C_LEDCR           0x18      /* RW LED Direct Control Register */
+#define MII_DP83848C_PHYCR           0x19      /* RW PHY Control Register */
+#define MII_DP83848C_10BTSCR         0x1a      /* RW 10Base-T Status/Control Register */
+#define MII_DP83848C_CDCTRL1         0x1b      /* RW CD Test Control Register and BIST Extensions Register */
+#define MII_DP83848C_EDCR            0x1e      /* RW Energy Detect Control Register */
 
 /* SMSC LAN8720 PHY Extended Registers */
 
@@ -151,21 +148,6 @@
 #define MII_LAN8720_ISR              0x1d      /* Interrupt Source Register */
 #define MII_LAN8720_IMR              0x1e      /* Interrupt Mask Register */
 #define MII_LAN8720_SCSR             0x1f      /* PHY Special Control/Status Register */
-
-/* GMII */
-
-#define GMII_MCR                     MII_MCR         /* GMII management control */
-#define GMII_MSR                     MII_MSR         /* GMII management status */
-#define GMII_PHYID1                  MII_PHYID1      /* PHY ID 1 */
-#define GMII_PHYID2                  MII_PHYID2      /* PHY ID 2 */
-#define GMII_ADVERTISE               MII_ADVERTISE   /* Auto-negotiation advertisement */
-#define GMII_LPA                     MII_LPA         /* Auto-negotiation link partner base page ability */
-#define GMII_EXPANSION               MII_EXPANSION   /* Auto-negotiation expansion */
-#define GMII_NEXTPAGE                MII_NEXTPAGE    /* Auto-negotiation next page */
-#define GMII_LPANEXTPAGE             MII_LPANEXTPAGE /* Auto-negotiation link partner received next page */
-#define GMII_CTRL1000                0x09            /* 1000BASE-T control */
-#define GMII_STAT1000                0x0a            /* 1000BASE-T status */
-#define GMII_ESTATUS                 MII_ESTATUS     /* Extended status register */
 
 /* MII register bit settings ************************************************/
 
@@ -192,6 +174,7 @@
 #define MII_MSR_RFAULT               (1 << 4)  /* Bit 4:  Remote fault */
 #define MII_MSR_ANEGCOMPLETE         (1 << 5)  /* Bit 5:  Auto-negotiation complete */
 #define MII_MSR_MFRAMESUPPRESS       (1 << 6)  /* Bit 6:  Management frame suppression */
+#define MII_MSR_UNIDIR               (1 << 7)  /* Bit 7:  Unidirectional ability */
 #define MII_MSR_ESTATEN              (1 << 8)  /* Bit 8:  Extended Status in R15 */
 #define MII_MSR_100BASET2FULL        (1 << 9)  /* Bit 9:  100BASE-T2 half duplex able */
 #define MII_MSR_100BASET2HALF        (1 << 10) /* Bit 10: 100BASE-T2 full duplex able */
@@ -201,11 +184,18 @@
 #define MII_MSR_100BASETXFULL        (1 << 14) /* Bit 14: 100BASE-TX full duplex able */
 #define MII_MSR_100BASET4            (1 << 15) /* Bit 15: 100BASE-T4 able */
 
+/* MII ID1 register bits: Bits 3-18 of the Organizationally Unique identifier (OUI) */
 /* MII ID2 register bits */
 
-#define MII_PHYID2_OUI               0xfc00    /* Bits 19-24 of OUI mask */
-#define MII_PHYID2_MODEL             0x03f0    /* Model number mask */
-#define MII_PHYID2_REV               0x000f    /* Revision number mask */
+#define MII_PHYID2_REV_SHIFT         (0)    /* Bits 0-3: Revision number mask */
+#define MII_PHYID2_REV_MASK          (15 <<  MII_PHYID2_REV_SHIFT)
+#  define MII_PHYID2_REV(n)          ((uint16_t)(n) <<  MII_PHYID2_REV_SHIFT)
+#define MII_PHYID2_MODEL_SHIFT       (4)       /* Bits 4-9: Model number mask */
+#define MII_PHYID2_MODEL_MASK        (0x3f <<  MII_PHYID2_MODEL_SHIFT)
+#  define MII_PHYID2_MODEL(n)        ((uint16_t)(n) <<  MII_PHYID2_MODEL_SHIFT)
+#define MII_PHYID2_OUI_SHIFT         (10)      /* Bits 10-15: OUI mask [24:19] */
+#define MII_PHYID2_OUI_MASK          (0x3f <<  MII_PHYID2_OUI_SHIFT)
+#  define MII_PHYID2_OUI(n)          ((uint16_t)(n) <<  MII_PHYID2_OUI_SHIFT)
 
 /* Advertisement control register bit definitions */
 
@@ -277,6 +267,26 @@
 #define MII_NPADVERTISE_ACK2         (1 << 12) /* Bit 12: Acknowledgement 2 */
 #define MII_NPADVERTISE_MSGPAGE      (1 << 13) /* Bit 13: Message page */
 #define MII_NPADVERTISE_NXTPAGE      (1 << 15) /* Bit 15: Next page indication */
+
+/* MMD access control register */
+
+#define MII_MMDCONTROL_DEVAD_SHIFT   (0)      /* Bits 0-4: Device address */
+#define MII_MMDCONTROL_DEVAD_MASK    (31 << MII_MMDCONTROL_DEVAD_SHIFT)
+#  define MII_MMDCONTROL_DEVAD(n)    ((uint16_t)(n) << MII_MMDCONTROL_DEVAD_SHIFT)
+                                               /* Bits 5-13: Reserved */
+#define MII_MMDCONTROL_FUNC_SHIFT    (14)      /* Bits 14-15: Function */
+#define MII_MMDCONTROL_FUNC_MASK     (3 << MII_MMDCONTROL_FUNC_SHIFT)
+#  define MII_MMDCONTROL_FUNC_ADDR   (0 << MII_MMDCONTROL_FUNC_SHIFT) /* Address */
+#  define MII_MMDCONTROL_FUNC_NOINCR (1 << MII_MMDCONTROL_FUNC_SHIFT) /* Data, no post increment */
+#  define MII_MMDCONTROL_FUNC_RWINCR (2 << MII_MMDCONTROL_FUNC_SHIFT) /* Data, post incr on reads & writes */
+#  define MII_MMDCONTROL_FUNC_WINCR  (3 << MII_MMDCONTROL_FUNC_SHIFT) /* Data, post incr on writes */
+
+/* Extended status register */
+                                               /* Bits 0-11: Reserved */
+#define MII_ESTATUS_1000BASETHALF    (1 << 12) /* Bit 12: 1000BASE-T Half Duplex able */
+#define MII_ESTATUS_1000BASETFULL    (1 << 13) /* Bit 13: 1000BASE-T Full Duplex able */
+#define MII_ESTATUS_1000BASEXHALF    (1 << 14) /* Bit 14: 1000BASE-X Half Duplex able */
+#define MII_ESTATUS_1000BASEXFULL    (1 << 15) /* Bit 15: 1000BASE-X Full Duplex able */
 
 /* MII PHYADDR register bit definitions */
 
@@ -450,6 +460,29 @@
 #define KS8721_10BTCR_FORCE          (1 << 11) /* Bit 11: Force link */
 #define KS8721_10BTCR_ENERGY         (1 << 12) /* Bit 12: Energy detect */
 #define KS8721_10BTCR_PAIRSWAPD      (1 << 13) /* Bit 13: Pairswap disable */
+
+/* KSZ8051-specific register bit settings ***********************************/
+/* KSZ805 MII ID1/2 register bits */
+
+#define MII_PHYID1_KSZ8051           0x0022    /* ID1 value for Micrel KSZ8051 */
+#define MII_PHYID2_KSZ8051           0x1550    /* ID2 value for Micrel KSZ8051 */
+
+/* KSZ805 Register 0x1e: PHY Control 1 */
+                                               /* Bits 10-15: Reserved */
+#define MII_PHYCTRL1_ENPAUSE         (1 << 9)  /* Bit 9: Enable pause */
+#define MII_PHYCTRL1_LINKSTATUS      (1 << 8)  /* Bit 8: Link status */
+#define MII_PHYCTRL1_POLARITY        (1 << 7)  /* Bit 7: Polarity status */
+                                               /* Bit 6: Reserved */
+#define MII_PHYCTRL1_MDIX            (1 << 5)  /* Bit 5: MDI/MDI-X state */
+#define MII_PHYCTRL1_ENERGYDET       (1 << 4)  /* Bit 4: Energy detect */
+#define MII_PHYCTRL1_ISOLATE         (1 << 3)  /* Bit 3: PHY isolate */
+#define MII_PHYCTRL1_MODE_SHIFT      (0)       /* Bits 0-2: Operation mode */
+#define MII_PHYCTRL1_MODE_MASK       (7 << MII_PHYCTRL1_MODE_SHIFT)
+#  define MII_PHYCTRL1_MODE_BUSY     (0 << MII_PHYCTRL1_MODE_SHIFT) /* Still in autonegotiation */
+#  define MII_PHYCTRL1_MODE_10HDX    (1 << MII_PHYCTRL1_MODE_SHIFT) /* 10Base-T half-duplex */
+#  define MII_PHYCTRL1_MODE_100HDX   (2 << MII_PHYCTRL1_MODE_SHIFT) /* 100Base-T half-duplex */
+#  define MII_PHYCTRL1_MODE_10FDX    (5 << MII_PHYCTRL1_MODE_SHIFT) /* 10Base-T full-duplex */
+#  define MII_PHYCTRL1_MODE_100FDX   (6 << MII_PHYCTRL1_MODE_SHIFT) /* 100Base-T full-duplex */
 
 /****************************************************************************
  * Type Definitions

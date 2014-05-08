@@ -45,13 +45,13 @@ GNU Toolchain Options
   add one of the following configuration options to your .config (or defconfig)
   file:
 
-    CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
-    CONFIG_STM32_CODESOURCERYL=y  : CodeSourcery under Linux
-    CONFIG_STM32_DEVKITARM=y      : devkitARM under Windows
-    CONFIG_STM32_RAISONANCE=y     : Raisonance RIDE7 under Windows
-    CONFIG_STM32_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin (default)
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y  : CodeSourcery under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYL=y  : CodeSourcery under Linux
+    CONFIG_ARMV7M_TOOLCHAIN_DEVKITARM=y      : devkitARM under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_RAISONANCE=y     : Raisonance RIDE7 under Windows
+    CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin (default)
 
-  If you are not using CONFIG_STM32_BUILDROOT, then you may also have to modify
+  If you are not using CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT, then you may also have to modify
   the PATH in the setenv.h file if your make cannot find the tools.
 
   NOTE: the CodeSourcery (for Windows), devkitARM, and Raisonance toolchains are
@@ -258,13 +258,13 @@ VSN-specific Configuration Options
     CONFIG_ENDIAN_BIG - define if big endian (default is little
        endian)
 
-    CONFIG_DRAM_SIZE - Describes the installed DRAM (SRAM in this case):
+    CONFIG_RAM_SIZE - Describes the installed DRAM (SRAM in this case):
 
-       CONFIG_DRAM_SIZE=0x00010000 (64Kb)
+       CONFIG_RAM_SIZE=0x00010000 (64Kb)
 
-    CONFIG_DRAM_START - The start address of installed DRAM
+    CONFIG_RAM_START - The start address of installed DRAM
 
-       CONFIG_DRAM_START=0x20000000
+       CONFIG_RAM_START=0x20000000
 
     CONFIG_ARCH_IRQPRIO - The STM32F103Z supports interrupt prioritization
 
@@ -304,6 +304,17 @@ Where <subdir> is one of the following:
     Configures the NuttShell (nsh) located at examples/nsh.  The
     Configuration enables both the serial and telnetd NSH interfaces.
 
-The default configuration sets up a console on front-panel RS-232 
-interface, sets up device driver of all supported equipment and 
-links in VSN default applications.
+    The default configuration sets up a console on front-panel RS-232 
+    interface, sets up device driver of all supported equipment and 
+    links in VSN default applications.
+
+    NOTES:
+
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configurations using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.

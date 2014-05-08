@@ -37,8 +37,8 @@
 
 CFLAGS		+= -I$(TOPDIR)/sched
 
-ASRCS		= 
-CSRCS		= up_boot.c
+ASRCS		=
+CSRCS		= qemu_boot.c
 
 AOBJS		= $(ASRCS:.S=$(OBJEXT))
 COBJS		= $(CSRCS:.c=$(OBJEXT))

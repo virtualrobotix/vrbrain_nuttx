@@ -1,7 +1,7 @@
 /************************************************************************
- * up_initialize.c
+ * arch/8051/src/up_initialize.c
  *
- *   Copyright (C) 2007, 2009, 2011 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007, 2009, 2011, 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -86,7 +86,7 @@ FAR struct xcptcontext *g_irqcontext;
  * to comput them.
  */
 
-const uint8_t g_ntobit[8] = 
+const uint8_t g_ntobit[8] =
   { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
 
 /************************************************************************
@@ -135,10 +135,10 @@ void up_initialize(void)
 
   /* Initialize the system timer interrupt */
 
-#ifndef CONFIG_SUPPRESS_INTERRUPTS
+#ifndef CONFIG_ARCH_8051_SUPRESS_INTERRUPTS
   up_timerinit();
 #endif
 
-  up_ledon(LED_IRQSENABLED);
+  board_led_on(LED_IRQSENABLED);
 }
 

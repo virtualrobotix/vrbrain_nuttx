@@ -47,7 +47,7 @@
 #include <debug.h>
 
 #include <nuttx/arch.h>
-#include <nuttx/spi.h>
+#include <nuttx/spi/spi.h>
 #include <nuttx/lcd/lcd.h>
 
 #include "up_arch.h"
@@ -176,7 +176,7 @@ static const struct fb_videoinfo_s g_videoinfo =
 
 /* This is the standard, NuttX Plane information object */
 
-static const struct lcd_planeinfo_s g_planeinfo = 
+static const struct lcd_planeinfo_s g_planeinfo =
 {
   .putrun = skel_putrun,           /* Put a run into LCD memory */
   .getrun = skel_getrun,           /* Get a run from LCD memory */
@@ -186,12 +186,12 @@ static const struct lcd_planeinfo_s g_planeinfo =
 
 /* This is the standard, NuttX LCD driver object */
 
-static struct skel_dev_s g_lcddev = 
+static struct skel_dev_s g_lcddev =
 {
   .dev =
   {
     /* LCD Configuration */
- 
+
     .getvideoinfo = skel_getvideoinfo,
     .getplaneinfo = skel_getplaneinfo,
 

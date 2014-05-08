@@ -71,9 +71,15 @@
 
 void stm32_boardinitialize(void)
 {
+  /* First reset the VS1053 since it tends to produce noise out of power on reset */
+
+#ifdef CONFIG_VS1053
+  (void)stm32_configgpio(GPIO_VS1053_RST);
+#endif
+
   /* Configure GPIOs for controlling the LCD */
 
-#ifdef CONFIG_LCD_MIO283QT2
+#if defined(CONFIG_LCD_MIO283QT2) || defined(CONFIG_LCD_MIO283QT9A)
   stm32_lcdinitialize();
 #endif
 

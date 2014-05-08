@@ -48,6 +48,13 @@
 //***************************************************************************
 // Definitions
 //***************************************************************************
+// Configuration ************************************************************
+// C++ initialization requires CXX initializer support
+
+#if !defined(CONFIG_HAVE_CXX) || !defined(CONFIG_HAVE_CXXINITIALIZE)
+#  undef CONFIG_EXAMPLES_HELLOXX_CXXINITIALIZE
+#endif
+
 // Debug ********************************************************************
 // Non-standard debug that may be enabled just for testing the constructors
 
@@ -116,7 +123,7 @@ class CHelloWorld
 // Define a statically constructed CHellowWorld instance if C++ static
 // initializers are supported by the platform
 
-#ifdef CONFIG_HAVE_CXXINITIALIZE 
+#ifdef CONFIG_HAVE_CXXINITIALIZE
 static CHelloWorld g_HelloWorld;
 #endif
 
@@ -135,7 +142,7 @@ extern "C"
     // If C++ initialization for static constructors is supported, then do
     // that first
 
-#ifdef CONFIG_HAVE_CXXINITIALIZE
+#ifdef CONFIG_EXAMPLES_HELLOXX_CXXINITIALIZE
     up_cxxinitialize();
 #endif
 
