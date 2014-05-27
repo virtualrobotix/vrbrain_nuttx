@@ -64,7 +64,7 @@
  * Public Functions
  ************************************************************************************/
 /************************************************************************************
- * Name: board_led_initialize
+ * Name: up_ledinit
  *
  * Description:
  *   Configure and initialize on-board LEDs
@@ -72,7 +72,7 @@
  ************************************************************************************/
 
 #ifdef CONFIG_ARCH_LEDS
-extern void board_led_initialize(void);
+extern void up_ledinit(void);
 #endif
 
 /************************************************************************************

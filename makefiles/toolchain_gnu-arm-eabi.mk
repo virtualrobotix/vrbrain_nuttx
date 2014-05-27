@@ -70,6 +70,14 @@ ARCHCPUFLAGS_CORTEXM3	 = -mcpu=cortex-m3 \
 			   -march=armv7-m \
 			   -mfloat-abi=soft
 
+ARCHINSTRUMENTATIONDEFINES_CORTEXM4F = -finstrument-functions \
+			   -ffixed-r10
+
+ARCHINSTRUMENTATIONDEFINES_CORTEXM4 = -finstrument-functions \
+			   -ffixed-r10
+
+ARCHINSTRUMENTATIONDEFINES_CORTEXM3 = 
+
 # Pick the right set of flags for the architecture.
 #
 ARCHCPUFLAGS		 = $(ARCHCPUFLAGS_$(CONFIG_ARCH))
@@ -95,6 +103,10 @@ ARCHOPTIMIZATION	 = $(MAXOPTIMIZATION) \
    			   -fno-builtin-printf \
    			   -ffunction-sections \
    			   -fdata-sections
+
+# enable precise stack overflow tracking
+# note - requires corresponding support in NuttX
+INSTRUMENTATIONDEFINES	 = $(ARCHINSTRUMENTATIONDEFINES_$(CONFIG_ARCH))
 
 # Language-specific flags
 #
@@ -143,6 +155,7 @@ CFLAGS			 = $(ARCHCFLAGS) \
 			   $(ARCHOPTIMIZATION) \
 			   $(ARCHCPUFLAGS) \
 			   $(ARCHINCLUDES) \
+			   $(INSTRUMENTATIONDEFINES) \
 			   $(ARCHDEFINES) \
 			   $(EXTRADEFINES) \
 			   $(EXTRACFLAGS) \
@@ -156,6 +169,7 @@ CXXFLAGS		 = $(ARCHCXXFLAGS) \
 			   $(ARCHOPTIMIZATION) \
 			   $(ARCHCPUFLAGS) \
 			   $(ARCHXXINCLUDES) \
+			   $(INSTRUMENTATIONDEFINES) \
 			   $(ARCHDEFINES) \
 			   -DCONFIG_WCHAR_BUILTIN \
 			   $(EXTRADEFINES) \
@@ -266,15 +280,15 @@ endef
 #       like the MinGW tools insert an extra _ in the binary symbol name; e.g.
 #	the path:
 #
-#	/d/vrbrain/firmware/Build/vrbrain_default.build/romfs.img
+#	/d/px4/firmware/Build/px4fmu_default.build/romfs.img
 #
 #	is assigned symbols like:
 #
-#	_binary_d__vrbrain_firmware_Build_vrbrain_default_build_romfs_img_size
+#	_binary_d__px4_firmware_Build_px4fmu_default_build_romfs_img_size
 #
 #	when we would expect
 #
-#	_binary__d_vrbrain_firmware_Build_vrbrain_default_build_romfs_img_size
+#	_binary__d_px4_firmware_Build_px4fmu_default_build_romfs_img_size
 #
 define BIN_SYM_PREFIX
 	_binary_$(subst /,_,$(subst .,_,$1))

@@ -95,7 +95,7 @@ namespace NXWidgets
      * serializes the multi-threaded accesses to the display.
      */
 
-#if defined(CONFIG_NX_MULTIUSER) && defined(CONFIG_NXWIDGET_SERVERINIT)
+#ifdef CONFIG_NX_MULTIUSER
     static int server(int argc, char *argv[]);
 #endif
 

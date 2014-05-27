@@ -59,6 +59,17 @@ SRCS			 = test_adc.c \
 			   test_buzzer.c
 endif
 
+ifneq ($(findstring VRUBRAIN_V5, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   tests_main.c \
+			   test_rc.c \
+			   test_mtd.c \
+			   test_buzzer.c
+endif
+
 ifneq ($(findstring VRHERO_V1, $(CONFIG_BOARD)),)
 SRCS			 = test_adc.c \
 			   test_hrt.c \

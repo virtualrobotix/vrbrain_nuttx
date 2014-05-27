@@ -85,10 +85,10 @@ static const uint32_t g_ledcfg[BOARD_NLEDS] =
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_led_onoff
+ * Name: up_ledonoff
  ****************************************************************************/
 
-void board_led_onoff(int led, bool state)
+void up_ledonoff(int led, bool state)
 {
   if ((unsigned)led < BOARD_NLEDS)
     {
@@ -101,10 +101,10 @@ void board_led_onoff(int led, bool state)
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_led_initialize
+ * Name: up_ledinit
  ****************************************************************************/
 
-void board_led_initialize(void)
+void up_ledinit(void)
 {
   int i;
 
@@ -117,21 +117,21 @@ void board_led_initialize(void)
 }
 
 /****************************************************************************
- * Name: board_led_on
+ * Name: up_ledon
  ****************************************************************************/
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
-  board_led_onoff(led, true);
+  up_ledonoff(led, true);
 }
 
 /****************************************************************************
- * Name: board_led_off
+ * Name: up_ledoff
  ****************************************************************************/
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
-  board_led_onoff(led, false);
+  up_ledonoff(led, false);
 }
 
 #endif /* CONFIG_ARCH_LEDS */

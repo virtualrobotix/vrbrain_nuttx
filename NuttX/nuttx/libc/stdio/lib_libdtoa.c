@@ -160,7 +160,7 @@ static void lib_dtoa(FAR struct lib_outstream_s *obj, int fmt, int prec,
 
   /* Special handling for NaN and Infinity */
 
-  if (isnan(value))
+  if (isnan(value)) 
     {
       lib_dtoa_string(obj, "NaN");
       return;
@@ -168,7 +168,7 @@ static void lib_dtoa(FAR struct lib_outstream_s *obj, int fmt, int prec,
 
   if (isinf(value))
     {
-      if (value < 0.0)
+      if (value < 0.0d)
         {
           obj->put(obj, '-');
         }
@@ -340,3 +340,4 @@ static void lib_dtoa(FAR struct lib_outstream_s *obj, int fmt, int prec,
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+

@@ -68,6 +68,7 @@
 #define HALF_SECOND_MSEC 500
 #define HALF_SECOND_USEC 500000L
 
+
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
@@ -154,14 +155,11 @@ static int dac_open(FAR struct file *filep)
 
                   dev->ad_ocount = tmp;
                 }
-
               irqrestore(flags);
             }
         }
-
       sem_post(&dev->ad_closesem);
     }
-
   return ret;
 }
 
@@ -222,7 +220,6 @@ static int dac_close(FAR struct file *filep)
           sem_post(&dev->ad_closesem);
         }
     }
-
   return ret;
 }
 
@@ -263,7 +260,6 @@ static int dac_xmit(FAR struct dac_dev_s *dev)
 
       enable = (ret == OK ? true : false);
     }
-
   dev->ad_ops->ao_txint(dev, enable);
   return ret;
 }
@@ -278,7 +274,7 @@ static ssize_t dac_write(FAR struct file *filep, FAR const char *buffer, size_t 
   FAR struct dac_dev_s  *dev   = inode->i_private;
   FAR struct dac_fifo_s *fifo  = &dev->ad_xmit;
   FAR struct dac_msg_s  *msg;
-  bool                   empty;
+  bool                   empty = false;
   ssize_t                nsent = 0;
   irqstate_t             flags;
   int                    nexttail;
@@ -299,30 +295,18 @@ static ssize_t dac_write(FAR struct file *filep, FAR const char *buffer, size_t 
    * shorter than the minimum.
    */
 
-  if (buflen % 5 == 0 )
-    {
-      msglen = 5;
-    }
-  else if (buflen % 4 == 0)
-    {
-      msglen = 4;
-    }
-  else if (buflen % 3 == 0)
-    {
-      msglen = 3;
-    }
-  else if (buflen % 2 == 0)
-    {
-      msglen = 2;
-    }
+  if (buflen % 5 ==0 )
+    msglen=5;
+  else if (buflen % 4 ==0 )
+    msglen=4;
+  else if (buflen % 3 ==0 )
+    msglen=3;
+  else if (buflen % 2 ==0 )
+    msglen=2;
   else if (buflen == 1)
-    {
-      msglen = 1;
-    }
+    msglen=1;
   else
-    {
-      msglen = 5;
-    }
+    msglen=5;
 
   while ((buflen - nsent) >= msglen )
     {
@@ -352,7 +336,6 @@ static ssize_t dac_write(FAR struct file *filep, FAR const char *buffer, size_t 
                 {
                   ret = nsent;
                 }
-
               goto return_with_irqdisabled;
             }
 
@@ -387,36 +370,35 @@ static ssize_t dac_write(FAR struct file *filep, FAR const char *buffer, size_t 
        * CAN message at the tail of the FIFO.
        */
 
-      if (msglen == 5)
-        {
-          msg = (FAR struct dac_msg_s *)&buffer[nsent];
-          memcpy(&fifo->af_buffer[fifo->af_tail], msg, msglen);
-        }
-      else if (msglen == 4)
-        {
-          fifo->af_buffer[fifo->af_tail].am_channel=buffer[nsent];
-          fifo->af_buffer[fifo->af_tail].am_data=*(uint32_t *)&buffer[nsent];
-          fifo->af_buffer[fifo->af_tail].am_data&=0xffffff00;
-        }
-      else if(msglen == 3)
-        {
-          fifo->af_buffer[fifo->af_tail].am_channel=buffer[nsent];
-          fifo->af_buffer[fifo->af_tail].am_data=(*(uint16_t *)&buffer[nsent+1]);
-          fifo->af_buffer[fifo->af_tail].am_data<<=16;
-        }
-      else if(msglen == 2)
-        {
-          fifo->af_buffer[fifo->af_tail].am_channel=0;
-          fifo->af_buffer[fifo->af_tail].am_data=(*(uint16_t *)&buffer[nsent]);
-          fifo->af_buffer[fifo->af_tail].am_data<<=16;
-        }
-      else if(msglen == 1)
-       {
-          fifo->af_buffer[fifo->af_tail].am_channel=0;
-          fifo->af_buffer[fifo->af_tail].am_data=buffer[nsent];
-          fifo->af_buffer[fifo->af_tail].am_data<<=24;
-       }
-
+     if (msglen==5)
+     {
+        msg    = (FAR struct dac_msg_s *)&buffer[nsent];
+        memcpy(&fifo->af_buffer[fifo->af_tail], msg, msglen);
+     }
+     else if(msglen == 4)
+     {
+         fifo->af_buffer[fifo->af_tail].am_channel=buffer[nsent];
+         fifo->af_buffer[fifo->af_tail].am_data=*(uint32_t *)&buffer[nsent];
+         fifo->af_buffer[fifo->af_tail].am_data&=0xffffff00;
+     }
+     else if(msglen == 3)
+     {
+         fifo->af_buffer[fifo->af_tail].am_channel=buffer[nsent];
+         fifo->af_buffer[fifo->af_tail].am_data=(*(uint16_t *)&buffer[nsent+1]);
+         fifo->af_buffer[fifo->af_tail].am_data<<=16;
+     }
+     else if(msglen == 2)
+     {
+         fifo->af_buffer[fifo->af_tail].am_channel=0;
+         fifo->af_buffer[fifo->af_tail].am_data=(*(uint16_t *)&buffer[nsent]);
+         fifo->af_buffer[fifo->af_tail].am_data<<=16;
+     }
+     else if(msglen == 1)
+     {
+         fifo->af_buffer[fifo->af_tail].am_channel=0;
+         fifo->af_buffer[fifo->af_tail].am_data=buffer[nsent];
+         fifo->af_buffer[fifo->af_tail].am_data<<=24;
+     }
       /* Increment the tail of the circular buffer */
 
       fifo->af_tail = nexttail;
@@ -450,9 +432,9 @@ return_with_irqdisabled:
 
 static int dac_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 {
-  FAR struct inode *inode = filep->f_inode;
-  FAR struct dac_dev_s *dev = inode->i_private;
-  int ret;
+  FAR struct inode     *inode = filep->f_inode;
+  FAR struct dac_dev_s *dev   = inode->i_private;
+  int               ret   = OK;
 
   ret = dev->ad_ops->ao_ioctl(dev, cmd, arg);
   return ret;
@@ -498,7 +480,6 @@ int dac_txdone(FAR struct dac_dev_s *dev)
           ret = sem_post(&dev->ad_xmit.af_sem);
         }
     }
-
   return ret;
 }
 
@@ -515,3 +496,4 @@ int dac_register(FAR const char *path, FAR struct dac_dev_s *dev)
 
   return register_driver(path, &dac_fops, 0555, dev);
 }
+

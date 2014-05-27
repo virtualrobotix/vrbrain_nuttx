@@ -50,7 +50,7 @@ long double sqrtl(long double x)
 
   if (x < 0.0)
     {
-      set_errno(EDOM);
+      errno = EDOM;
       return NAN;
     }
 

@@ -94,13 +94,7 @@
 #  define LCD_YRES       320
 #endif
 
-#define LCD_BL_TIMER_PERIOD 8999
-
-/* LCD is connected to the FSMC_Bank1_NOR/SRAM1 and NE1 is used as ship select signal */
-/* RS <==> A16 */
-
-#define LCD_INDEX        0x60000000  /* RS = 0 */
-#define LCD_DATA         0x60020000  /* RS = 1 */
+#define LCD_BL_TIMER_PERIOD   8999
 
 /* Debug ******************************************************************************/
 #ifdef CONFIG_DEBUG_LCD
@@ -110,6 +104,12 @@
 #  define lcddbg(x...)
 #  define lcdvdbg(x...)
 #endif
+
+/* LCD is connected to the FSMC_Bank1_NOR/SRAM1 and NE1 is used as ship select signal */
+/* RS <==> A16 */
+
+#define LCD_INDEX     0x60000000  /* RS = 0 */
+#define LCD_DATA      0x60020000  /* RS = 1 */
 
 /**************************************************************************************
  * Private Type Definition

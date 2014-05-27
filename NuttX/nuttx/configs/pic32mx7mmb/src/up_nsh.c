@@ -45,7 +45,7 @@
 #include <debug.h>
 #include <errno.h>
 
-#include <nuttx/spi/spi.h>
+#include <nuttx/spi.h>
 #include <nuttx/mmcsd.h>
 #include <nuttx/usb/usbhost.h>
 
@@ -170,7 +170,7 @@
  ****************************************************************************/
 
 #ifdef NSH_HAVEUSBHOST
-static struct usbhost_connection_s *g_usbconn;
+static struct usbhost_driver_s *g_drvr;
 #endif
 
 /****************************************************************************
@@ -196,7 +196,7 @@ static int nsh_waiter(int argc, char *argv[])
     {
       /* Wait for the device to change state */
 
-      ret = CONN_WAIT(g_usbconn, &connected);
+      ret = DRVR_WAIT(g_drvr, connected);
       DEBUGASSERT(ret == OK);
 
       connected = !connected;
@@ -208,7 +208,7 @@ static int nsh_waiter(int argc, char *argv[])
         {
           /* Yes.. enumerate the newly connected device */
 
-          (void)CONN_ENUMERATE(g_usbconn, 0);
+          (void)DRVR_ENUMERATE(g_drvr);
         }
     }
 
@@ -308,8 +308,8 @@ static int nsh_usbhostinitialize(void)
   /* Then get an instance of the USB host interface */
 
   message("nsh_usbhostinitialize: Initialize USB host\n");
-  g_usbconn = pic32_usbhost_initialize(0);
-  if (g_usbconn)
+  g_drvr = usbhost_initialize(0);
+  if (g_drvr)
     {
       /* Start a thread to handle device connection. */
 

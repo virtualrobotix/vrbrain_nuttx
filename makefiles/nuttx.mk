@@ -39,7 +39,7 @@
 #
 NUTTX_ARCHIVE		:= $(wildcard $(ARCHIVE_DIR)$(BOARD).export)
 ifeq ($(NUTTX_ARCHIVE),)
-$(error The NuttX export archive for $(BOARD) is missing from $(ARCHIVE_DIR) - try 'make archives' in $(VRBRAIN_BASE))
+$(error The NuttX export archive for $(BOARD) is missing from $(ARCHIVE_DIR) - try 'make archives' in $(VRX_BASE))
 endif
 
 #

@@ -163,7 +163,7 @@
  * Public Functions
  ************************************************************************************/
 /* The LPC17 LCD driver uses the common framebuffer interfaces declared in
- * include/nuttx/video/fb.h.
+ * include/nuttx/fb.h.
  */
 
 /************************************************************************************

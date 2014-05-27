@@ -74,7 +74,7 @@ void sam_boardinitialize(void)
    * sam_spiinitialize() has been brought into the link.
    */
 
-#ifdef CONFIG_SAM34_SPI0
+#ifdef CONFIG_SAM34_SPI
   if (sam_spiinitialize)
     {
       sam_spiinitialize();
@@ -96,7 +96,7 @@ void sam_boardinitialize(void)
   /* Configure on-board LEDs if LED support has been selected. */
 
 #ifdef CONFIG_ARCH_LEDS
-  board_led_initialize();
+  up_ledinit();
 #endif
 
   /* Setup SD card-related PIOs if 1) HSMCI is selected and 2) the weak

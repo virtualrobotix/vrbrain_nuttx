@@ -50,6 +50,7 @@ struct pwm_servo_timer {
 	uint32_t	base;
 	uint32_t	clock_register;
 	uint32_t	clock_bit;
+	uint32_t	vector;
 	uint32_t	clock_freq;
 };
 

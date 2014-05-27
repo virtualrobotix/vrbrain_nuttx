@@ -96,7 +96,7 @@
 #if !defined(CONFIG_DEBUG) || !defined(CONFIG_DEBUG_CAN)
 #  undef CONFIG_CAN_REGDEBUG
 #endif
-
+ 
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -201,7 +201,7 @@ static struct stm32_can_s g_can2priv =
   .cantx            = STM32_IRQ_CAN2TX,
   .filter           = CAN_NFILTERS / 2,
   .base             = STM32_CAN2_BASE,
-  .fbase            = STM32_CAN1_BASE,
+  .fbase             = STM32_CAN1_BASE,
   .baud             = CONFIG_CAN2_BAUD,
 };
 
@@ -283,28 +283,23 @@ static uint32_t can_vgetreg(uint32_t addr)
   lldbg("%08x->%08x\n", addr, val);
   return val;
 }
-
 static uint32_t can_getreg(struct stm32_can_s *priv, int offset)
 {
   return can_vgetreg(priv->base + offset);
 }
-
 static uint32_t can_getfreg(struct stm32_can_s *priv, int offset)
 {
   return can_vgetreg(priv->fbase + offset);
 }
-
 #else
 static uint32_t can_getreg(struct stm32_can_s *priv, int offset)
 {
   return getreg32(priv->base + offset);
 }
-
 static uint32_t can_getfreg(struct stm32_can_s *priv, int offset)
 {
   return getreg32(priv->fbase + offset);
 }
-
 #endif
 
 /****************************************************************************
@@ -336,23 +331,19 @@ static void can_vputreg(uint32_t addr, uint32_t value)
 
   putreg32(value, addr);
 }
-
 static void can_putreg(struct stm32_can_s *priv, int offset, uint32_t value)
 {
   can_vputreg(priv->base + offset, value);
 }
-
 static void can_putfreg(struct stm32_can_s *priv, int offset, uint32_t value)
 {
   can_vputreg(priv->fbase + offset, value);
 }
-
 #else
 static void can_putreg(struct stm32_can_s *priv, int offset, uint32_t value)
 {
   putreg32(value, priv->base + offset);
 }
-
 static void can_putfreg(struct stm32_can_s *priv, int offset, uint32_t value)
 {
   putreg32(value, priv->fbase + offset);
@@ -384,7 +375,7 @@ static void can_dumpctrlregs(struct stm32_can_s *priv, FAR const char *msg)
     {
       canlldbg("Control Registers:\n");
     }
-
+ 
   /* CAN control and status registers */
 
   lldbg("  MCR: %08x   MSR: %08x   TSR: %08x\n",
@@ -533,14 +524,14 @@ static void can_reset(FAR struct can_dev_s *dev)
 
   /* Get the bits in the AHB1RSTR register needed to reset this CAN device */
 
-#ifdef CONFIG_STM32_CAN1
+#ifdef CONFIG_STM32_CAN1  
   if (priv->port == 1)
     {
       regbit = RCC_APB1RSTR_CAN1RST;
     }
   else
 #endif
-#ifdef CONFIG_STM32_CAN2
+#ifdef CONFIG_STM32_CAN2 
   if (priv->port == 2)
     {
       regbit = RCC_APB1RSTR_CAN2RST;
@@ -1191,7 +1182,7 @@ static int can_txinterrupt(int irq, void *context)
       if ((regval & CAN_TSR_TXOK0) != 0)
         {
           /* Tell the upper half that the tansfer is finished. */
-
+   
           (void)can_txdone(dev);
         }
     }
@@ -1211,7 +1202,7 @@ static int can_txinterrupt(int irq, void *context)
       if ((regval & CAN_TSR_TXOK1) != 0)
         {
           /* Tell the upper half that the tansfer is finished. */
-
+   
           (void)can_txdone(dev);
         }
     }
@@ -1231,7 +1222,7 @@ static int can_txinterrupt(int irq, void *context)
       if ((regval & CAN_TSR_TXOK2) != 0)
         {
           /* Tell the upper half that the tansfer is finished. */
-
+   
           (void)can_txdone(dev);
         }
     }
@@ -1351,7 +1342,7 @@ static int can_bittiming(struct stm32_can_s *priv)
       if (ts1 == ts2 && ts1 > 1 && ts2 < CAN_BTR_TSEG2_MAX)
         {
           ts1--;
-          ts2++;
+          ts2++;          
         }
     }
 
@@ -1370,7 +1361,7 @@ static int can_bittiming(struct stm32_can_s *priv)
 
   canllvdbg("TS1: %d TS2: %d BRP: %d\n", ts1, ts2, brp);
 
- /* Configure bit timing.  This also does the following, less obvious
+ /* Configure bit timing.  This also does the the following, less obvious
    * things.  Unless loopback mode is enabled, it:
    *
    * - Disables silent mode.
@@ -1465,7 +1456,7 @@ static int can_cellinit(struct stm32_can_s *priv)
   can_putreg(priv, STM32_CAN_MCR_OFFSET, regval);
 
   /* Configure bit timing. */
-
+ 
   ret = can_bittiming(priv);
   if (ret < 0)
     {
@@ -1515,7 +1506,7 @@ static int can_cellinit(struct stm32_can_s *priv)
  *   Filters can also be configured as:
  *
  *   3. 16- or 32-bit.  The advantage of 16-bit filters is that you get
- *      more filters;  The advantage of 32-bit filters is that you get
+ *      more filters;  The advantage of 32-bit filters is that you get 
  *      finer control of the filtering.
  *
  *   One filter is set up for each CAN.  The filter resources are shared
@@ -1563,7 +1554,7 @@ static int can_filterinit(struct stm32_can_s *priv)
   regval  = can_getfreg(priv, STM32_CAN_FS1R_OFFSET);
   regval |= bitmask;
   can_putfreg(priv, STM32_CAN_FS1R_OFFSET, regval);
-
+ 
   /* There are 14 or 28 filter banks (depending) on the device.  Each filter bank is
    * composed of two 32-bit registers, CAN_FiR:
    */
@@ -1582,7 +1573,7 @@ static int can_filterinit(struct stm32_can_s *priv)
   regval  = can_getfreg(priv, STM32_CAN_FFA1R_OFFSET);
   regval &= ~bitmask;
   can_putfreg(priv, STM32_CAN_FFA1R_OFFSET, regval);
-
+ 
   /* Enable the filter */
 
   regval  = can_getfreg(priv, STM32_CAN_FA1R_OFFSET);
@@ -1625,7 +1616,7 @@ FAR struct can_dev_s *stm32_caninitialize(int port)
    * by stm32_clockconfig() early in the reset sequence.
    */
 
-#ifdef CONFIG_STM32_CAN1
+#ifdef CONFIG_STM32_CAN1  
   if( port == 1 )
     {
       /* Select the CAN1 device structure */
@@ -1640,8 +1631,8 @@ FAR struct can_dev_s *stm32_caninitialize(int port)
       stm32_configgpio(GPIO_CAN1_TX);
     }
   else
-#endif
-#ifdef CONFIG_STM32_CAN2
+#endif  
+#ifdef CONFIG_STM32_CAN2  
   if ( port ==2 )
     {
       /* Select the CAN2 device structure */
@@ -1656,7 +1647,7 @@ FAR struct can_dev_s *stm32_caninitialize(int port)
       stm32_configgpio(GPIO_CAN2_TX);
     }
   else
-#endif
+#endif  
     {
       candbg("ERROR: Unsupported port %d\n", port);
       return NULL;

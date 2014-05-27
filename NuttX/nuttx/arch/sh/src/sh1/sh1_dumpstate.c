@@ -172,7 +172,7 @@ void up_dumpstate(void)
   /* Get the limits on the interrupt stack memory */
 
 #if CONFIG_ARCH_INTERRUPTSTACK > 3
-  istackbase = (uint32_t)&g_intstackbase;
+  istackbase = (uint32_t)&g_userstack;
   istacksize = (CONFIG_ARCH_INTERRUPTSTACK & ~3) - 4;
 
   /* Show interrupt stack info */
@@ -196,7 +196,7 @@ void up_dumpstate(void)
        * at the base of the interrupt stack.
        */
 
-      sp = g_intstackbase;
+      sp = g_userstack;
       lldbg("sp:     %08x\n", sp);
     }
 

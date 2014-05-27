@@ -398,7 +398,7 @@ Micropendous3 Configuration Options
 
     CONFIG_ARCH_architecture - For use in C code:
 
-       CONFIG_ARCH_CHIP_AT90USB=y
+       CONFIG_ARCH_AT90USB=y
 
     CONFIG_ARCH_CHIP - Identifies the arch/*/chip subdirectory
 
@@ -429,14 +429,14 @@ Micropendous3 Configuration Options
     CONFIG_ENDIAN_BIG - define if big endian (default is little
        endian)
 
-    CONFIG_RAM_SIZE - Describes the installed DRAM.  One of:
+    CONFIG_DRAM_SIZE - Describes the installed DRAM.  One of:
 
-       CONFIG_RAM_SIZE=(4*1024) - (4Kb)
-       CONFIG_RAM_SIZE=(8*1024) - (8Kb)
+       CONFIG_DRAM_SIZE=(4*1024) - (4Kb)
+       CONFIG_DRAM_SIZE=(8*1024) - (8Kb)
 
-    CONFIG_RAM_START - The start address of installed SRAM
+    CONFIG_DRAM_START - The start address of installed SRAM
 
-       CONFIG_RAM_START=0x800100
+       CONFIG_DRAM_START=0x800100
 
     CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
        have LEDs
@@ -510,42 +510,19 @@ Micropendous3 Configuration Options
 Configurations
 ^^^^^^^^^^^^^^
 
-Common Configuration Notes
---------------------------
+Each Micropendous3 configuration is maintained in a sub-directory and can
+be selected as follow:
 
-  1. Each Micropendous3 configuration is maintained in a sub-directory and
-     can be selected as follow:
+    cd tools
+    ./configure.sh micropendous3/<subdir>
+    cd -
+    . ./setenv.sh
 
-       cd tools
-       ./configure.sh micropendous3/<subdir>
-       cd -
-       . ./setenv.sh
+NOTE: You must also copy avr-libc header files, perhaps like:
 
-     Where <subdir> is one of the configuration sub-directories described in
-     the following paragraph.
+     cp -a /cygdrive/c/WinAVR/include/avr include/.
 
-     NOTE: You must also copy avr-libc header files, perhaps like:
-
-       cp -a /cygdrive/c/WinAVR/include/avr include/.
-
-  2. These configurations use the mconf-based configuration tool.  To
-     change a configurations using that tool, you should:
-
-     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-        and misc/tools/
-
-     b. Execute 'make menuconfig' in nuttx/ in order to start the
-        reconfiguration process.
-
-  3. By default, all configurations assume the NuttX Buildroot toolchain
-     under Cygwin with Windows.  This is easily reconfigured:
-
-        CONFIG_HOST_WINDOWS=y
-        CONFIG_WINDOWS_CYGWIN=y
-        CONFIG_AVR_BUILDROOT=y
-
-Configuration Sub-Directories
------------------------------
+Where <subdir> is one of the following:
 
   hello:
     The simple apps/examples/hello "Hello, World!" example.

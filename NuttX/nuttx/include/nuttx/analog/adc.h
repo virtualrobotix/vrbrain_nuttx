@@ -7,7 +7,6 @@
  *            0.2 remove ao_read
  *
  * Derived from include/nuttx/can.h
- *
  *   Copyright (C) 2008, 2009 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
@@ -55,13 +54,13 @@
 #include <stdbool.h>
 #include <semaphore.h>
 #include <nuttx/fs/fs.h>
-#include <nuttx/spi/spi.h>
+#include <nuttx/spi.h>
 
 /************************************************************************************
  * Pre-processor Definitions
  ************************************************************************************/
 
-/* Default configuration settings that may be overridden in the NuttX configuration
+/* Default configuration settings that may be overridden in the board configuration.
  * file.  The configured size is limited to 255 to fit into a uint8_t.
  */
 
@@ -126,10 +125,11 @@ struct adc_ops_s
   /* All ioctl calls will be routed through this method */
 
   CODE int (*ao_ioctl)(FAR struct adc_dev_s *dev, int cmd, unsigned long arg);
+
 };
 
 /* This is the device structure used by the driver.  The caller of
- * adc_register() must allocate and initialize this structure.  The
+ * can_register() must allocate and initialize this structure.  The
  * calling logic need only set all fields to zero except:
  *
  *   The elements of 'ad_ops', and 'ad_priv'
@@ -157,8 +157,7 @@ struct adc_dev_s
  ************************************************************************************/
 
 #if defined(__cplusplus)
-extern "C"
-{
+extern "C" {
 #endif
 
 /************************************************************************************

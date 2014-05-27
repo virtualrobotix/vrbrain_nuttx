@@ -137,7 +137,7 @@ static inline void stmpe811_tscinitialize(FAR struct stmpe811_dev_s *priv);
  * Private Data
  ****************************************************************************/
 
-/* This the vtable that supports the character driver interface */
+/* This the the vtable that supports the character driver interface */
 
 static const struct file_operations g_stmpe811fops =
 {
@@ -323,7 +323,7 @@ static inline int stmpe811_waitsample(FAR struct stmpe811_dev_s *priv,
         }
     }
 
-  /* Re-acquire the semaphore that manages mutually exclusive access to
+  /* Re-acquire the the semaphore that manages mutually exclusive access to
    * the device structure.  We may have to wait here.  But we have our sample.
    * Interrupts and pre-emption will be re-enabled while we wait.
    */
@@ -769,7 +769,7 @@ static void stmpe811_timeout(int argc, uint32_t arg1, ...)
 
   /* Are we still stuck in the pen down state? */
 
-  if (priv->sample.contact == CONTACT_DOWN ||
+  if (priv->sample.contact == CONTACT_MOVE ||
       priv->sample.contact == CONTACT_MOVE)
     {
       /* Yes... is the worker thread available?   If not, then apparently
@@ -1127,7 +1127,7 @@ void stmpe811_tscworker(FAR struct stmpe811_dev_s *priv, uint8_t intsta)
    */
 
 ignored:
-  if (priv->sample.contact == CONTACT_DOWN ||
+  if (priv->sample.contact == CONTACT_MOVE ||
       priv->sample.contact == CONTACT_MOVE)
     {
       (void)wd_start(priv->wdog, STMPE811_PENUP_TICKS, stmpe811_timeout,

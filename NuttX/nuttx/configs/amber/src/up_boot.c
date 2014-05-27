@@ -1,5 +1,6 @@
 /************************************************************************************
  * configs/amber/src/up_boot.c
+ * arch/mips/src/board/up_boot.c
  *
  *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

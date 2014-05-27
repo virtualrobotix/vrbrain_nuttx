@@ -45,7 +45,7 @@
 #include <assert.h>
 #include <errno.h>
 
-#include <nuttx/spi/spi.h>
+#include <nuttx/spi.h>
 #include <nuttx/input/touchscreen.h>
 #include <nuttx/input/ads7843e.h>
 
@@ -62,8 +62,8 @@
 #  error "Touchscreen support requires CONFIG_INPUT"
 #endif
 
-#ifndef CONFIG_SAM34_SPI0
-#  error "Touchscreen support requires CONFIG_SAM34_SPI0"
+#ifndef CONFIG_SAM34_SPI
+#  error "Touchscreen support requires CONFIG_SAM34_SPI"
 #endif
 
 #ifndef CONFIG_GPIOA_IRQ
@@ -75,11 +75,11 @@
 #endif
 
 #ifndef CONFIG_ADS7843E_SPIDEV
-#  define CONFIG_ADS7843E_SPIDEV TSC_CSNUM
+#  define CONFIG_ADS7843E_SPIDEV 0
 #endif
 
-#if CONFIG_ADS7843E_SPIDEV != TSC_CSNUM
-#  error "CONFIG_ADS7843E_SPIDEV must have the same value as TSC_CSNUM"
+#if CONFIG_ADS7843E_SPIDEV != 0
+#  error "CONFIG_ADS7843E_SPIDEV must be zero"
 #endif
 
 #ifndef CONFIG_ADS7843E_DEVMINOR
@@ -195,15 +195,14 @@ static bool tsc_busy(FAR struct ads7843e_config_s *state)
       last = busy;
     }
 #endif
-
   return busy;
 }
 
 static bool tsc_pendown(FAR struct ads7843e_config_s *state)
 {
-  /* The /PENIRQ value is active low */
+  /* REVISIT:  This might need to be inverted */
 
-  bool pendown = !sam_gpioread(GPIO_TCS_IRQ);
+  bool pendown = sam_gpioread(GPIO_TCS_IRQ);
   ivdbg("pendown:%d\n", pendown);
   return pendown;
 }
@@ -247,12 +246,12 @@ int arch_tcinitialize(int minor)
 
   sam_gpioirq(GPIO_TCS_IRQ);
 
-  /* Get an instance of the SPI interface for the touchscreen chip select */
+  /* Get an instance of the SPI interface */
 
-  dev = up_spiinitialize(TSC_CSNUM);
+  dev = up_spiinitialize(CONFIG_ADS7843E_SPIDEV);
   if (!dev)
     {
-      idbg("Failed to initialize SPI chip select %d\n", TSC_CSNUM);
+      idbg("Failed to initialize SPI bus %d\n", CONFIG_ADS7843E_SPIDEV);
       return -ENODEV;
     }
 
@@ -261,7 +260,7 @@ int arch_tcinitialize(int minor)
   ret = ads7843e_register(dev, &g_tscinfo, CONFIG_ADS7843E_DEVMINOR);
   if (ret < 0)
     {
-      idbg("Failed to initialize SPI chip select %d\n", TSC_CSNUM);
+      idbg("Failed to initialize SPI bus %d\n", CONFIG_ADS7843E_SPIDEV);
       /* up_spiuninitialize(dev); */
       return -ENODEV;
     }

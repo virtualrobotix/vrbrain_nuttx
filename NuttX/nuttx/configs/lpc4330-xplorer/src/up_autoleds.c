@@ -136,14 +136,14 @@ static void led_dumppins(FAR const char *msg)
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_led_initialize
+ * Name: up_ledinit
  ****************************************************************************/
 
-void board_led_initialize(void)
+void up_ledinit(void)
 {
   /* Configure all LED pins as GPIO outputs */
 
-  led_dumppins("board_led_initialize() Entry)");
+  led_dumppins("up_ledinit() Entry)");
 
   /* Configure LED pins as GPIOs, then configure GPIOs as outputs */
 
@@ -153,14 +153,14 @@ void board_led_initialize(void)
   lpc43_pin_config(PINCONFIG_LED2);
   lpc43_gpio_config(GPIO_LED2);
 
-  led_dumppins("board_led_initialize() Exit");
+  led_dumppins("up_ledinit() Exit");
 }
 
 /****************************************************************************
- * Name: board_led_on
+ * Name: up_ledon
  ****************************************************************************/
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
   switch (led)
     {
@@ -182,10 +182,10 @@ void board_led_on(int led)
 }
 
 /****************************************************************************
- * Name: board_led_off
+ * Name: up_ledoff
  ****************************************************************************/
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
   switch (led)
     {

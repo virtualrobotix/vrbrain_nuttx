@@ -127,7 +127,6 @@ int uip_backlogcreate(FAR struct uip_conn *conn, int nblg)
       for (i = 0; i < nblg; i++)
         {
           sq_addfirst(&blc->bc_node, &bls->bl_free);
-          blc++;
         }
     }
 

@@ -19,22 +19,12 @@ config MTD_PARTITION
 		each managed by a separate MTD driver.  The MTD parition interface
 		is described in:
 
-			include/nuttx/mtd/mtd.h
+			include/nuttx/mtd.h
 			FAR struct mtd_dev_s *mtd_partition(FAR struct mtd_dev_s *mtd, off_t offset, off_t nblocks);
 
 		Each call to mtd_partition() will create a new MTD driver instance
 		managing the sub-region of flash beginning at 'offset' (in blocks)
 		and of size 'nblocks' on the device specified by 'mtd'.
-
-config MTD_PARTITION_NAMES
-	bool "Support MTD partition naming"
-	depends on FS_PROCFS
-	depends on MTD_PARTITION
-	default n
-	---help---
-		MTD partitions can be assigned a name for reporting via the procfs
-		file system interface.  This adds an API which must be called to
-		specify the partition name.
 
 config MTD_BYTE_WRITE
 	bool "Byte write"
@@ -45,119 +35,7 @@ config MTD_BYTE_WRITE
 		support such writes.  The SMART file system can take advantage of
 		this option if it is enabled.
 
-config MTD_CONFIG
-	bool "Enable Dev Config (MTD based) device"
-	default n
-	---help---
-		Provides a /dev/config device for saving / restoring application
-		configuration data to a standard MTD device or partition.
-
-config MTD_CONFIG_RAM_CONSOLIDATE
-	bool "Always use RAM consolidation method (work in progress)"
-	default n
-	---help---
-		When the MTD device used for /dev/config contains more than one
-		erase block, the "unused entry" consolidation reserves one erase
-		block by default for cleanup purposes.  This consumes the minimum
-		amount of RAM, however it "wastes" one erase block on the device.
-		(For configurations that have only a single erase block assigned
-		to the config device, RAM consolidation is the ONLY option.)
-
-		Another apporach is to allow the driver to use the entire MTD
-		device (or partition) to save config data, and then allocate a
-		RAM buffer (the size of one erase block) to perform the
-		consolidation.  Enabling this feature basically trades off RAM
-		usage for FLASH usage.  If the MTD device used for config data
-		has small erase sizes (4K, etc.) and there is plenty of free RAM
-		available, then this is probably a good option.
-
-		Another benefit of this option is it reduces code space a bit
-		since the "reserved block" consolidate routine is not needed.
-
-config MTD_CONFIG_ERASEDVALUE
-	hex "Erased value of bytes on the MTD device"
-	depends on MTD_CONFIG
-	default 0xff
-	---help---
-		Specifies the value of the erased state of the MTD FLASH.  For
-		most FLASH parts, this is 0xff, but could also be zero depending
-		on the device.
-
 comment "MTD Device Drivers"
-
-menuconfig MTD_NAND
-	bool "MTD NAND support"
-	default n
-	---help---
-		Enable support for NAND FLASH devices.
-
-if MTD_NAND
-
-config MTD_NAND_MAXNUMBLOCKS
-	int "Max blocks"
-	default 1024
-	---help---
-		Maximum number of blocks in a device
-
-config MTD_NAND_MAXNUMPAGESPERBLOCK
-	int "Max pages per block"
-	default 256
-	---help---
-		Maximum number of pages in one block
-
-config MTD_NAND_MAXPAGEDATASIZE
-	int "Max page size"
-	default 4096
-	---help---
-		Maximum size of the data area of one page, in bytes.
-
-config MTD_NAND_MAXPAGESPARESIZE
-	int "Max size of spare area"
-	default 256
-	---help---
-		Maximum size of the spare area of one page, in bytes.
-
-config MTD_NAND_MAXSPAREECCBYTES
-	int "Max number of ECC bytes"
-	default 48
-	---help---
-		Maximum number of ECC bytes stored in the spare for one single page.
-
-config MTD_NAND_BLOCKCHECK
-	bool "Block check"
-	default y
-	---help---
-		Enable support for ECC and bad block checking.
-
-config MTD_NAND_SWECC
-	bool "Sofware ECC support"
-	default n if ARCH_NAND_HWECC
-	default y if !ARCH_NAND_HWECC
-	---help---
-		Build in logic to support software calculation of ECC.
-
-config MTD_NAND_HWECC
-	bool "Hardware ECC support"
-	default n
-	depends on ARCH_NAND_HWECC
-	---help---
-		Build in logic to support hardware calculation of ECC.
-
-config MTD_NAND_MAXSPAREEXTRABYTES
-	int "Max extra free bytes"
-	default 206
-	---help---
-		Maximum number of extra free bytes inside the spare area of a page.
-
-config MTD_NAND_EMBEDDEDECC
-	bool "Support devices with Embedded ECC"
-	default n
-	---help---
-		Some NAND devices have internal, embedded ECC function.  One (the
-		only one supported) is Micron, 4-bit ECC, device size = 1Gb or 2Gb
-		or 4Gb.
-
-endif # MTD_NAND
 
 config RAMMTD
 	bool "RAM-based MTD driver"
@@ -189,45 +67,22 @@ config RAMMTD_FLASHSIM
 endif
 
 config MTD_AT24XX
-	bool "I2C-based AT24xx eeprom"
+	bool "I2C-based AT24XX eeprom"
 	default n
 	select I2C
 	---help---
-		Build support for I2C-based AT24CXX EEPROM(at24c32, at24c64,
+		Build support for I2C-based at24cxx EEPROM(at24c32, at24c64,
 		at24c128, at24c256)
 
 if MTD_AT24XX
 
 config AT24XX_SIZE
-	int "AT24xx size (kbit)"
+	int "at24xx size(kByte)"
 	default 64
-		---help---
-		This is the XX in the AT24Cxx part number.  For example, if you have a
-		AT 24C512, then the correct value is 512.  This value is also the capacity
-		of the part in kilobits.  For example, the 24C512 supports 512 Kbits or
-		512 /8 = 64 KiB.
 
 config AT24XX_ADDR
-	hex "AT24XX I2C address"
+	hex "at24xx i2c address"
 	default 0x50
-	range 0x50 0x57
-
-endif
-
-config MTD_AT25
-	bool "SPI-based AT25 FLASH"
-	default n
-	select SPI
-
-if MTD_AT25
-
-config AT25_SPIMODE
-	int "AT25 SPI Mode"
-	default 0
-
-config AT25_SPIFREQUENCY
-	int "AT25 SPI Frequency"
-	default 20000000
 
 endif
 
@@ -239,15 +94,15 @@ config MTD_AT45DB
 if MTD_AT45DB
 
 config AT45DB_FREQUENCY
-	int "AT45DB frequency"
+	int "at45db frequency"
 	default 1000000
 
 config AT45DB_PREWAIT
-	bool "Enable higher performance write logic"
+	bool "enables higher performance write logic"
 	default y
 
 config AT45DB_PWRSAVE
-	bool "Enable power save"
+	bool "enables power save"
 	default n
 
 endif
@@ -292,7 +147,7 @@ endif
 
 config MTD_SMART
 	bool "Sector Mapped Allocation for Really Tiny (SMART) Flash support"
-	default n
+	default y
 	---help---
 		The MP25x series of Flash devices are typically very small and have a very large
 		erase block size.  This causes issues with the standard Flash Translation Layer
@@ -343,53 +198,11 @@ config SST25_SECTOR512
 
 config SST25_SLOWWRITE
 	bool
-	default n
-	---help---
-		There used to be a bug in the current code when using the higher speed AAI
-		write sequence. The nature of the bug is that the WRDI instruction is not
-		working. At the end of the AAI sequence, the status register continues to
-		report that the SST25 is write enabled (WEL bit) and in AAI mode (AAI
-		bit).  This has been fixed by David Sidrane!
+	default y
 
 config SST25_SLOWREAD
 	bool
 	default n
-
-endif
-
-config MTD_SST25XX
-	bool "SPI-based SST25XX FLASH (64-MBit and larger)"
-	default n
-	select SPI
-	---help---
-		With the 64 MBit and larger parts, SST changed the write mechanism to
-		support page write instead of byte/word write like the smaller parts.
-		As a result, the SST25 driver is not compatible with the larger density
-		parts, and the SST25XX driver must be used instead.
-
-if MTD_SST25XX
-
-config SST25XX_SPIMODE
-	int "SST25 SPI Mode"
-	default 0
-
-config SST25XX_SPIFREQUENCY
-	int "SST25 SPI Frequency"
-	default 20000000
-
-config SST25XX_MANUFACTURER
-	hex "Manufacturers ID"
-	default 0xBF
-	---help---
-		Various manufacturers may have produced the parts.  0xBF is the manufacturer ID
-		for the parts manufactured by SST.
-
-config SST25XX_MEMORY_TYPE
-	hex "Memory type ID"
-	default 0x25
-	---help---
-		The memory type for SST25VF065 series is 0x25, but this can be modified if needed
-		to support compatible devices from different manufacturers.
 
 endif
 

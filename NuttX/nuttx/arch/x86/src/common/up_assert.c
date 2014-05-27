@@ -140,7 +140,7 @@ static void up_dumpstate(void)
   /* Get the limits on the interrupt stack memory */
 
 #if CONFIG_ARCH_INTERRUPTSTACK > 3
-  istackbase = (uint32_t)&g_intstackbase;
+  istackbase = (uint32_t)&g_userstack;
   istacksize = (CONFIG_ARCH_INTERRUPTSTACK & ~3) - 4;
 
   /* Show interrupt stack info */
@@ -164,7 +164,7 @@ static void up_dumpstate(void)
        * at the base of the interrupt stack.
        */
 
-      sp = g_intstackbase;
+      sp = g_userstack;
       lldbg("sp:     %08x\n", sp);
     }
 
@@ -220,9 +220,9 @@ static void _up_assert(int errorcode)
         for(;;)
           {
 #ifdef CONFIG_ARCH_LEDS
-            board_led_on(LED_PANIC);
+            up_ledon(LED_PANIC);
             up_mdelay(250);
-            board_led_off(LED_PANIC);
+            up_ledoff(LED_PANIC);
             up_mdelay(250);
 #endif
           }
@@ -247,7 +247,7 @@ void up_assert(const uint8_t *filename, int lineno)
   struct tcb_s *rtcb = (struct tcb_s*)g_readytorun.head;
 #endif
 
-  board_led_on(LED_ASSERTION);
+  up_ledon(LED_ASSERTION);
 
 #ifdef CONFIG_PRINT_TASKNAME
   lldbg("Assertion failed at file:%s line: %d task: %s\n",

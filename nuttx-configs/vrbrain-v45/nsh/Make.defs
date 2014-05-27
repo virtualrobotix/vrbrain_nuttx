@@ -40,7 +40,7 @@ include ${TOPDIR}/tools/Config.mk
 # We only support building with the ARM bare-metal toolchain from
 # https://launchpad.net/gcc-arm-embedded on Windows, Linux or Mac OS.
 #
-CONFIG_ARMV7M_TOOLCHAIN	:= GNU_EABIL
+CONFIG_ARMV7M_TOOLCHAIN	:= GNU_EABI
 
 include ${TOPDIR}/arch/arm/src/armv7-m/Toolchain.defs
 
@@ -60,6 +60,10 @@ ARCHCPUFLAGS		 = -mcpu=cortex-m4 \
 			   -mfpu=fpv4-sp-d16 \
 			   -mfloat-abi=hard
 
+
+# enable precise stack overflow tracking
+INSTRUMENTATIONDEFINES	 = -finstrument-functions \
+			   -ffixed-r10
 
 # pull in *just* libm from the toolchain ... this is grody
 LIBM			 = "${shell $(CC) $(ARCHCPUFLAGS) -print-file-name=libm.a}"
@@ -135,7 +139,8 @@ ARCHCWARNINGS		 = $(ARCHWARNINGS) \
 			   -Wold-style-declaration \
 			   -Wmissing-parameter-type \
 			   -Wmissing-prototypes \
-			   -Wnested-externs
+			   -Wnested-externs \
+			   -Wunsuffixed-float-constants
 ARCHWARNINGSXX		 = $(ARCHWARNINGS) \
 			   -Wno-psabi
 ARCHDEFINES		 =
@@ -145,11 +150,11 @@ ARCHPICFLAGS		 = -fpic -msingle-pic-base -mpic-register=r10
 EXTRA_LIBS		+= --warn-common \
 			   --gc-sections
 
-CFLAGS			 = $(ARCHCFLAGS) $(ARCHCWARNINGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRADEFINES) -pipe -fno-common
+CFLAGS			 = $(ARCHCFLAGS) $(ARCHCWARNINGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(INSTRUMENTATIONDEFINES) $(ARCHDEFINES) $(EXTRADEFINES) -pipe -fno-common
 CPICFLAGS		 = $(ARCHPICFLAGS) $(CFLAGS)
-CXXFLAGS		 = $(ARCHCXXFLAGS) $(ARCHWARNINGSXX) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHXXINCLUDES) $(ARCHDEFINES) $(EXTRADEFINES) -pipe
+CXXFLAGS		 = $(ARCHCXXFLAGS) $(ARCHWARNINGSXX) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHXXINCLUDES) $(INSTRUMENTATIONDEFINES) $(ARCHDEFINES) $(EXTRADEFINES) -pipe
 CXXPICFLAGS		 = $(ARCHPICFLAGS) $(CXXFLAGS)
-CPPFLAGS		 = $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRADEFINES)
+CPPFLAGS		 = $(ARCHINCLUDES) $(INSTRUMENTATIONDEFINES) $(ARCHDEFINES) $(EXTRADEFINES)
 AFLAGS			 = $(CFLAGS) -D__ASSEMBLY__
 
 NXFLATLDFLAGS1		 = -r -d -warn-common

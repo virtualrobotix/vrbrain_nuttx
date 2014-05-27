@@ -1,7 +1,7 @@
 /****************************************************************************
  * fs/nxffs/nxffs_inode.c
  *
- *   Copyright (C) 2011, 2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * References: Linux/Documentation/filesystems/romfs.txt
@@ -48,7 +48,7 @@
 #include <debug.h>
 
 #include <nuttx/kmalloc.h>
-#include <nuttx/mtd/mtd.h>
+#include <nuttx/mtd.h>
 
 #include "nxffs.h"
 
@@ -85,6 +85,8 @@
  *   Zero on success.  Otherwise, a negated errno value is returned
  *   indicating the nature of the failure.
  *
+ *   On return, the 
+ *
  ****************************************************************************/
 
 static int nxffs_rdentry(FAR struct nxffs_volume_s *volume, off_t offset,
@@ -115,7 +117,7 @@ static int nxffs_rdentry(FAR struct nxffs_volume_s *volume, off_t offset,
       ret = -ENOENT;
       goto errout_no_offset;
     }
-
+ 
   /* Copy the packed header into the user-friendly buffer */
 
   entry->hoffset = offset;
@@ -137,11 +139,11 @@ static int nxffs_rdentry(FAR struct nxffs_volume_s *volume, off_t offset,
   entry->name = (FAR char *)kmalloc(namlen + 1);
   if (!entry->name)
     {
-      fdbg("ERROR: Failed to allocate name, namlen: %d\n", namlen);
+      fdbg("Failed to allocate name, namlen: %d\n", namlen);
       ret = -ENOMEM;
       goto errout_no_offset;
     }
-
+  
   /* Seek to the expected location of the name in FLASH */
 
   nxffs_ioseek(volume, entry->noffset);
@@ -149,11 +151,11 @@ static int nxffs_rdentry(FAR struct nxffs_volume_s *volume, off_t offset,
   /* Make sure that the block is in memory (the name may not be in the
    * same block as the inode header.
    */
-
+ 
   ret = nxffs_rdcache(volume, volume->ioblock);
   if (ret < 0)
     {
-      fdbg("ERROR: nxffsx_rdcache failed: %d\n", -ret);
+      fdbg("nxffsx_rdcache failed: %d\n", -ret);
       goto errout_with_name;
     }
 
@@ -167,7 +169,7 @@ static int nxffs_rdentry(FAR struct nxffs_volume_s *volume, off_t offset,
   crc = crc32part((FAR const uint8_t *)entry->name, namlen, crc);
   if (crc != ecrc)
     {
-      fdbg("ERROR: CRC entry: %08x CRC calculated: %08x\n", ecrc, crc);
+      fdbg("CRC entry: %08x CRC calculated: %08x\n", ecrc, crc);
       ret = -EIO;
       goto errout_with_name;
     }
@@ -253,7 +255,7 @@ void nxffs_freeentry(FAR struct nxffs_entry_s *entry)
  *   offset - The FLASH memory offset to begin searching.
  *   entry  - A pointer to memory provided by the caller in which to return
  *     the inode description.
- *
+ *  
  * Returned Value:
  *   Zero is returned on success. Otherwise, a negated errno is returned
  *   that indicates the nature of the failure.
@@ -273,7 +275,7 @@ int nxffs_nextentry(FAR struct nxffs_volume_s *volume, off_t offset,
   nxffs_ioseek(volume, offset);
 
   /* Then begin searching */
-
+  
   nerased = 0;
   nmagic  = 0;
   for (;;)
@@ -283,7 +285,7 @@ int nxffs_nextentry(FAR struct nxffs_volume_s *volume, off_t offset,
       ch = nxffs_getc(volume, SIZEOF_NXFFS_INODE_HDR - nmagic);
       if (ch < 0)
         {
-          fdbg("ERROR: nxffs_getc failed: %d\n", -ch);
+          fvdbg("nxffs_getc failed: %d\n", -ch);
           return ch;
         }
 
@@ -338,7 +340,7 @@ int nxffs_nextentry(FAR struct nxffs_volume_s *volume, off_t offset,
            * indicate the beginning of an NXFFS inode.
            */
 
-          else
+          else 
             {
               /* The the FLASH offset where we found the matching magic number */
 
@@ -496,3 +498,5 @@ off_t nxffs_inodeend(FAR struct nxffs_volume_s *volume,
   DEBUGASSERT(entry->noffset);
   return entry->noffset + strlen(entry->name);
 }
+
+

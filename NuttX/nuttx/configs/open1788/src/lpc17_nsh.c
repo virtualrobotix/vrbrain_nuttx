@@ -52,7 +52,6 @@
 
 #include "lpc17_gpio.h"
 #include "lpc17_sdcard.h"
-#include "lpc17_usbhost.h"
 #include "open1788.h"
 
 /****************************************************************************
@@ -164,7 +163,7 @@
  ****************************************************************************/
 
 #ifdef NSH_HAVE_USBHOST
-static struct usbhost_connection_s *g_usbconn;
+static struct usbhost_driver_s *g_drvr;
 #endif
 #ifdef NSH_HAVE_MMCSD
 static FAR struct sdio_dev_s *g_sdiodev;
@@ -193,7 +192,7 @@ static int nsh_waiter(int argc, char *argv[])
     {
       /* Wait for the device to change state */
 
-      ret = CONN_WAIT(g_usbconn, &connected);
+      ret = DRVR_WAIT(g_drvr, connected);
       DEBUGASSERT(ret == OK);
 
       connected = !connected;
@@ -205,7 +204,7 @@ static int nsh_waiter(int argc, char *argv[])
         {
           /* Yes.. enumerate the newly connected device */
 
-          (void)CONN_ENUMERATE(g_usbconn, 0);
+          (void)DRVR_ENUMERATE(g_drvr);
         }
     }
 
@@ -336,8 +335,8 @@ static int nsh_usbhostinitialize(void)
   /* Then get an instance of the USB host interface */
 
   message("nsh_usbhostinitialize: Initialize USB host\n");
-  g_usbconn = lpc17_usbhost_initialize(0);
-  if (g_usbconn)
+  g_drvr = usbhost_initialize(0);
+  if (g_drvr)
     {
       /* Start a thread to handle device connection. */
 

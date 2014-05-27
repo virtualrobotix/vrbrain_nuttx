@@ -59,8 +59,6 @@
  *   and this value is ignored.  Otherwise, this number of samples is
  *   collected and the program terminates.  Default:  Zero (Samples are collected
  *   indefinitely).
- * CONFIG_EXAMPLES_TOUCHSCREEN_MOUSE - The touchscreen test can also be
- *   configured to work with a mouse driver by setting this option.
  */
 
 #ifndef CONFIG_INPUT
@@ -70,21 +68,13 @@
 #ifndef CONFIG_EXAMPLES_TOUCHSCREEN_MINOR
 #  undef  CONFIG_EXAMPLES_TOUCHSCREEN_DEVPATH
 #  define CONFIG_EXAMPLES_TOUCHSCREEN_MINOR 0
-#  ifdef CONFIG_EXAMPLES_TOUCHSCREEN_MOUSE
-#    define CONFIG_EXAMPLES_TOUCHSCREEN_DEVPATH "/dev/mouse0"
-#  else
-#    define CONFIG_EXAMPLES_TOUCHSCREEN_DEVPATH "/dev/input0"
-#  endif
+#  define CONFIG_EXAMPLES_TOUCHSCREEN_DEVPATH "/dev/input0"
 #endif
 
 #ifndef CONFIG_EXAMPLES_TOUCHSCREEN_DEVPATH
 #  undef  CONFIG_EXAMPLES_TOUCHSCREEN_MINOR
 #  define CONFIG_EXAMPLES_TOUCHSCREEN_MINOR 0
-#  ifdef CONFIG_EXAMPLES_TOUCHSCREEN_MOUSE
-#    define CONFIG_EXAMPLES_TOUCHSCREEN_DEVPATH "/dev/mouse0"
-#  else
-#    define CONFIG_EXAMPLES_TOUCHSCREEN_DEVPATH "/dev/input0"
-#  endif
+#  define CONFIG_EXAMPLES_TOUCHSCREEN_DEVPATH "/dev/input0"
 #endif
 
 #ifndef CONFIG_EXAMPLES_TOUCHSCREEN_NSAMPLES

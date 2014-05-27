@@ -5,7 +5,7 @@
 #
 # Use the configuration's ROMFS.
 #
-ROMFS_ROOT	 = $(SKETCHBOOK)/mk/VRBRAIN/ROMFS_APM
+ROMFS_ROOT	 = $(SKETCHBOOK)/mk/VRBRAIN/ROMFS_VRBRAIN_APM
 
 MODULES		+= $(APM_MODULE_DIR)
 
@@ -58,6 +58,7 @@ MODULES		+= systemcmds/mtd
 
 MODULES		+= systemcmds/pwm
 
+MODULES		+= systemcmds/top
 MODULES		+= systemcmds/reboot
 
 

@@ -51,10 +51,7 @@
 #include <nuttx/net/net.h>
 
 #include <net/if.h>
-#include <net/route.h>
 #include <net/ethernet.h>
-#include <netinet/in.h>
-
 #include <nuttx/net/uip/uip-arch.h>
 #include <nuttx/net/uip/uip.h>
 
@@ -64,7 +61,6 @@
 #endif
 
 #include "net_internal.h"
-#include "net_route.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -150,7 +146,7 @@ static void ioctl_ifup(FAR struct uip_driver_s *dev)
     {
       /* Is the interface already up? */
 
-      if ((dev->d_flags & IFF_UP) == 0)
+      if ((dev->d_flags & IFF_RUNNING) == 0)
         {
           /* No, bring the interface up now */
 
@@ -158,7 +154,7 @@ static void ioctl_ifup(FAR struct uip_driver_s *dev)
             {
               /* Mark the interface as up */
 
-              dev->d_flags |= IFF_UP;
+              dev->d_flags |= IFF_RUNNING;
             }
         }
     }
@@ -172,7 +168,7 @@ static void ioctl_ifdown(FAR struct uip_driver_s *dev)
     {
       /* Is the interface already down? */
 
-      if ((dev->d_flags & IFF_UP) != 0)
+      if ((dev->d_flags & IFF_RUNNING) != 0)
         {
           /* No, take the interface down now */
 
@@ -180,42 +176,14 @@ static void ioctl_ifdown(FAR struct uip_driver_s *dev)
             {
               /* Mark the interface as down */
 
-              dev->d_flags &= ~IFF_UP;
+              dev->d_flags &= ~IFF_RUNNING;
             }
         }
     }
 }
 
 /****************************************************************************
- * Name: netdev_ifrdev
- *
- * Description:
- *   Verify the struct ifreq and get the Ethernet device.
- *
- * Parameters:
- *   req - The argument of the ioctl cmd
- *
- * Return:
- *  A pointer to the driver structure on success; NULL on failure.
- *
- ****************************************************************************/
-
-static FAR struct uip_driver_s *netdev_ifrdev(FAR struct ifreq *req)
-{
-  if (!req)
-    {
-      return NULL;
-    }
-
-  /* Find the network device associated with the device name
-   * in the request data.
-   */
-
-  return netdev_findbyname(req->ifr_name);
-}
-
-/****************************************************************************
- * Name: netdev_ifrioctl
+ * Name: netdev_ioctl
  *
  * Description:
  *   Perform network device specific operations.
@@ -232,13 +200,23 @@ static FAR struct uip_driver_s *netdev_ifrdev(FAR struct ifreq *req)
  *
  ****************************************************************************/
 
-static int netdev_ifrioctl(FAR struct socket *psock, int cmd,
-                           FAR struct ifreq *req)
+static int netdev_ifrioctl(FAR struct socket *psock, int cmd, struct ifreq *req)
 {
   FAR struct uip_driver_s *dev;
-  int ret = -EINVAL;
+  int ret = OK;
 
   nvdbg("cmd: %d\n", cmd);
+
+  /* Find the network device associated with the device name
+   * in the request data.
+   */
+
+  dev = netdev_findbyname(req->ifr_name);
+  if (!dev)
+    {
+      ret = -EINVAL;
+      goto errout;
+    }
 
   /* Execute the command */
 
@@ -246,76 +224,45 @@ static int netdev_ifrioctl(FAR struct socket *psock, int cmd,
     {
       case SIOCGIFADDR:  /* Get IP address */
         {
-          dev = netdev_ifrdev(req);
-          if (dev)
-            {
-              ioctl_getipaddr(&req->ifr_addr, &dev->d_ipaddr);
-              ret = OK;
-            }
+          ioctl_getipaddr(&req->ifr_addr, &dev->d_ipaddr);
         }
         break;
 
       case SIOCSIFADDR:  /* Set IP address */
         {
-          dev = netdev_ifrdev(req);
-          if (dev)
-            {
-              ioctl_ifdown(dev);
-              ioctl_setipaddr(&dev->d_ipaddr, &req->ifr_addr);
-              ioctl_ifup(dev);
-              ret = OK;
-            }
+          ioctl_ifdown(dev);
+          ioctl_setipaddr(&dev->d_ipaddr, &req->ifr_addr);
+          ioctl_ifup(dev);
         }
         break;
 
       case SIOCGIFDSTADDR:  /* Get P-to-P address */
         {
-          dev = netdev_ifrdev(req);
-          if (dev)
-            {
-              ioctl_getipaddr(&req->ifr_dstaddr, &dev->d_draddr);
-              ret = OK;
-            }
+          ioctl_getipaddr(&req->ifr_dstaddr, &dev->d_draddr);
         }
         break;
 
       case SIOCSIFDSTADDR:  /* Set P-to-P address */
         {
-          dev = netdev_ifrdev(req);
-          if (dev)
-            {
-              ioctl_setipaddr(&dev->d_draddr, &req->ifr_dstaddr);
-              ret = OK;
-            }
+          ioctl_setipaddr(&dev->d_draddr, &req->ifr_dstaddr);
         }
         break;
 
       case SIOCGIFNETMASK:  /* Get network mask */
         {
-          dev = netdev_ifrdev(req);
-          if (dev)
-            {
-              ioctl_getipaddr(&req->ifr_addr, &dev->d_netmask);
-              ret = OK;
-            }
+          ioctl_getipaddr(&req->ifr_addr, &dev->d_netmask);
         }
         break;
 
       case SIOCSIFNETMASK:  /* Set network mask */
         {
-          dev = netdev_ifrdev(req);
-          if (dev)
-            {
-              ioctl_setipaddr(&dev->d_netmask, &req->ifr_addr);
-              ret = OK;
-            }
+          ioctl_setipaddr(&dev->d_netmask, &req->ifr_addr);
         }
         break;
 
       case SIOCGIFMTU:  /* Get MTU size */
         {
           req->ifr_mtu = CONFIG_NET_BUFSIZE;
-          ret = OK;
         }
         break;
 
@@ -323,39 +270,42 @@ static int netdev_ifrioctl(FAR struct socket *psock, int cmd,
         {
           /* Is this a request to bring the interface up? */
 
-          dev = netdev_ifrdev(req);
-          if (dev)
+          if (req->ifr_flags & IF_FLAG_IFUP)
             {
-              if (req->ifr_flags & IFF_UP)
-                {
-                  /* Yes.. bring the interface up */
+              /* Yes.. bring the interface up */
 
-                  ioctl_ifup(dev);
-                }
-
-              /* Is this a request to take the interface down? */
-
-              else if (req->ifr_flags & IFF_DOWN)
-                {
-                  /* Yes.. take the interface down */
-
-                  ioctl_ifdown(dev);
-                }
+              ioctl_ifup(dev);
             }
 
-          ret = OK;
+          /* Is this a request to take the interface down? */
+
+          else if (req->ifr_flags & IF_FLAG_IFDOWN)
+            {
+              /* Yes.. take the interface down */
+
+              ioctl_ifdown(dev);
+            }
         }
         break;
 
       case SIOCGIFFLAGS:  /* Gets the interface flags */
         {
-          dev = netdev_ifrdev(req);
-          if (dev)
-            {
-              req->ifr_flags = dev->d_flags;
-            }
+          req->ifr_flags = 0;
 
-          ret = OK;
+          /* Is the interface running? */
+
+          if (dev->d_flags & IFF_RUNNING)
+            {
+              /* Yes.. report interface up */
+
+              req->ifr_flags |= IF_FLAG_IFUP;
+            }
+          else
+            {
+              /* No.. report interface down */
+
+              req->ifr_flags |= IF_FLAG_IFDOWN;
+            }
         }
         break;
 
@@ -364,40 +314,23 @@ static int netdev_ifrioctl(FAR struct socket *psock, int cmd,
 #ifdef CONFIG_NET_ETHERNET
       case SIOCGIFHWADDR:  /* Get hardware address */
         {
-          dev = netdev_ifrdev(req);
-          if (dev)
-            {
-              req->ifr_hwaddr.sa_family = AF_INETX;
-              memcpy(req->ifr_hwaddr.sa_data,
-                     dev->d_mac.ether_addr_octet, IFHWADDRLEN);
-              ret = OK;
-            }
+          req->ifr_hwaddr.sa_family = AF_INETX;
+          memcpy(req->ifr_hwaddr.sa_data, dev->d_mac.ether_addr_octet, IFHWADDRLEN);
         }
         break;
 
       case SIOCSIFHWADDR:  /* Set hardware address -- will not take effect until ifup */
         {
-          dev = netdev_ifrdev(req);
-          if (dev)
-            {
-              req->ifr_hwaddr.sa_family = AF_INETX;
-              memcpy(dev->d_mac.ether_addr_octet,
-                     req->ifr_hwaddr.sa_data, IFHWADDRLEN);
-              ret = OK;
-            }
+          req->ifr_hwaddr.sa_family = AF_INETX;
+          memcpy(dev->d_mac.ether_addr_octet, req->ifr_hwaddr.sa_data, IFHWADDRLEN);
         }
         break;
 #endif
 
       case SIOCDIFADDR:  /* Delete IP address */
         {
-          dev = netdev_ifrdev(req);
-          if (dev)
-            {
-              ioctl_ifdown(dev);
-              memset(&dev->d_ipaddr, 0, sizeof(uip_ipaddr_t));
-              ret = OK;
-            }
+          ioctl_ifdown(dev);
+          memset(&dev->d_ipaddr, 0, sizeof(uip_ipaddr_t));
         }
         break;
 
@@ -424,43 +357,14 @@ static int netdev_ifrioctl(FAR struct socket *psock, int cmd,
 
       default:
         {
-          ret = -ENOTTY;
+          ret = -EINVAL;
         }
         break;;
     }
 
+errout:
   return ret;
 }
-
-/****************************************************************************
- * Name: netdev_imsfdev
- *
- * Description:
- *   Verify the struct ip_msfilter and get the Ethernet device.
- *
- * Parameters:
- *   req - The argument of the ioctl cmd
- *
- * Return:
- *  A pointer to the driver structure on success; NULL on failure.
- *
- ****************************************************************************/
-
-#ifdef CONFIG_NET_IGMP
-static FAR struct uip_driver_s *netdev_imsfdev(FAR struct ip_msfilter *imsf)
-{
-  if (!imsf)
-    {
-      return NULL;
-    }
-
-  /* Find the network device associated with the device name
-   * in the request data.
-   */
-
-  return netdev_findbyname(imsf->imsf_name);
-}
-#endif
 
 /****************************************************************************
  * Name: netdev_imsfioctl
@@ -481,13 +385,23 @@ static FAR struct uip_driver_s *netdev_imsfdev(FAR struct ip_msfilter *imsf)
  ****************************************************************************/
 
 #ifdef CONFIG_NET_IGMP
-static int netdev_imsfioctl(FAR struct socket *psock, int cmd,
-                            FAR struct ip_msfilter *imsf)
+static int netdev_imsfioctl(FAR struct socket *psock, int cmd, struct ip_msfilter *imsf)
 {
   FAR struct uip_driver_s *dev;
-  int ret = -EINVAL;
+  int ret = OK;
 
   nvdbg("cmd: %d\n", cmd);
+
+  /* Find the network device associated with the device name
+   * in the request data.
+   */
+
+  dev = netdev_findbyname(imsf->imsf_name);
+  if (!dev)
+    {
+      ret = -EINVAL;
+      goto errout;
+    }
 
   /* Execute the command */
 
@@ -495,163 +409,25 @@ static int netdev_imsfioctl(FAR struct socket *psock, int cmd,
     {
       case SIOCSIPMSFILTER:  /* Set source filter content */
         {
-          dev = netdev_imsfdev(req);
-          if (dev)
+          if (imsf->imsf_fmode == MCAST_INCLUDE)
             {
-              if (imsf->imsf_fmode == MCAST_INCLUDE)
-                {
-                  ret = igmp_joingroup(dev, &imsf->imsf_multiaddr);
-                }
-              else
-                {
-                  DEBUGASSERT(imsf->imsf_fmode == MCAST_EXCLUDE);
-                  ret = igmp_leavegroup(dev, &imsf->imsf_multiaddr);
-                }
+              ret = igmp_joingroup(dev, &imsf->imsf_multiaddr);
+            }
+          else
+            {
+              DEBUGASSERT(imsf->imsf_fmode == MCAST_EXCLUDE);
+              ret = igmp_leavegroup(dev, &imsf->imsf_multiaddr);
             }
         }
         break;
 
       case SIOCGIPMSFILTER:  /* Retrieve source filter addresses */
       default:
-        ret = -ENOTTY;
+        ret = -EINVAL;
         break;
     }
 
-  return ret;
-}
-#endif
-
-/****************************************************************************
- * Name: netdev_rtioctl
- *
- * Description:
- *   Perform routing table specific operations.
- *
- * Parameters:
- *   psock    Socket structure
- *   dev      Ethernet driver device structure
- *   cmd      The ioctl command
- *   rtentry  The argument of the ioctl cmd
- *
- * Return:
- *   >=0 on success (positive non-zero values are cmd-specific)
- *   Negated errno returned on failure.
- *
- ****************************************************************************/
-
-#ifdef CONFIG_NET_ROUTE
-static int netdev_rtioctl(FAR struct socket *psock, int cmd,
-                          FAR struct rtentry *rtentry)
-{
-  int ret = -EINVAL;
-
-  /* Execute the command */
-
-  switch (cmd)
-    {
-      case SIOCADDRT:  /* Add an entry to the routing table */
-        {
-          if (rtentry)
-            {
-              uip_ipaddr_t target;
-              uip_ipaddr_t netmask;
-              uip_ipaddr_t router;
-#ifdef CONFIG_NET_IPv6
-              FAR struct sockaddr_in6 *addr;
-#else
-              FAR struct sockaddr_in *addr;
-#endif
-              /* The target address and the netmask are required value */
-
-              if (!rtentry->rt_target || !rtentry->rt_netmask)
-                {
-                  return -EINVAL;
-                }
-
-#ifdef CONFIG_NET_IPv6
-              addr    = (FAR struct sockaddr_in6 *)rtentry->rt_target;
-              target  = (uip_ipaddr_t)addr->sin6_addr.u6_addr16;
-
-              addr    = (FAR struct sockaddr_in6 *)rtentry->rt_netmask;
-              netmask = (uip_ipaddr_t)addr->sin6_addr.u6_addr16;
-
-              /* The router is an optional argument */
-
-              if (rtentry->rt_router)
-                {
-                  addr   = (FAR struct sockaddr_in6 *)rtentry->rt_router;
-                  router = (uip_ipaddr_t)addr->sin6_addr.u6_addr16;
-                }
-              else
-                {
-                  router = NULL;
-                }
-#else
-              addr    = (FAR struct sockaddr_in *)rtentry->rt_target;
-              target  = (uip_ipaddr_t)addr->sin_addr.s_addr;
-
-              addr    = (FAR struct sockaddr_in *)rtentry->rt_netmask;
-              netmask = (uip_ipaddr_t)addr->sin_addr.s_addr;
-
-              /* The router is an optional argument */
-
-              if (rtentry->rt_router)
-                {
-                  addr   = (FAR struct sockaddr_in *)rtentry->rt_router;
-                  router = (uip_ipaddr_t)addr->sin_addr.s_addr;
-                }
-              else
-                {
-                  router = 0;
-                }
-#endif
-              ret = net_addroute(target, netmask, router);
-            }
-        }
-        break;
-
-      case SIOCDELRT:  /* Delete an entry from the routing table */
-        {
-          if (rtentry)
-            {
-              uip_ipaddr_t target;
-              uip_ipaddr_t netmask;
-#ifdef CONFIG_NET_IPv6
-              FAR struct sockaddr_in6 *addr;
-#else
-              FAR struct sockaddr_in *addr;
-#endif
-
-              /* The target address and the netmask are required value */
-
-              if (!rtentry->rt_target || !rtentry->rt_netmask)
-                {
-                  return -EINVAL;
-                }
-
-#ifdef CONFIG_NET_IPv6
-              addr    = (FAR struct sockaddr_in6 *)rtentry->rt_target;
-              target  = (uip_ipaddr_t)addr->sin6_addr.u6_addr16;
-
-              addr    = (FAR struct sockaddr_in6 *)rtentry->rt_netmask;
-              netmask = (uip_ipaddr_t)addr->sin6_addr.u6_addr16;
-#else
-              addr    = (FAR struct sockaddr_in *)rtentry->rt_target;
-              target  = (uip_ipaddr_t)addr->sin_addr.s_addr;
-
-              addr    = (FAR struct sockaddr_in *)rtentry->rt_netmask;
-              netmask = (uip_ipaddr_t)addr->sin_addr.s_addr;
-#endif
-              ret = net_delroute(target, netmask);
-            }
-        }
-        break;
-
-      default:
-        ret = -ENOTTY;
-        break;
-    }
-
+errout:
   return ret;
 }
 #endif
@@ -669,7 +445,7 @@ static int netdev_rtioctl(FAR struct socket *psock, int cmd,
  * Parameters:
  *   sockfd   Socket descriptor of device
  *   cmd      The ioctl command
- *   arg      The argument of the ioctl cmd
+ *   req      The argument of the ioctl cmd
  *
  * Return:
  *   >=0 on success (positive non-zero values are cmd-specific)
@@ -678,11 +454,9 @@ static int netdev_rtioctl(FAR struct socket *psock, int cmd,
  *   EBADF
  *     'sockfd' is not a valid descriptor.
  *   EFAULT
- *     'arg' references an inaccessible memory area.
- *   ENOTTY
- *     'cmd' not valid.
+ *     'req' references an inaccessible memory area.
  *   EINVAL
- *     'arg' is not valid.
+ *     'cmd' or 'req' is not valid.
  *   ENOTTY
  *     'sockfd' is not associated with a network device.
  *   ENOTTY
@@ -701,9 +475,9 @@ int netdev_ioctl(int sockfd, int cmd, unsigned long arg)
    * non-NULL.
    */
 
-  if (!_SIOCVALID(cmd))
+  if (!_SIOCVALID(cmd) || !arg)
     {
-      ret = -ENOTTY;
+      ret = -EINVAL;
       goto errout;
     }
 
@@ -717,18 +491,11 @@ int netdev_ioctl(int sockfd, int cmd, unsigned long arg)
 
   /* Execute the command */
 
-  ret = netdev_ifrioctl(psock, cmd, (FAR struct ifreq*)((uintptr_t)arg));
+  ret = netdev_ifrioctl(psock, cmd, (FAR struct ifreq*)arg);
 #ifdef CONFIG_NET_IGMP
-  if (ret == -ENOTTY)
+  if (ret == -EINVAL)
     {
-
-      ret = netdev_imsfioctl(psock, cmd, (FAR struct ip_msfilter*)((uintptr_t)arg));
-    }
-#endif
-#ifdef CONFIG_NET_ROUTE
-  if (ret == -ENOTTY)
-    {
-      ret = netdev_rtioctl(psock, cmd, (FAR struct rtentry*)((uintptr_t)arg));
+      ret = netdev_imsfioctl(psock, cmd, (FAR struct ip_msfilter*)arg);
     }
 #endif
 

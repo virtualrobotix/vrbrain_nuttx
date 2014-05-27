@@ -1,7 +1,7 @@
 /**************************************************************************
  * arch/arm/src/sam34/sam_lowputc.c
  *
- *   Copyright (C) 2010, 2013-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2010, 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,12 +51,12 @@
 #include "sam_periphclks.h"
 #include "sam_lowputc.h"
 
-#if defined(CONFIG_ARCH_CHIP_SAM3U) || defined(CONFIG_ARCH_CHIP_SAM3X) || \
-    defined(CONFIG_ARCH_CHIP_SAM3A) || defined(CONFIG_ARCH_CHIP_SAM4S) || \
-    defined(CONFIG_ARCH_CHIP_SAM4E)
-#  include "chip/sam_uart.h"
+#if defined(CONFIG_ARCH_CHIP_SAM3U)
+#  include "chip/sam3u_uart.h"
 #elif defined(CONFIG_ARCH_CHIP_SAM4L)
 #  include "chip/sam4l_usart.h"
+#elif defined(CONFIG_ARCH_CHIP_SAM4S)
+#  include "chip/sam3u_uart.h"
 #else
 #  error Unknown UART
 #endif
@@ -143,16 +143,12 @@
 
 /* Select MCU-specific settings
  *
- * For the SAM3U, SAM3A, SAM3X, SAM4E and SAM4S the USARTs are driven by the
- *   main clock.  (This could also be the MCK/8 or an external clock but
- *   those options have not yet been necessary).
+ * For the SAM3U, the USARTs are driven by the main clock.
  * For the SAM4L, the USARTs are driven by CLK_USART (undivided) which is
  *   selected by the PBADIVMASK register.
  */
 
-#if defined(CONFIG_ARCH_CHIP_SAM3U) || defined(CONFIG_ARCH_CHIP_SAM3X) || \
-    defined(CONFIG_ARCH_CHIP_SAM3A) || defined(CONFIG_ARCH_CHIP_SAM4S) || \
-    defined(CONFIG_ARCH_CHIP_SAM4E)
+#if defined(CONFIG_ARCH_CHIP_SAM3U) || defined(CONFIG_ARCH_CHIP_SAM4S)
 #  define SAM_MR_USCLKS    UART_MR_USCLKS_MCK   /* Source = Main clock */
 #  define SAM_USART_CLOCK  BOARD_MCK_FREQUENCY  /* Frequency of the main clock */
 #elif defined(CONFIG_ARCH_CHIP_SAM4L)
@@ -218,7 +214,7 @@
      !defined(CONFIG_UART1_SERIAL_CONSOLE)
 #  define MR_CHRL_VALUE UART_MR_MODE9
 #else
-#  error "Invalid number of bits"
+#  error "Invlaid number of bits"
 #endif
 
 #if SAM_CONSOLE_PARITY == 1

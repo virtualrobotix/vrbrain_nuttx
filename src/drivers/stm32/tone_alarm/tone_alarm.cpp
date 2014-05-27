@@ -32,7 +32,7 @@
  ****************************************************************************/
 
 /**
- * Driver for the VRBRAIN audio alarm port, /dev/tone_alarm.
+ * Driver for the PX4 audio alarm port, /dev/tone_alarm.
  *
  * The tone_alarm driver supports a set of predefined "alarm"
  * tunes and one user-supplied tune.
@@ -338,6 +338,8 @@ ToneAlarm::ToneAlarm() :
 	_default_tunes[TONE_BATTERY_WARNING_SLOW_TUNE] = "MBNT100a8";					//battery warning slow
 	_default_tunes[TONE_BATTERY_WARNING_FAST_TUNE] = "MBNT255a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8";	//battery warning fast
 	_default_tunes[TONE_GPS_WARNING_TUNE] = "MFT255L4AAAL1F#";					//gps warning slow
+	_default_tunes[TONE_ARMING_FAILURE_TUNE] = "MFT255L4<<<BAP";
+	_default_tunes[TONE_PARACHUTE_RELEASE_TUNE] = "MFT255L16agagagag";			// parachute release
 
 	_tune_names[TONE_STARTUP_TUNE] = "startup";			// startup tune
 	_tune_names[TONE_ERROR_TUNE] = "error";				// ERROR tone
@@ -348,6 +350,8 @@ ToneAlarm::ToneAlarm() :
 	_tune_names[TONE_BATTERY_WARNING_SLOW_TUNE] = "slow_bat";	// battery warning slow
 	_tune_names[TONE_BATTERY_WARNING_FAST_TUNE] = "fast_bat";	// battery warning fast
 	_tune_names[TONE_GPS_WARNING_TUNE] = "gps_warning";	            // gps warning
+	_tune_names[TONE_ARMING_FAILURE_TUNE] = "arming_failure";            //fail to arm
+	_tune_names[TONE_PARACHUTE_RELEASE_TUNE] = "parachute_release";	// parachute release
 }
 
 ToneAlarm::~ToneAlarm()

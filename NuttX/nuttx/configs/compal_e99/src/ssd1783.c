@@ -41,7 +41,7 @@
  ************************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/video/fb.h>
+#include <nuttx/fb.h>
 
 #include <sys/types.h>
 #include <assert.h>

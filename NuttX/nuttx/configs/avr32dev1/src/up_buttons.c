@@ -1,7 +1,7 @@
 /****************************************************************************
  * configs/sam3u-ek/src/up_leds.c
  *
- *   Copyright (C) 2010-2011, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2010-2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,6 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-#include <nuttx/arch.h>
 #include <nuttx/irq.h>
 
 #include <arch/irq.h>
@@ -67,16 +66,16 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_button_irqx
+ * Name: up_irqbuttonx
  *
  * Description:
- *   This function implements the core of the board_button_irq() logic.
+ *   This function implements the core of the up_irqbutton() logic.
  *
  ****************************************************************************/
 
 #if defined(CONFIG_AVR32_GPIOIRQ) && defined(CONFIG_ARCH_IRQBUTTONS) && \
    (defined(CONFIG_AVR32DEV_BUTTON1_IRQ) || defined(CONFIG_AVR32DEV_BUTTON2_IRQ))
-static xcpt_t board_button_irqx(int irq, xcpt_t irqhandler)
+static xcpt_t up_irqbuttonx(int irq, xcpt_t irqhandler)
 {
   xcpt_t oldhandler;
   
@@ -88,12 +87,12 @@ static xcpt_t board_button_irqx(int irq, xcpt_t irqhandler)
 
   if (irqhandler)
     {
-      gpio_irqenable(irq);
-    }
+	  gpio_irqenable(irq);
+	}
   else
     {
-      gpio_irqdisable(irq);
-    }
+	  gpio_irqdisable(irq);
+	}
 
   /* Return the old button handler (so that it can be restored) */
 
@@ -106,35 +105,34 @@ static xcpt_t board_button_irqx(int irq, xcpt_t irqhandler)
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_button_initialize
+ * Name: up_buttoninit
  *
  * Description:
- *   board_button_initialize() must be called to initialize button resources.
- *   After  that, board_buttons() may be called to collect the current state of
- *   all  buttons or board_button_irq() may be called to register button interrupt
+ *   up_buttoninit() must be called to initialize button resources.  After
+ *   that, up_buttons() may be called to collect the current state of all
+ *   buttons or up_irqbutton() may be called to register button interrupt
  *   handlers.
  *
  ****************************************************************************/
 
-void board_button_initialize(void)
+void up_buttoninit(void)
 {
   (void)at32uc3_configgpio(PINMUX_GPIO_BUTTON1);
   (void)at32uc3_configgpio(PINMUX_GPIO_BUTTON2);
 }
 
 /****************************************************************************
- * Name: board_buttons
+ * Name: up_buttons
  *
  * Description:
- *   After board_button_initialize() has been called, board_buttons() may be
- *   called to collect the state of all buttons.  board_buttons() returns an
- *   8-bit bit set with each bit associated with a button.  See the BUTTON*
- *   definitions in the board.h header file for the meaning of each bit in
- *   the returned value.
+ *   After up_buttoninit() has been called, up_buttons() may be called to
+ *   collect the state of all buttons.  up_buttons() returns an 8-bit bit set
+ *   with each bit associated with a button.  See the BUTTON* definitions
+ *   above for the meaning of each bit in the returned value.
  *
  ****************************************************************************/
 
-uint8_t board_buttons(void)
+uint8_t up_buttons(void)
 {
   uint8_t retval;
 
@@ -145,7 +143,7 @@ uint8_t board_buttons(void)
 }
 
 /****************************************************************************
- * Name: board_button_irq
+ * Name: up_irqbutton
  *
  * Description:
  *   This function may be called to register an interrupt handler that will
@@ -163,19 +161,19 @@ uint8_t board_buttons(void)
  ****************************************************************************/
 
 #if defined(CONFIG_AVR32_GPIOIRQ) && defined(CONFIG_ARCH_IRQBUTTONS)
-xcpt_t board_button_irq(int id, xcpt_t irqhandler)
+xcpt_t up_irqbutton(int id, xcpt_t irqhandler)
 {
 #ifdef CONFIG_AVR32DEV_BUTTON1_IRQ
   if (id == BUTTON1)
     {
-      return board_button_irqx(GPIO_BUTTON1_IRQ, irqhandler);
+      return up_irqbuttonx(GPIO_BUTTON1_IRQ, irqhandler);
     }
   else
 #endif
 #ifdef CONFIG_AVR32DEV_BUTTON2_IRQ
   if (id == BUTTON2)
     {
-      return board_button_irqx(GPIO_BUTTON2_IRQ, irqhandler);
+      return up_irqbuttonx(GPIO_BUTTON2_IRQ, irqhandler);
     }
   else
 #endif

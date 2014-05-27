@@ -121,7 +121,7 @@ static void up_stackdump(uint32_t sp, uint32_t stack_base)
     }
 }
 #else
-#  define up_stackdump(sp,stack_base)
+# define up_stackdump()
 #endif
 
 /****************************************************************************
@@ -290,9 +290,9 @@ static void _up_assert(int errorcode)
       for(;;)
         {
 #ifdef CONFIG_ARCH_LEDS
-          board_led_on(LED_PANIC);
+          up_ledon(LED_PANIC);
           up_mdelay(250);
-          board_led_off(LED_PANIC);
+          up_ledoff(LED_PANIC);
           up_mdelay(250);
 #endif
         }
@@ -317,7 +317,7 @@ void up_assert(const uint8_t *filename, int lineno)
   struct tcb_s *rtcb = (struct tcb_s*)g_readytorun.head;
 #endif
 
-  board_led_on(LED_ASSERTION);
+  up_ledon(LED_ASSERTION);
 
 #ifdef CONFIG_PRINT_TASKNAME
   lldbg("Assertion failed at file:%s line: %d task: %s\n",

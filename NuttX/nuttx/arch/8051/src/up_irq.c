@@ -1,7 +1,7 @@
 /************************************************************************
- * arch/8051/src/up_irq.c
+ * up_irq.c
  *
- *   Copyright (C) 2007, 2009, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007, 2009 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ void up_irqinitialize(void)
 
   IP = 0;
 
-#ifdef CONFIG_ARCH_8051_SUPRESS_INTERRUPTS
+#ifdef CONFIG_SUPPRESS_INTERRUPTS
   /* Disable all interrupts */
 
   IE = 0;

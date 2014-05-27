@@ -32,11 +32,12 @@ endif
 
 
 
-# we have different config files for vrbrain_v40, vrbrain_v45, vrbrain_v50, vrbrain_v51 and vrhero_v10
+# we have different config files for vrbrain_v40, vrbrain_v45, vrbrain_v50, vrbrain_v51, vrubrain_v51 and vrhero_v10
 VRBRAIN_VB40_CONFIG_FILE=$(MK_DIR)/VRBRAIN/config_vrbrain-v40_APM.mk
 VRBRAIN_VB45_CONFIG_FILE=$(MK_DIR)/VRBRAIN/config_vrbrain-v45_APM.mk
 VRBRAIN_VB50_CONFIG_FILE=$(MK_DIR)/VRBRAIN/config_vrbrain-v50_APM.mk
 VRBRAIN_VB51_CONFIG_FILE=$(MK_DIR)/VRBRAIN/config_vrbrain-v51_APM.mk
+VRBRAIN_VU51_CONFIG_FILE=$(MK_DIR)/VRBRAIN/config_vrubrain-v51_APM.mk
 VRBRAIN_VH10_CONFIG_FILE=$(MK_DIR)/VRBRAIN/config_vrhero-v10_APM.mk
 
 SKETCHFLAGS=$(SKETCHLIBINCLUDES) -I$(PWD) -DARDUPILOT_BUILD -DCONFIG_HAL_BOARD=HAL_BOARD_VRBRAIN -DSKETCHNAME="\\\"$(SKETCH)\\\"" -DSKETCH_MAIN=ArduPilot_main -DAPM_BUILD_DIRECTORY=APM_BUILD_$(SKETCH)
@@ -92,6 +93,15 @@ vrbrain-v51: showflags $(VRBRAIN_ROOT)/Archives/vrbrain-v51.export $(SKETCHCPP) 
 	$(v) cp $(VRBRAIN_ROOT)/Images/vrbrain-v51_APM.vrx $(SKETCH)-vrbrain-v51.vrx
 	$(v) echo "VRBRAIN $(SKETCH) Firmware is in $(SKETCH)-vrbrain-v51.vrx"
 
+vrubrain-v51: showflags $(VRBRAIN_ROOT)/Archives/vrubrain-v51.export $(SKETCHCPP) module_mk
+	$(RULEHDR)
+	$(v) rm -f $(VRBRAIN_ROOT)/makefiles/$(VRBRAIN_VU51_CONFIG_FILE)
+	$(v) cp $(SRCROOT)/$(VRBRAIN_VU51_CONFIG_FILE) $(VRBRAIN_ROOT)/makefiles/
+	$(v) $(VRBRAIN_MAKE) vrubrain-v51_APM
+	$(v) /bin/rm -f $(SKETCH)-vrubrain-v51.vrx
+	$(v) cp $(VRBRAIN_ROOT)/Images/vrubrain-v51_APM.vrx $(SKETCH)-vrubrain-v51.vrx
+	$(v) echo "MICRO VRBRAIN $(SKETCH) Firmware is in $(SKETCH)-vrubrain-v51.vrx"
+
 vrhero-v10: showflags $(VRBRAIN_ROOT)/Archives/vrhero-v10.export $(SKETCHCPP) module_mk
 	$(RULEHDR)
 	$(v) rm -f $(VRBRAIN_ROOT)/makefiles/$(VRBRAIN_VH10_CONFIG_FILE)
@@ -101,7 +111,8 @@ vrhero-v10: showflags $(VRBRAIN_ROOT)/Archives/vrhero-v10.export $(SKETCHCPP) mo
 	$(v) cp $(VRBRAIN_ROOT)/Images/vrhero-v10_APM.vrx $(SKETCH)-vrhero-v10.vrx
 	$(v) echo "VRBRAIN $(SKETCH) Firmware is in $(SKETCH)-vrhero-v10.vrx"
 
-vrbrain: vrbrain-v40 vrbrain-v45 vrbrain-v50 vrbrain-v51 vrhero-v10
+#vrbrain: vrbrain-v40 vrbrain-v45 vrbrain-v50 vrbrain-v51 vrubrain-v51 vrhero-v10
+vrbrain: vrbrain-v45 vrubrain-v51
 
 vrbrain-clean: clean vrbrain-archives-clean
 	$(v) /bin/rm -rf $(VRBRAIN_ROOT)/makefiles/build $(VRBRAIN_ROOT)/Build
@@ -125,6 +136,10 @@ vrbrain-v51-upload: vrbrain-v51
 	$(RULEHDR)
 	$(v) $(VRBRAIN_MAKE) vrbrain-v51_APM upload
 
+vrubrain-v51-upload: vrubrain-v51
+	$(RULEHDR)
+	$(v) $(VRBRAIN_MAKE) vrubrain-v51_APM upload
+
 vrhero-v10-upload: vrhero-v10
 	$(RULEHDR)
 	$(v) $(VRBRAIN_MAKE) vrhero-v10_APM upload
@@ -144,6 +159,9 @@ $(VRBRAIN_ROOT)/Archives/vrbrain-v50.export:
 	$(v) $(VRBRAIN_MAKE_ARCHIVES)
 
 $(VRBRAIN_ROOT)/Archives/vrbrain-v51.export:
+	$(v) $(VRBRAIN_MAKE_ARCHIVES)
+
+$(VRBRAIN_ROOT)/Archives/vrubrain-v51.export:
 	$(v) $(VRBRAIN_MAKE_ARCHIVES)
 
 $(VRBRAIN_ROOT)/Archives/vrhero-v10.export:

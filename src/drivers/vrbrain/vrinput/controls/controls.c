@@ -44,17 +44,27 @@
 #include <systemlib/perf_counter.h>
 #include <systemlib/ppm_decode.h>
 
+#ifdef PWM_INPUT
+#include <drivers/stm32/drv_pwm_input.h>
+#endif
+
 #include "controls.h"
 
 #define RC_FAILSAFE_TIMEOUT		2000000		/**< two seconds failsafe timeout */
 #define RC_CHANNEL_HIGH_THRESH		5000
 #define RC_CHANNEL_LOW_THRESH		-5000
 
+#ifdef PPMSUM_INPUT
 static bool	ppm_input(uint16_t *values, uint16_t *num_values, uint16_t *frame_len);
+#endif
+#ifdef PWM_INPUT
+static bool	pwm_input(uint16_t *values, uint16_t *num_values);
+#endif
 
 static perf_counter_t c_gather_dsm;
 static perf_counter_t c_gather_sbus;
 static perf_counter_t c_gather_ppm;
+static perf_counter_t c_gather_pwm;
 
 struct sys_state_s 	system_state;
 
@@ -66,11 +76,20 @@ controls_init(void)
 	system_state.rc_channels_timestamp_received = 0;
 	system_state.rc_channels_timestamp_valid = 0;
 
-//	/* DSM input (USART1) */
-//	dsm_init("/dev/ttyS0");
+#ifdef DSM_INPUT
+	/* DSM input (USART1) */
+	dsm_init("/dev/ttyS0");
+#endif
 
+#ifdef SBUS_INPUT
 	/* S.bus input (USART6) */
 	sbus_init("/dev/ttyS3");
+#endif
+
+#ifdef PWM_INPUT
+	/* PWM input */
+	up_pwm_input_init(0xff);
+#endif
 
 	/* default to a 1:1 input map, all enabled */
 	for (unsigned i = 0; i < PX4IO_RC_INPUT_CHANNELS; i++) {
@@ -117,29 +136,34 @@ controls_tick() {
 	}
 #endif
 
-//	perf_begin(c_gather_dsm);
-//	uint16_t temp_count = r_raw_rc_count;
-//	bool dsm_updated = dsm_input(r_raw_rc_values, &temp_count);
-//	if (dsm_updated) {
-//		r_raw_rc_flags |= PX4IO_P_STATUS_FLAGS_RC_DSM;
-//		r_raw_rc_count = temp_count & 0x7fff;
-//		if (temp_count & 0x8000)
-//			r_raw_rc_flags |= PX4IO_P_RAW_RC_FLAGS_RC_DSM11;
-//		else
-//			r_raw_rc_flags &= ~PX4IO_P_RAW_RC_FLAGS_RC_DSM11;
-//
-//		r_raw_rc_flags &= ~(PX4IO_P_RAW_RC_FLAGS_FRAME_DROP);
-//		r_raw_rc_flags &= ~(PX4IO_P_RAW_RC_FLAGS_FAILSAFE);
-//
-//	}
-//	perf_end(c_gather_dsm);
+	bool dsm_updated = 0;
+#ifdef DSM_INPUT
+	perf_begin(c_gather_dsm);
+	uint16_t temp_count = r_raw_rc_count;
+	dsm_updated = dsm_input(r_raw_rc_values, &temp_count);
+	if (dsm_updated) {
+		r_raw_rc_flags |= PX4IO_P_STATUS_FLAGS_RC_DSM;
+		r_raw_rc_count = temp_count & 0x7fff;
+		if (temp_count & 0x8000)
+			r_raw_rc_flags |= PX4IO_P_RAW_RC_FLAGS_RC_DSM11;
+		else
+			r_raw_rc_flags &= ~PX4IO_P_RAW_RC_FLAGS_RC_DSM11;
 
+		r_raw_rc_flags &= ~(PX4IO_P_RAW_RC_FLAGS_FRAME_DROP);
+		r_raw_rc_flags &= ~(PX4IO_P_RAW_RC_FLAGS_FAILSAFE);
+
+	}
+	perf_end(c_gather_dsm);
+#endif
+
+	bool sbus_updated = 0;
+#ifdef SBUS_INPUT
 	perf_begin(c_gather_sbus);
 
 	bool sbus_status = (r_status_flags & PX4IO_P_STATUS_FLAGS_RC_SBUS);
 
 	bool sbus_failsafe, sbus_frame_drop;
-	bool sbus_updated = sbus_input(r_raw_rc_values, &r_raw_rc_count, &sbus_failsafe, &sbus_frame_drop, PX4IO_RC_INPUT_CHANNELS);
+	sbus_updated = sbus_input(r_raw_rc_values, &r_raw_rc_count, &sbus_failsafe, &sbus_frame_drop, PX4IO_RC_INPUT_CHANNELS);
 
 	if (sbus_updated) {
 		r_status_flags |= PX4IO_P_STATUS_FLAGS_RC_SBUS;
@@ -163,14 +187,17 @@ controls_tick() {
 	}
 
 	perf_end(c_gather_sbus);
+#endif
 
+	bool ppm_updated = 0;
+#ifdef PPMSUM_INPUT
 	/*
 	 * XXX each S.bus frame will cause a PPM decoder interrupt
 	 * storm (lots of edges).  It might be sensible to actually
 	 * disable the PPM decoder completely if we have S.bus signal.
 	 */
 	perf_begin(c_gather_ppm);
-	bool ppm_updated = ppm_input(r_raw_rc_values, &r_raw_rc_count, &r_page_raw_rc_input[PX4IO_P_RAW_RC_DATA]);
+	ppm_updated = ppm_input(r_raw_rc_values, &r_raw_rc_count, &r_page_raw_rc_input[PX4IO_P_RAW_RC_DATA]);
 	if (ppm_updated) {
 
 		r_status_flags |= PX4IO_P_STATUS_FLAGS_RC_PPM;
@@ -178,6 +205,20 @@ controls_tick() {
 		r_raw_rc_flags &= ~(PX4IO_P_RAW_RC_FLAGS_FAILSAFE);
 	}
 	perf_end(c_gather_ppm);
+#endif
+
+	bool pwm_updated = 0;
+#ifdef PWM_INPUT
+	perf_begin(c_gather_pwm);
+	pwm_updated = pwm_input(r_raw_rc_values, &r_raw_rc_count);
+	if (pwm_updated) {
+
+		r_status_flags |= PX4IO_P_STATUS_FLAGS_RC_PPM;
+		r_raw_rc_flags &= ~(PX4IO_P_RAW_RC_FLAGS_FRAME_DROP);
+		r_raw_rc_flags &= ~(PX4IO_P_RAW_RC_FLAGS_FAILSAFE);
+	}
+	perf_end(c_gather_pwm);
+#endif
 
 	/* limit number of channels to allowable data size */
 	if (r_raw_rc_count > PX4IO_RC_INPUT_CHANNELS)
@@ -195,8 +236,7 @@ controls_tick() {
 	/*
 	 * If we received a new frame from any of the RC sources, process it.
 	 */
-//	if (dsm_updated || sbus_updated || ppm_updated) {
-	if (sbus_updated || ppm_updated) {
+	if (dsm_updated || sbus_updated || ppm_updated || pwm_updated) {
 
 		/* record a bitmask of channels assigned */
 		unsigned assigned_channels = 0;
@@ -379,6 +419,7 @@ controls_tick() {
 	}
 }
 
+#ifdef PPMSUM_INPUT
 static bool
 ppm_input(uint16_t *values, uint16_t *num_values, uint16_t *frame_len)
 {
@@ -418,3 +459,33 @@ ppm_input(uint16_t *values, uint16_t *num_values, uint16_t *frame_len)
 
 	return result;
 }
+#endif
+
+#ifdef PWM_INPUT
+static bool
+pwm_input(uint16_t *values, uint16_t *num_values)
+{
+	bool result = false;
+
+	/* avoid racing with PPM updates */
+	irqstate_t state = irqsave();
+
+	/* PPM data exists, copy it */
+	*num_values = 8;
+	if (*num_values > PX4IO_RC_INPUT_CHANNELS)
+		*num_values = PX4IO_RC_INPUT_CHANNELS;
+
+	for (unsigned i = 0; i < *num_values; i++)
+		values[i] = ppm_buffer[i];
+
+	/* clear validity */
+	ppm_last_valid_decode = 0;
+
+	/* good if we got any channels */
+	result = (*num_values > 0);
+
+	irqrestore(state);
+
+	return result;
+}
+#endif

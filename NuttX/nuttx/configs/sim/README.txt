@@ -165,9 +165,6 @@ I never did get networking to work on the sim target.  It tries to use the tap d
 (/dev/net/tun) to emulate an Ethernet NIC, but I never got it correctly integrated
 with the NuttX networking (I probably should try using raw sockets instead).
 
-Update:  Max Holtzberg reports to me that the tap device actually does work properly,
-but not in an NSH configuration because of stdio operations freeze the simulation.
-
 X11 Issues
 ----------
 There is an X11-based framebuffer driver that you can use exercise the NuttX graphics
@@ -191,45 +188,16 @@ X11.  See the discussion "Stack Size Issues" above.
 Configurations
 ^^^^^^^^^^^^^^
 
-Common Configuration Information
---------------------------------
-
-  1. Each configuration is maintained in a sub-directory and can be selected
-     as follow:
-
-       cd <nuttx-directory>/tools
-       ./configure.sh sim/<subdir>
-       cd -
-       . ./setenv.sh
-
-     If this is a Windows native build, then configure.bat should be used
-     instead of configure.sh:
-
-        configure.bat sim\<subdir>
-
-     Where <subdir> is one of the following sub-directories.
-
-  2. All configurations uses the mconf-based configuration tool.  To
-     change this configuration using that tool, you should:
-
-     a. Build and install the kconfig mconf tool.  See nuttx/README.txt
-        and misc/tools/
-
-     b. Execute 'make menuconfig' in nuttx/ in order to start the
-        reconfiguration process.
-
-Configuration Sub-Directories
------------------------------
-
-configdata
-
-  A unit test for the MTD configuration data driver.
-
 cxxtest
 
-
+  Description
+  -----------
   The C++ standard libary test at apps/examples/cxxtest configuration.  This
-  test is used to verify the uClibc++ port to NuttX.
+  test is used to verify the uClibc++ port to NuttX.  This configuration may
+  be selected as follows:
+
+    cd <nuttx-directory>/tools
+    ./configure.sh sim/cxxtest
 
   NOTES
   -----
@@ -238,11 +206,20 @@ cxxtest
      misc/uClibc++ in GIT.  See the README.txt file for instructions on
      how to install uClibc++
 
-  2. At present (2012/11/02), exceptions are disabled in this example
+  2. This configuration uses the mconf-based configuration tool.  To
+     change this configuration using that tool, you should:
+
+     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+        and misc/tools/
+
+     b. Execute 'make menuconfig' in nuttx/ in order to start the
+        reconfiguration process.
+
+  3. At present (2012/11/02), exceptions are disabled in this example
      CONFIG_UCLIBCXX_EXCEPTIONS=n).  It is probably not necessary to
      disable exceptions.
 
-  3. Unfortunately, this example will not run now.
+  4. Unfortunately, this example will not run now.
 
      The reason that the example will not run on the simulator has
      to do with when static constructors are enabled:  In the simulator
@@ -255,7 +232,13 @@ cxxtest
 
 mount
 
-  Configures to use apps/examples/mount.
+  Description
+  -----------
+  Configures to use apps/examples/mount.  This configuration may be
+  selected as follows:
+
+    cd <nuttx-directory>/tools
+    ./configure.sh sim/mount
 
 mtdpart
 
@@ -264,48 +247,62 @@ mtdpart
 
 nettest
 
+  Description
+  -----------
   Configures to use apps/examples/nettest.  This configuration
-  enables networking using the network TAP device.
+  enables networking using the network TAP device.  It may
+  be selected via:
+
+    cd <nuttx-directory>/tools
+    ./configure.sh sim/nettest
 
   NOTES:
-
-  1. The NuttX network is not, however, functional on the Linux TAP
+  - The NuttX network is not, however, functional on the Linux TAP
     device yet.
 
-    UPDATE:  The TAP device does apparently work according to a NuttX
-    user (provided that it is not used with NSH: NSH waits on readline()
-    for console input.  When it calls readline(), the whole system blocks
-    waiting from input from the host OS).  My failure to get the TAP
-    device working appears to have been a cockpit error.
+  - As of NuttX-5.18, when built on Windows, this test does not try
+    to use the TAP device (which is not available on Cygwin anyway), 
+    but inside will try to use the Cygwin WPCAP library.  Only the
+    most preliminary testing has been performed with the Cygwin WPCAP
+    library, however.
 
-  2. As of NuttX-5.18, when built on Windows, this test does not try
-     to use the TAP device (which is not available on Cygwin anyway),
-     but inside will try to use the Cygwin WPCAP library.  Only the
-     most preliminary testing has been performed with the Cygwin WPCAP
-     library, however.
-
-     NOTE that the IP address is hard-coded in arch/sim/src/up_wpcap.c.
-     You will either need to edit your configuration files to use 10.0.0.1
-     on the "target" (CONFIG_EXAMPLES_NETTEST_*) or edit up_wpcap.c to
-     select the IP address that you want to use.
+    NOTE that the IP address is hard-coded in arch/sim/src/up_wpcap.c.
+    You will either need to edit your configuration files to use 10.0.0.1
+    on the "target" (CONFIG_EXAMPLES_NETTEST_*) or edit up_wpcap.c to
+    select the IP address that you want to use.
 
 nsh
 
-  Configures to use the NuttShell at apps/examples/nsh.
+  Description
+  -----------
+  Configures to use the NuttShell at apps/examples/nsh.  This configuration
+  may be selected as follows:
+
+    cd <nuttx-directory>/tools
+    ./configure.sh sim/nsh
 
   NOTES:
+  ------ 
+  1. This configuration uses the mconf-based configuration tool.  To
+     change this configuration using that tool, you should:
 
-  1. This version has one builtin function:  This configuration:
+     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+        and misc/tools/
+
+     b. Execute 'make menuconfig' in nuttx/ in order to start the
+        reconfiguration process.
+
+  2. This version has one builtin function:  This configuration:
      apps/examples/hello.
 
-  2. This configuration has BINFS enabled so that the builtin applications
+  3. This configuration has BINFS enabled so that the builtin applications
      can be made visible in the file system.  Because of that, the
      build in applications do not work as other examples.
 
      For example trying to execute the hello builtin application will
      fail:
 
-       nsh> hello
+       nsh> hello   
        nsh: hello: command not found
        nsh>
 
@@ -319,7 +316,7 @@ nsh
        /bin
        nsh> hello
        Hello, World!!
-       nsh>
+       nsh> 
 
      Notice that the executable 'hello' is found using the value in the PATH
      variable (which was preset to "/bin").  If the PATH variable were not set
@@ -327,151 +324,173 @@ nsh
 
 nsh2
 
+  Description
+  -----------
   This is another example that configures to use the NuttShell at apps/examples/nsh.
   Like nsh, this version uses NSH built-in functions:  The nx, nxhello, and
   nxlines examples are included as built-in functions.
 
-  NOTES:
+  X11 Configuration
+  -----------------
+  This configuration uses an X11-based framebuffer driver.  Of course, this
+  configuration can only be used in environments that support X11!  (And it
+  may not even be usable in all of those environments without some "tweaking"
+  See discussion below under the nx11 configuration).
 
-  1. X11 Configuration
+  Configuring
+  -----------
+  This configuration may be selected as follows:
 
-     This configuration uses an X11-based framebuffer driver.  Of course, this
-     configuration can only be used in environments that support X11!  (And it
-     may not even be usable in all of those environments without some "tweaking"
-     See discussion below under the nx11 configuration).
+    cd <nuttx-directory>/tools
+    ./configure.sh sim/nsh2
 
 nx
 
-  Configures to use apps/examples/nx.
+  Description
+  -----------
+  Configures to use apps/examples/nx.  This configuration may be
+  selected as follows:
 
-  NOTES:
+    cd <nuttx-directory>/tools
+    ./configure.sh sim/nx
 
-  1. Special Framebuffer Configuration
+  Special Framebuffer Configuration
+  ---------------------------------
+  Special simulated framebuffer configuration options:
 
-     Special simulated framebuffer configuration options:
+    CONFIG_SIM_FBHEIGHT - Height of the framebuffer in pixels
+    CONFIG_SIM_FBWIDTH  - Width of the framebuffer in pixels.
+    CONFIG_SIM_FBBPP    - Pixel depth in bits
 
-       CONFIG_SIM_FBHEIGHT - Height of the framebuffer in pixels
-       CONFIG_SIM_FBWIDTH  - Width of the framebuffer in pixels.
-       CONFIG_SIM_FBBPP    - Pixel depth in bits
+  No Display!
+  -----------
+  This version has NO DISPLAY and is only useful for debugging NX
+  internals in environments where X11 is not supported.  There is
+  and additonal configuration that may be added to include an X11-
+  based simulated framebuffer driver:
+  
+    CONFIG_SIM_X11FB    - Use X11 window for framebuffer
 
-  2. No Display!
+  See the "nx11" configuration below for more information.
 
-     This version has NO DISPLAY and is only useful for debugging NX
-     internals in environments where X11 is not supported.  There is
-     and additonal configuration that may be added to include an X11-
-     based simulated framebuffer driver:
+  Multi- and Single-User Modes
+  ----------------------------
+  The default is the single-user NX implementation.  To select
+  the multi-user NX implementation:
 
-       CONFIG_SIM_X11FB    - Use X11 window for framebuffer
-
-     See the "nx11" configuration below for more information.
-
-  3. Multi- and Single-User Modes
-
-     The default is the single-user NX implementation.  To select
-     the multi-user NX implementation:
-
-       CONFG_NX_MULTIUSER=y
-       CONFIG_DISABLE_MQUEUE=n
+    CONFG_NX_MULTIUSER=y
+    CONFIG_DISABLE_MQUEUE=n
 
 nx11
 
+  Description
+  -----------
   Configures to use apps/examples/nx.  This configuration is similar
   to the nx configuration except that it adds support for an X11-
   based framebuffer driver.  Of course, this configuration can only
   be used in environments that support X11!  (And it may not even
   be usable in all of those environments without some "tweaking").
+  
+  This configuration may be selected as follows:
 
-  1. Special Framebuffer Configuration
+    cd <nuttx-directory>/tools
+    ./configure.sh sim/nx11
 
-     This configuration uses the same special simulated framebuffer
-     configuration options as the nx configuration:
+  Special Framebuffer Configuration
+  ---------------------------------
+  This configuration uses the same special simulated framebuffer
+  configuration options as the nx configuration:
 
-       CONFIG_SIM_X11FB    - Use X11 window for framebuffer
-       CONFIG_SIM_FBHEIGHT - Height of the framebuffer in pixels
-       CONFIG_SIM_FBWIDTH  - Width of the framebuffer in pixels.
-       CONFIG_SIM_FBBPP    - Pixel depth in bits
+    CONFIG_SIM_X11FB    - Use X11 window for framebuffer
+    CONFIG_SIM_FBHEIGHT - Height of the framebuffer in pixels
+    CONFIG_SIM_FBWIDTH  - Width of the framebuffer in pixels.
+    CONFIG_SIM_FBBPP    - Pixel depth in bits
 
-  2. X11 Configuration
+  X11 Configuration
+  -----------------
+  But now, since CONFIG_SIM_X11FB is also selected the following
+  definitions are needed
 
-     But now, since CONFIG_SIM_X11FB is also selected the following
-     definitions are needed
+    CONFIG_SIM_FBBPP (must match the resolution of the display).
+    CONFIG_FB_CMAP=y
 
-       CONFIG_SIM_FBBPP (must match the resolution of the display).
-       CONFIG_FB_CMAP=y
+  My system has 24-bit color, but packed into 32-bit words so
+  the correct seeting of CONFIG_SIM_FBBPP is 32.
 
-     My system has 24-bit color, but packed into 32-bit words so
-     the correct setting of CONFIG_SIM_FBBPP is 32.
+  For whatever value of CONFIG_SIM_FBBPP is selected, the
+  corresponidng CONFIG_NX_DISABLE_*BPP setting must not be
+  disabled.
 
-     For whatever value of CONFIG_SIM_FBBPP is selected, the
-     corresponding CONFIG_NX_DISABLE_*BPP setting must not be
-     disabled.
+  Touchscreen Support
+  -------------------
+  A X11 mouse-based touchscreen simulation can also be enabled
+  by setting:
 
-  3. Touchscreen Support
+    CONFIG_INPUT=y
+    CONFIG_SIM_TOUCHSCREEN=y
 
-     A X11 mouse-based touchscreen simulation can also be enabled
-     by setting:
+  Then you must also have some application logic that will call
+  arch_tcinitialize(0) to register the touchscreen driver.  See
+  also configuration "touchscreen"
 
-       CONFIG_INPUT=y
-       CONFIG_SIM_TOUCHSCREEN=y
+  NOTES:
 
-     Then you must also have some application logic that will call
-     arch_tcinitialize(0) to register the touchscreen driver.  See
-     also configuration "touchscreen"
+  1. If you do not have the call to sim_tcinitialize(0), the build
+     will mysteriously fail claiming that is can't find up_tcenter()
+     and up_tcleave().  That is a consequence of the crazy way that
+     the simulation is built and can only be eliminated by calling
+     up_simtouchscreen(0) from your application.
 
-     NOTES:
+  2. You must first up_fbinitialize() before calling up_simtouchscreen()
+     or you will get a crash.
 
-     a. If you do not have the call to sim_tcinitialize(0), the build
-        will mysteriously fail claiming that is can't find up_tcenter()
-        and up_tcleave().  That is a consequence of the crazy way that
-        the simulation is built and can only be eliminated by calling
-        up_simtouchscreen(0) from your application.
+  3. Call sim_tcuninintialize() when you are finished with the
+     simulated touchscreen.
 
-     b. You must first up_fbinitialize() before calling up_simtouchscreen()
-        or you will get a crash.
+  4. Enable CONFIG_DEBUG_INPUT=y for touchscreen debug output.
 
-     c. Call sim_tcunininitializee() when you are finished with the
-        simulated touchscreen.
+  X11 Build Issues
+  ----------------
+  To get the system to compile under various X11 installations
+  you may have to modify a few things.  For example, in order
+  to find libXext, I had to make the following change under
+  Ubuntu 9.09:
 
-     d. Enable CONFIG_DEBUG_INPUT=y for touchscreen debug output.
+    cd /usr/lib/
+    sudo ln -s libXext.so.6.4.0 libXext.so
 
-  4. X11 Build Issues
+  Multi- and Single-User Modes
+  ----------------------------
+  The default is the single-user NX implementation.  To select
+  the multi-user NX implementation:
 
-     To get the system to compile under various X11 installations
-     you may have to modify a few things.  For example, in order
-     to find libXext, I had to make the following change under
-     Ubuntu 9.09:
+    CONFG_NX_MULTIUSER=y
+    CONFIG_DISABLE_MQUEUE=n
 
-       cd /usr/lib/
-       sudo ln -s libXext.so.6.4.0 libXext.so
+  apps/examples/nxconsole
+  -----------------------
+  This configuration is also set up to use the apps/examples/nxconsole
+  test instead of apps/examples/nx.  To enable this configuration,
+  First, select Multi-User mode as described above.  Then add the
+  following definitions to the defconfig file:
 
-  5. Multi- and Single-User Modes
+    -CONFIG_NXCONSOLE=n
+    +CONFIG_NXCONSOLE=y
 
-     The default is the single-user NX implementation.  To select
-     the multi-user NX implementation:
+    -CONFIG_NX_MULTIUSER=n
+    +CONFIG_NX_MULTIUSER=y
 
-       CONFG_NX_MULTIUSER=y
-       CONFIG_DISABLE_MQUEUE=n
+  Comment out the following in the appconfig file:
 
-   6. apps/examples/nxconsole
+    -CONFIGURED_APPS += examples/nx
+    +#CONFIGURED_APPS += examples/nx
 
-      This configuration is also set up to use the apps/examples/nxconsole
-      test instead of apps/examples/nx.  To enable this configuration,
-      First, select Multi-User mode as described above.  Then add the
-      following definitions to the defconfig file:
+  And uncomment the following:
 
-       -CONFIG_NXCONSOLE=n
-       +CONFIG_NXCONSOLE=y
+    -#CONFIGURED_APPS += examples/nxconsole
+    +CONFIGURED_APPS += examples/nxconsole
 
-       -CONFIG_NX_MULTIUSER=n
-       +CONFIG_NX_MULTIUSER=y
-
-       -CONFIG_EXAMPLES_NX=y
-       +CONFIG_EXAMPLES_NX=n
-
-       -CONFIG_EXAMPLES_NXCONSOLE=n
-       +CONFIG_EXAMPLES_NXCONSOLE=y
-
-     See apps/examples/README.txt for further details.
+  See apps/examples/README.txt for further details.
 
 nxffs
 
@@ -481,6 +500,17 @@ nxffs
 nxlines
 
   This is the apps/examples/nxlines test.
+
+  NOTES:
+  ------ 
+  1. This configuration uses the mconf-based configuration tool.  To
+     change this configuration using that tool, you should:
+
+     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+        and misc/tools/
+
+     b. Execute 'make menuconfig' in nuttx/ in order to start the
+        reconfiguration process.
 
 nxwm
 
@@ -498,8 +528,17 @@ nxwm
     nuttx-code/NxWidgets/UnitTests/READEM.txt
 
   NOTES
+  -----
+  1. This configuration uses the mconf-based configuration tool.  To
+     change this configuration using that tool, you should:
 
-  1. There is an issue with running this example under the
+     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+        and misc/tools/
+
+     b. Execute 'make menuconfig' in nuttx/ in order to start the
+        reconfiguration process.
+
+  2. There is an issue with running this example under the
      simulation.  In the default configuration, this example will
      run the NxConsole example which waits on readline() for console
      input.  When it calls readline(), the whole system blocks
@@ -513,17 +552,17 @@ nxwm
      +++ nsh_consolemain.c   (working copy)
      @@ -117,7 +117,8 @@
         /* Execute the startup script */
-
+ 
       #ifdef CONFIG_NSH_ROMFSETC
      -  (void)nsh_script(&pstate->cn_vtbl, "init", NSH_INITPATH);
      +// REMOVE ME
      +//  (void)nsh_script(&pstate->cn_vtbl, "init", NSH_INITPATH);
       #endif
-
+   
         /* Then enter the command line parsing loop */
      @@ -130,7 +131,8 @@
             fflush(pstate->cn_outstream);
-
+   
             /* Get the next line of input */
      -
      +sleep(2); // REMOVE ME
@@ -537,23 +576,52 @@ nxwm
               }
      +#endif // REMOVE ME
           }
-
+ 
         /* Clean up */
 
 ostest
 
-  The "standard" NuttX apps/examples/ostest configuration.
+  Description
+  -----------
+  The "standard" NuttX apps/examples/ostest configuration.  This
+  configuration may be selected as follows:
+
+    cd <nuttx-directory>/tools
+    ./configure.sh sim/ostest
+
+  NOTES
+  -----
+  1. This configuration uses the mconf-based configuration tool.  To
+     change this configuration using that tool, you should:
+
+     a. Build and install the kconfig mconf tool.  See nuttx/README.txt
+        and misc/tools/
+
+     b. Execute 'make menuconfig' in nuttx/ in order to start the
+        reconfiguration process.
 
 pashello
 
-  Configures to use apps/examples/pashello.
+  Description
+  -----------
+  Configures to use apps/examples/pashello.  This configuration may
+  by selected as follows:
+
+    cd <nuttx-directory>/tools
+    ./configure.sh sim/pashello
 
 touchscreen
 
+  Description
+  -----------
   This configuration uses the simple touchscreen test at
   apps/examples/touchscreen.  This test will create an empty X11 window
-  and will print the touchscreen output as it is received from the
-  simulated touchscreen driver.
+  and will print the touchscreen output as it is received from the 
+  simulated touchscreen driver.  This configuration may
+  by selected as follows:
+
+    cd <nuttx-directory>/tools
+    ./configure.sh sim/touchscreen
 
   Since this example uses the simulated frame buffer driver, the
   most of the configuration settings discussed for the "nx11"

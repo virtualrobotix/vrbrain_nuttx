@@ -42,7 +42,7 @@
 
 #include "device.h"
 
-#include <nuttx/spi/spi.h>
+#include <nuttx/spi.h>
 
 namespace device __EXPORT
 {

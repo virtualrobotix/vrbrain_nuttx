@@ -82,11 +82,11 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_led_initialize
+ * Name: up_ledinit
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_LEDS
-void board_led_initialize(void)
+void up_ledinit(void)
 {
   /* Initilize GIOs P1.16-P1.23 */
 
@@ -96,19 +96,19 @@ void board_led_initialize(void)
 }
 
 /****************************************************************************
- * Name: board_led_on
+ * Name: up_ledon
  ****************************************************************************/
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
   putled(LEDBIT(led),LED_CLR_OFFSET);
 }
 
 /****************************************************************************
- * Name: board_led_off
+ * Name: up_ledoff
  ****************************************************************************/
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
   putled(LEDBIT(led),LED_SET_OFFSET);
 }

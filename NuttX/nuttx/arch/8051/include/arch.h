@@ -64,8 +64,7 @@
 
 #ifdef __cplusplus
 #define EXTERN extern "C"
-extern "C"
-{
+extern "C" {
 #else
 #define EXTERN extern
 #endif
@@ -75,7 +74,7 @@ extern "C"
  * code to dump the stack pointer at critical locations.
  */
 
-void up_showsp(uint8_t ch) __naked;
+EXTERN void up_showsp(uint8_t ch) __naked;
 
 #undef EXTERN
 #ifdef __cplusplus

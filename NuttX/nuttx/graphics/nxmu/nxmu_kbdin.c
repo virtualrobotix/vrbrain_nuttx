@@ -78,7 +78,7 @@
 /****************************************************************************
  * Name: nxmu_kbdin
  *
- * Description:
+ * Descripton:
  *   New keyboard data has been received from the thread or interrupt
  *   handler that manages some kind of keyboard/keypad hardware.  Route that
  *   positional data to the appropriate window client.
@@ -116,3 +116,4 @@ void nxmu_kbdin(FAR struct nxfe_state_s *fe, uint8_t nch, FAR uint8_t *ch)
 }
 
 #endif /* CONFIG_NX_KBD */
+

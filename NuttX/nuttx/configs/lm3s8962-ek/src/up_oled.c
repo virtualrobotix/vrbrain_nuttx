@@ -44,11 +44,11 @@
 #include <debug.h>
 #include <errno.h>
 
-#include <nuttx/spi/spi.h>
+#include <nuttx/spi.h>
 #include <nuttx/lcd/lcd.h>
 #include <nuttx/lcd/p14201.h>
 
-#include "tiva_gpio.h"
+#include "lm_gpio.h"
 #include "lm3s8962ek_internal.h"
 
 /****************************************************************************
@@ -72,8 +72,8 @@
 
 #ifdef CONFIG_LCD_RITDEBUG
 #  define ritdbg(format, arg...)  vdbg(format, ##arg)
-#  define oleddc_dumpgpio(m) tiva_dumpgpio(OLEDDC_GPIO, m)
-#  define oledcs_dumpgpio(m) tiva_dumpgpio(OLEDCS_GPIO, m)
+#  define oleddc_dumpgpio(m) lm_dumpgpio(OLEDDC_GPIO, m)
+#  define oledcs_dumpgpio(m) lm_dumpgpio(OLEDCS_GPIO, m)
 #else
 #  define ritdbg(x...)
 #  define oleddc_dumpgpio(m)
@@ -102,8 +102,8 @@ FAR struct lcd_dev_s *up_nxdrvinit(unsigned int devno)
   oledcs_dumpgpio("up_nxdrvinit: After OLEDCS setup");
   oleddc_dumpgpio("up_nxdrvinit: On entry");
 
-  tiva_configgpio(OLEDDC_GPIO); /* PC7: OLED display data/control select (D/Cn) */
-  tiva_configgpio(OLEDEN_GPIO); /* PC6: Enable +15V needed by OLED (EN+15V) */
+  lm_configgpio(OLEDDC_GPIO); /* PC7: OLED display data/control select (D/Cn) */
+  lm_configgpio(OLEDEN_GPIO); /* PC6: Enable +15V needed by OLED (EN+15V) */
 
   oleddc_dumpgpio("up_nxdrvinit: After OLEDDC/EN setup");
 
@@ -137,13 +137,13 @@ FAR struct lcd_dev_s *up_nxdrvinit(unsigned int devno)
 }
 
 /******************************************************************************
- * Name:  tiva_spicmddata
+ * Name:  lm_spicmddata
  *
  * Description:
  *   Set or clear the SD1329 D/Cn bit to select data (true) or command
  *   (false).  This function must be provided by platform-specific logic.
  *   This is an implementation of the cmddata method of the SPI
- *   interface defined by struct spi_ops_s (see include/nuttx/spi/spi.h).
+ *   interface defined by struct spi_ops_s (see include/nuttx/spi.h).
  *
  * Input Parameters:
  *
@@ -159,15 +159,14 @@ FAR struct lcd_dev_s *up_nxdrvinit(unsigned int devno)
  *
  ******************************************************************************/
 
-int tiva_spicmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd)
+int lm_spicmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd)
 {
   if (devid == SPIDEV_DISPLAY)
     {
       /* Set GPIO to 1 for data, 0 for command */
 
-      tiva_gpiowrite(OLEDDC_GPIO, !cmd);
+      lm_gpiowrite(OLEDDC_GPIO, !cmd);
       return OK;
     }
-
   return -ENODEV;
 }

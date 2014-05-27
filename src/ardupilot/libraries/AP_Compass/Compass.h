@@ -46,6 +46,8 @@
  */
 #if CONFIG_HAL_BOARD == HAL_BOARD_PX4
 #define COMPASS_MAX_INSTANCES 2
+#elif CONFIG_HAL_BOARD == HAL_BOARD_VRBRAIN
+#define COMPASS_MAX_INSTANCES 2
 #else
 #define COMPASS_MAX_INSTANCES 1
 #endif
@@ -231,6 +233,9 @@ protected:
     AP_Int8 _use_for_yaw;                       ///<enable use for yaw calculation
     AP_Int8 _auto_declination;                  ///<enable automatic declination code
     AP_Int8 _external;                          ///<compass is external
+#if COMPASS_MAX_INSTANCES > 1
+    AP_Int8 _primary;                           ///primary instance
+#endif
 
     bool _null_init_done;                           ///< first-time-around flag used by offset nulling
 

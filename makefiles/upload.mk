@@ -2,7 +2,7 @@
 # Rules and tools for uploading firmware to various PX4 boards.
 #
 
-UPLOADER		 = $(VRBRAIN_BASE)/Tools/px_uploader.py
+UPLOADER		 = $(VRX_BASE)/Tools/px_uploader.py
 
 SYSTYPE			:= $(shell uname -s)
 
@@ -27,8 +27,8 @@ all:	upload-$(METHOD)-$(BOARD)
 upload-serial-px4fmu-v1:	$(BUNDLE) $(UPLOADER)
 	$(Q) $(PYTHON) -u $(UPLOADER) --port $(SERIAL_PORTS) $(BUNDLE)
 
-
-
+upload-serial-px4fmu-v2:	$(BUNDLE) $(UPLOADER)
+	$(Q) $(PYTHON) -u $(UPLOADER) --port $(SERIAL_PORTS) $(BUNDLE)
 
 #
 # JTAG firmware uploading with OpenOCD
@@ -39,6 +39,6 @@ upload-jtag-px4fmu: all
 	@$(ECHO) Attempting to flash PX4FMU board via JTAG
 	$(Q) $(OPENOCD) -f $(JTAGCONFIG) -f ../Bootloader/stm32f4x.cfg -c init -c "reset halt" -c "flash write_image erase nuttx/nuttx" -c "flash write_image erase ../Bootloader/px4fmu_bl.elf" -c "reset run" -c shutdown
 
-
-
-
+upload-jtag-px4io: all
+	@$(ECHO) Attempting to flash PX4IO board via JTAG
+	$(Q) $(OPENOCD) -f $(JTAGCONFIG) -f ../Bootloader/stm32f1x.cfg -c init -c "reset halt" -c "flash write_image erase nuttx/nuttx" -c "flash write_image erase ../Bootloader/px4io_bl.elf" -c "reset run" -c shutdown

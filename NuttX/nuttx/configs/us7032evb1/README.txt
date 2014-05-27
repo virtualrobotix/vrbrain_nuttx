@@ -6,7 +6,7 @@ The port is basically complete and many examples run correctly.  However, there
 are remaining instabilities that make the port un-usable.  The nature of these
 is not understood; the behavior is that certain SH-1 instructions stop working
 as advertised.  This could be a silicon problem, some pipeline issue that is not
-handled properly by the gcc 3.4.5 toolchain (which has very limited SH-1 support
+handled properly by the gcc 3.4.5 toolchain (which has very limit SH-1 support
 to begin with), or perhaps with the CMON debugger.  At any rate, I have exhausted
 all of the energy that I am willing to put into this cool old processor for the
 time being.
@@ -55,50 +55,30 @@ shterm
 Configurations
 ^^^^^^^^^^^^^^
 
-Common Configuration Notes
---------------------------
+Each SH-1 configuration is maintained in a sub-directory and
+can be selected as follow:
 
-  1. Each SH-1 configuration is maintained in a sub-directory and
-     can be selected as follow:
+	cd tools
+	./configure.sh us7032evb1/<subdir>
+	cd -
+	. ./setenv.sh
 
-       cd tools
-       ./configure.sh us7032evb1/<subdir>
-       cd -
-       . ./setenv.sh
+Where <subdir> is one of the following:
 
-     Where <subdir> is one of the configuration sub-directories described in
-     the following paragraph.
+ostest
+^^^^^^as advertised.  This could be a silicon problem, some pipeline issue that is not handled properly by the gcc 3.4.5 tool
 
-  2. These configurations use the mconf-based configuration tool.  To
-     change a configurations using that tool, you should:
+This configuration directory, performs a simple OS test using
+examples/ostest.
 
-     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-        and misc/tools/
+nsh
+^^^
 
-     b. Execute 'make menuconfig' in nuttx/ in order to start the
-        reconfiguration process.
+Configures the NuttShell (nsh) located at examples/nsh.  The
+Configuration enables only the serial NSH interfaces.
 
-  3. By default, all configurations assume that you are building under
-     Linux (should work under Windows with Cygwin as well).  This is
-     is easily reconfigured:
-
-        CONFIG_HOST_LINUX=y
-
-Configuration Sub-Directories
------------------------------
-
-  ostest
-
-    This configuration directory, performs a simple OS test using
-    examples/ostest.
-
-  nsh
-
-    Configures the NuttShell (nsh) located at examples/nsh.  The
-    Configuration enables only the serial NSH interfaces.
-
-    NOTE:  At present, the NSH example does not run.  See the "Status"
-    discussion above for a full explanation.
+NOTE:  At present, the NSH example does not run.  See the "Status"
+discussion above for a full explanation.
 
 Configuration Options
 ^^^^^^^^^^^^^^^^^^^^^
@@ -130,8 +110,8 @@ Architecture selection
     and the up_prioritize_irq() API.  Should be defined.
   CONFIG_BOARD_LOOPSPERMSEC - for delay loops
   CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to SH1_LCEVB1
-  CONFIG_RAM_SIZE - Describes the internal DRAM.
-  CONFIG_RAM_START - The start address of internal DRAM
+  CONFIG_DRAM_SIZE - Describes the internal DRAM.
+  CONFIG_DRAM_START - The start address of internal DRAM
   CONFIG_ARCH_INTERRUPTSTACK - This architecture supports an interrupt
     stack. If defined, this symbol is the size of the interrupt
     stack in bytes.  If not defined, the user task stacks will be

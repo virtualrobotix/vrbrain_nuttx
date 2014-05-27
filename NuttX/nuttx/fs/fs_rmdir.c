@@ -1,7 +1,7 @@
 /****************************************************************************
  * fs/fs_rmdir.c
  *
- *   Copyright (C) 2007-2009, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2009 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,24 +49,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#undef FS_HAVE_WRITABLE_MOUNTPOINT
-#if !defined(CONFIG_DISABLE_MOUNTPOINT) && defined(CONFIG_FS_WRITABLE) && \
-    CONFIG_NFILE_STREAMS > 0
-#  define FS_HAVE_WRITABLE_MOUNTPOINT 1
-#endif
-
-#undef FS_HAVE_PSEUDOFS_OPERATIONS
-#if !defined(CONFIG_DISABLE_PSEUDOFS_OPERATIONS) && CONFIG_NFILE_STREAMS > 0
-#  define FS_HAVE_PSEUDOFS_OPERATIONS 1
-#endif
-
-#undef FS_HAVE_RMDIR
-#if defined(FS_HAVE_WRITABLE_MOUNTPOINT) || defined(FS_HAVE_PSEUDOFS_OPERATIONS)
-#  define FS_HAVE_RMDIR 1
-#endif
-
-#ifdef FS_HAVE_RMDIR
-
 /****************************************************************************
  * Private Variables
  ****************************************************************************/
@@ -94,105 +76,55 @@ int rmdir(FAR const char *pathname)
 {
   FAR struct inode *inode;
   const char       *relpath = NULL;
-  int               errcode;
+  int               ret;
 
-  /* Get an inode for this file.  inode_find() automatically increments the
-   * reference count on the inode if one is found.
-   */
+  /* Get an inode for this file */
 
   inode = inode_find(pathname, &relpath);
   if (!inode)
     {
-      /* There is no inode that includes in this path */
+      /* There is no mountpoint that includes in this path */
 
-      errcode = ENOENT;
+      ret = ENOENT;
       goto errout;
     }
 
-#ifndef CONFIG_DISABLE_MOUNTPOINT
-  /* Check if the inode is a valid mountpoint. */
+  /* Verify that the inode is a valid mountpoint. */
 
-  if (INODE_IS_MOUNTPT(inode) && inode->u.i_mops)
+  if (!INODE_IS_MOUNTPT(inode) || !inode->u.i_mops)
     {
-      /* Perform the rmdir operation using the relative path
-       * from the mountpoint.
-       */
-
-      if (inode->u.i_mops->rmdir)
-        {
-          int ret = inode->u.i_mops->rmdir(inode, relpath);
-          if (ret < 0)
-            {
-              errcode = -ret;
-              goto errout_with_inode;
-            }
-        }
-      else
-        {
-          errcode = ENOSYS;
-          goto errout_with_inode;
-        }
+      ret = ENXIO;
+      goto errout_with_inode;
     }
-  else
-#endif
 
-#ifndef CONFIG_DISABLE_PSEUDOFS_OPERATIONS
-  /* If this is a "dangling" pseudo-directory node (i.e., it has no operations)
-   * then rmdir should remove the node.
+  /* Perform the rmdir operation using the relative path
+   * at the mountpoint.
    */
 
-  if (!inode->u.i_ops)
+  if (inode->u.i_mops->rmdir)
     {
-      int ret;
-
-      /* If the directory inode has children, however, then it cannot be
-       * removed.
-       */
-
-      if (inode->i_child)
+      ret = inode->u.i_mops->rmdir(inode, relpath);
+      if (ret < 0)
         {
-          errcode = ENOTEMPTY;
-          goto errout_with_inode;
-        }
-
-      /* Remove the inode.  NOTE: Because we hold a reference count on the
-       * inode, it will not be deleted now.  But probably when inode_release()
-       * is called below.  inode_remove should return -EBUSY to indicate that
-       * the inode was not deleted now.
-       */
-
-      inode_semtake();
-      ret = inode_remove(pathname);
-      inode_semgive();
-
-      if (ret < 0 && ret != -EBUSY)
-        {
-          errcode = -ret;
+          ret = -ret;
           goto errout_with_inode;
         }
     }
   else
-    {
-      errcode = ENOTDIR;
+    { 
+      ret = ENOSYS;
       goto errout_with_inode;
     }
-#else
-    {
-      errcode = ENXIO;
-      goto errout_with_inode;
-    }
-#endif
 
   /* Successfully removed the directory */
 
   inode_release(inode);
   return OK;
 
-errout_with_inode:
+ errout_with_inode:
   inode_release(inode);
-errout:
-  set_errno(errcode);
+ errout:
+  set_errno(ret);
   return ERROR;
 }
 
-#endif /* FS_HAVE_RMDIR */

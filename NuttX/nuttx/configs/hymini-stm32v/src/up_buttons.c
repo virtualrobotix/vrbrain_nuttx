@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/hymini-stm32v/src/board_buttons.c
+ * configs/hymini-stm32v/src/up_buttons.c
  *
- *   Copyright (C) 2009, 2011, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2009, 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,9 +41,7 @@
 
 #include <stdint.h>
 
-#include <nuttx/arch.h>
 #include <arch/board/board.h>
-
 #include "hymini_stm32v-internal.h"
 
 #ifdef CONFIG_ARCH_BUTTONS
@@ -57,27 +55,27 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_button_initialize
+ * Name: up_buttoninit
  *
  * Description:
- *   board_button_initialize() must be called to initialize button resources.
- *   After that, board_buttons() may be called to collect the current state of
- *   all buttons or board_button_irq() may be called to register button interrupt
+ *   up_buttoninit() must be called to initialize button resources.  After
+ *   that, up_buttons() may be called to collect the current state of all
+ *   buttons or up_irqbutton() may be called to register button interrupt
  *   handlers.
  *
  ****************************************************************************/
 
-void board_button_initialize(void)
+void up_buttoninit(void)
   {
     stm32_configgpio(GPIO_BTN_KEYA);
     stm32_configgpio(GPIO_BTN_KEYB);
   }
 
 /****************************************************************************
- * Name: board_buttons
+ * Name: up_buttons
  ****************************************************************************/
 
-uint8_t board_buttons(void)
+uint8_t up_buttons(void)
   {
     uint8_t ret = 0;
     bool pinValue;
@@ -102,32 +100,31 @@ uint8_t board_buttons(void)
     return ret;
   }
 
-/****************************************************************************
+/************************************************************************************
  * Button support.
  *
  * Description:
- *   board_button_initialize() must be called to initialize button resources.
- *   After that, board_buttons() may be called to collect the current state of
- *   all buttons or board_button_irq() may be called to register button interrupt
+ *   up_buttoninit() must be called to initialize button resources.  After
+ *   that, up_buttons() may be called to collect the current state of all
+ *   buttons or up_irqbutton() may be called to register button interrupt
  *   handlers.
  *
- *   After board_button_initialize() has been called, board_buttons() may be
- *   called to collect the state of all buttons.  board_buttons() returns an
- *   8-bit bit set with each bit associated with a button.  See the
- *   BUTTON_*_BIT and JOYSTICK_*_BIT definitions in board.h for the meaning
- *  of each bit.
+ *   After up_buttoninit() has been called, up_buttons() may be called to
+ *   collect the state of all buttons.  up_buttons() returns an 8-bit bit set
+ *   with each bit associated with a button.  See the BUTTON_*_BIT and JOYSTICK_*_BIT
+ *   definitions in board.h for the meaning of each bit.
  *
- *   board_button_irq() may be called to register an interrupt handler that will
+ *   up_irqbutton() may be called to register an interrupt handler that will
  *   be called when a button is depressed or released.  The ID value is a
- *   button enumeration value that uniquely identifies a button resource. See
- *   the BUTTON_* definitions in board.h for the meaning of enumeration
- *   value.  The previous interrupt handler address is returned (so that it
- *    may be restored, if so desired).
+ *   button enumeration value that uniquely identifies a button resource. See the
+ *   BUTTON_* definitions in board.h for the meaning of enumeration
+ *   value.  The previous interrupt handler address is returned (so that it may
+ *   restored, if so desired).
  *
- ****************************************************************************/
+ ************************************************************************************/
 
 #ifdef CONFIG_ARCH_IRQBUTTONS
-xcpt_t board_button_irq(int id, xcpt_t irqhandler)
+xcpt_t up_irqbutton(int id, xcpt_t irqhandler)
   {
     xcpt_t oldhandler = NULL;
     uint32_t pinset = GPIO_BTN_KEYA;

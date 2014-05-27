@@ -59,7 +59,7 @@
 #include "lpc31_mpmc.h"
 #include "ea3131_internal.h"
 
-#ifdef CONFIG_LPC31_EXTDRAM
+#ifdef CONFIG_ARCH_EXTDRAM
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -227,7 +227,7 @@ static void lpc31_sdraminitialize(void)
   putreg32((MPMC_DYNCONTROL_CE|MPMC_DYNCONTROL_CS|MPMC_DYNCONTROL_INOP),
            LPC31_MPMC_DYNCONTROL);
 
-  /* Wait ~200us  */
+  /* Load ~200us delay value to timer1 */
 
   up_udelay(200);
   
@@ -243,7 +243,7 @@ static void lpc31_sdraminitialize(void)
   putreg32(NS2HCLKS(EA3131_SDRAM_REFRESH, HCLK, MPMC_DYNREFRESH_TIMER_MASK),
            LPC31_MPMC_DYNREFRESH);
 
-  /* Wait ~250us  */
+  /* Load ~250us delay value to timer1 */
 
   up_udelay(250);
   
@@ -356,4 +356,4 @@ void lpc31_meminitialize(void)
 
   lpc31_sdraminitialize();
 }
-#endif /* CONFIG_LPC31_EXTDRAM */
+#endif /* CONFIG_ARCH_EXTDRAM */

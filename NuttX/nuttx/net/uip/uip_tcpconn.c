@@ -1,7 +1,7 @@
 /****************************************************************************
  * net/uip/uip_tcpconn.c
  *
- *   Copyright (C) 2007-2011, 2013-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Large parts of this file were leveraged from uIP logic:
@@ -34,6 +34,10 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ ****************************************************************************/
+
+/****************************************************************************
+ * Compilation Switches
  ****************************************************************************/
 
 /****************************************************************************
@@ -217,32 +221,23 @@ struct uip_conn *uip_tcpalloc(void)
 
   conn = (struct uip_conn *)dq_remfirst(&g_free_tcp_connections);
 
+#if 0 /* Revisit */
   /* Is the free list empty? */
 
   if (!conn)
     {
-      /* As a fallback, check for connection structures which can be stalled.
-       *
-       * Search the active connection list for the oldest connection
-       * that is in the UIP_TIME_WAIT or UIP_FIN_WAIT_1 state.
+      /* As a fallback, check for connection structures in the TIME_WAIT
+       * state.  If no CLOSED connections are found, then take the oldest
        */
 
-      FAR struct uip_conn *tmp =
-        (FAR struct uip_conn *)g_active_tcp_connections.head;
-
+      struct uip_conn *tmp = g_active_tcp_connections.head;
       while (tmp)
         {
-          nllvdbg("conn: %p state: %02x\n", tmp, tmp->tcpstateflags);
+          /* Is this connectin in the UIP_TIME_WAIT state? */
 
-          /* Is this connection in a state we can sacrifice.
-           * REVISIT: maybe UIP_FIN_WAIT_1 is too harsh? There should be a
-           *          higher priority for UIP_TIME_WAIT
-           */
-
-          if (tmp->tcpstateflags == UIP_TIME_WAIT ||
-              tmp->tcpstateflags == UIP_FIN_WAIT_1)
+          if (tmp->tcpstateflags == UIP_TIME_WAIT)
             {
-              /* Yes.. Is it the oldest one we have seen so far? */
+              /* Is it the oldest one we have seen so far? */
 
               if (!conn || tmp->timer > conn->timer)
                 {
@@ -254,30 +249,14 @@ struct uip_conn *uip_tcpalloc(void)
 
           /* Look at the next active connection */
 
-          tmp = (FAR struct uip_conn *)tmp->node.flink;
+          tmp = tmp->node.flink;
         }
 
-      /* Did we find a connection that we can re-use? */
+      /* If we found one, remove it from the active connection list */
 
-      if (conn != NULL)
-        {
-          nlldbg("Closing unestablished connection: %p\n", conn);
-
-          /* Yes... free it.  This will remove the connection from the list
-           * of active connections and release all resources held by the
-           * connection.
-           *
-           * REVISIT:  Could there be any higher level, socket interface
-           * that needs to be informed that we did this to them?
-           */
-
-          uip_tcpfree(conn);
-
-          /* Now there is guaranteed to be one free connection.  Get it! */
-
-          conn = (struct uip_conn *)dq_remfirst(&g_free_tcp_connections);
-        }
+      dq_rem(&conn->node, &g_active_tcp_connections);
     }
+#endif
 
   uip_unlock(flags);
 
@@ -285,7 +264,6 @@ struct uip_conn *uip_tcpalloc(void)
 
   if (conn)
     {
-      memset(conn, 0, sizeof(struct uip_conn));
       conn->tcpstateflags = UIP_ALLOCATED;
     }
 
@@ -303,13 +281,8 @@ struct uip_conn *uip_tcpalloc(void)
 
 void uip_tcpfree(struct uip_conn *conn)
 {
-  FAR struct uip_callback_s *cb;
-  FAR struct uip_callback_s *next;
-#ifdef CONFIG_NET_TCP_READAHEAD
-  FAR struct uip_readahead_s *readahead;
-#endif
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-  FAR struct uip_wrbuffer_s *wrbuffer;
+#if CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
+  struct uip_readahead_s *readahead;
 #endif
   uip_lock_t flags;
 
@@ -320,16 +293,6 @@ void uip_tcpfree(struct uip_conn *conn)
 
   DEBUGASSERT(conn->crefs == 0);
   flags = uip_lock();
-
-  /* Free remaining callbacks, actually there should be only the close callback
-   * left.
-   */
-
-  for (cb = conn->list; cb; cb = next)
-    {
-      next = cb->flink;
-      uip_tcpcallbackfree(conn, cb);
-    }
 
   /* UIP_ALLOCATED means that that the connection is not in the active list
    * yet.
@@ -342,32 +305,18 @@ void uip_tcpfree(struct uip_conn *conn)
       dq_rem(&conn->node, &g_active_tcp_connections);
     }
 
-#ifdef CONFIG_NET_TCP_READAHEAD
   /* Release any read-ahead buffers attached to the connection */
 
+#if CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
   while ((readahead = (struct uip_readahead_s *)sq_remfirst(&conn->readahead)) != NULL)
     {
-      uip_tcpreadahead_release(readahead);
+      uip_tcpreadaheadrelease(readahead);
     }
 #endif
 
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-  /* Release any write buffers attached to the connection */
-
-  while ((wrbuffer = (struct uip_wrbuffer_s *)sq_remfirst(&conn->write_q)) != NULL)
-    {
-      uip_tcpwrbuffer_release(wrbuffer);
-    }
-
-  while ((wrbuffer = (struct uip_wrbuffer_s *)sq_remfirst(&conn->unacked_q)) != NULL)
-    {
-      uip_tcpwrbuffer_release(wrbuffer);
-    }
-#endif
-
-#ifdef CONFIG_NET_TCPBACKLOG
   /* Remove any backlog attached to this connection */
 
+#ifdef CONFIG_NET_TCPBACKLOG
   if (conn->backlog)
     {
       uip_backlogdestroy(conn);
@@ -405,7 +354,7 @@ void uip_tcpfree(struct uip_conn *conn)
 struct uip_conn *uip_tcpactive(struct uip_tcpip_hdr *buf)
 {
   struct uip_conn *conn      = (struct uip_conn *)g_active_tcp_connections.head;
-  in_addr_t        srcipaddr = uip_ip4addr_conv(buf->srcipaddr);
+  in_addr_t        srcipaddr = uip_ip4addr_conv(buf->srcipaddr);  
 
   while (conn)
     {
@@ -472,7 +421,7 @@ struct uip_conn *uip_tcplistener(uint16_t portno)
   int i;
 
   /* Check if this port number is in use by any active UIP TCP connection */
-
+ 
   for (i = 0; i < CONFIG_NET_TCP_CONNS; i++)
     {
       conn = &g_tcp_connections[i];
@@ -483,7 +432,6 @@ struct uip_conn *uip_tcplistener(uint16_t portno)
           return conn;
         }
     }
-
   return NULL;
 }
 
@@ -514,33 +462,20 @@ struct uip_conn *uip_tcpaccept(struct uip_tcpip_hdr *buf)
       conn->nrtx          = 0;
       conn->lport         = buf->destport;
       conn->rport         = buf->srcport;
-      conn->mss           = UIP_TCP_INITIAL_MSS;
       uip_ipaddr_copy(conn->ripaddr, uip_ip4addr_conv(buf->srcipaddr));
       conn->tcpstateflags = UIP_SYN_RCVD;
 
       uip_tcpinitsequence(conn->sndseq);
       conn->unacked       = 1;
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-      conn->expired       = 0;
-      conn->isn           = 0;
-      conn->sent          = 0;
-#endif
 
       /* rcvseq should be the seqno from the incoming packet + 1. */
 
       memcpy(conn->rcvseq, buf->seqno, 4);
 
-#ifdef CONFIG_NET_TCP_READAHEAD
       /* Initialize the list of TCP read-ahead buffers */
 
+#if CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
       sq_init(&conn->readahead);
-#endif
-
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-      /* Initialize the write buffer lists */
-
-      sq_init(&conn->write_q);
-      sq_init(&conn->unacked_q);
 #endif
 
       /* And, finally, put the connection structure into the active list.
@@ -549,7 +484,6 @@ struct uip_conn *uip_tcpaccept(struct uip_tcpip_hdr *buf)
 
       dq_addlast(&conn->node, &g_active_tcp_connections);
     }
-
   return conn;
 }
 
@@ -635,7 +569,7 @@ int uip_tcpconnect(struct uip_conn *conn, const struct sockaddr_in *addr)
   uip_lock_t flags;
   int port;
 
-  /* The connection is expected to be in the UIP_ALLOCATED state.. i.e.,
+  /* The connection is expected to be in the UIP_ALLOCATED state.. i.e., 
    * allocated via up_tcpalloc(), but not yet put into the active connections
    * list.
    */
@@ -663,7 +597,7 @@ int uip_tcpconnect(struct uip_conn *conn, const struct sockaddr_in *addr)
   conn->tcpstateflags = UIP_SYN_SENT;
   uip_tcpinitsequence(conn->sndseq);
 
-  conn->mss        = UIP_TCP_INITIAL_MSS;
+  conn->initialmss = conn->mss = UIP_TCP_MSS;
   conn->unacked    = 1;    /* TCP length of the SYN is one. */
   conn->nrtx       = 0;
   conn->timer      = 1;    /* Send the SYN next time around. */
@@ -671,11 +605,6 @@ int uip_tcpconnect(struct uip_conn *conn, const struct sockaddr_in *addr)
   conn->sa         = 0;
   conn->sv         = 16;   /* Initial value of the RTT variance. */
   conn->lport      = htons((uint16_t)port);
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-  conn->expired    = 0;
-  conn->isn        = 0;
-  conn->sent       = 0;
-#endif
 
   /* The sockaddr port is 16 bits and already in network order */
 
@@ -685,17 +614,10 @@ int uip_tcpconnect(struct uip_conn *conn, const struct sockaddr_in *addr)
 
   uip_ipaddr_copy(conn->ripaddr, addr->sin_addr.s_addr);
 
-#ifdef CONFIG_NET_TCP_READAHEAD
   /* Initialize the list of TCP read-ahead buffers */
 
+#if CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
   sq_init(&conn->readahead);
-#endif
-
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-  /* Initialize the TCP write buffer lists */
-
-  sq_init(&conn->write_q);
-  sq_init(&conn->unacked_q);
 #endif
 
   /* And, finally, put the connection structure into the active

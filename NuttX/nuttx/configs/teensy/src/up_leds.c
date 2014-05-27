@@ -104,10 +104,10 @@ void at90usb_ledinit(void)
 }
 
 /****************************************************************************
- * Name: board_led_on
+ * Name: up_ledon
  ****************************************************************************/
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
  /*                         ON      OFF
   * LED_STARTED        0    OFF     ON  (never happens)
@@ -146,10 +146,10 @@ void board_led_on(int led)
 }
 
 /****************************************************************************
- * Name: board_led_off
+ * Name: up_ledoff
  ****************************************************************************/
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
  /*                         ON      OFF
   * LED_STARTED        0    OFF     ON  (never happens)

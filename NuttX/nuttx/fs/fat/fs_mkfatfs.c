@@ -80,19 +80,19 @@ static inline int mkfatfs_getgeometry(FAR struct fat_format_s *fmt,
 {
   struct geometry geometry;
   int ret;
-
+ 
   /* Get the device geometry */
 
   ret = DEV_GEOMETRY(geometry);
   if (ret < 0)
     {
-      fdbg("ERROR: geometry() returned %d\n", ret);
+      fdbg("geometry() returned %d\n", ret);
       return ret;
     }
 
   if (!geometry.geo_available || !geometry.geo_writeenabled)
     {
-      fdbg("ERROR: Media is not available\n", ret);
+      fdbg("Media is not available\n", ret);
       return -ENODEV;
     }
 
@@ -104,9 +104,8 @@ static inline int mkfatfs_getgeometry(FAR struct fat_format_s *fmt,
     {
       if (fmt->ff_nsectors > geometry.geo_nsectors)
         {
-          fdbg("ERROR: User maxblocks (%d) exceeds blocks on device (%d)\n",
+          fdbg("User maxblocks (%d) exceeds blocks on device (%d)\n",
                fmt->ff_nsectors, geometry.geo_nsectors);
-
           return -EINVAL;
         }
     }
@@ -139,10 +138,9 @@ static inline int mkfatfs_getgeometry(FAR struct fat_format_s *fmt,
         break;
 
       default:
-        fdbg("ERROR: Unsupported sector size: %d\n", var->fv_sectorsize);
+        fdbg("Unsupported sector size: %d\n", var->fv_sectorsize);
         return -EPERM;
     }
-
   return 0;
 }
 
@@ -154,9 +152,7 @@ static inline int mkfatfs_getgeometry(FAR struct fat_format_s *fmt,
  * Name: mkfatfs
  *
  * Description:
- *   Make a FAT file system image on the specified block device.  This
- *   function can automatically format a FAT12 or FAT16 file system.  By
- *   tradition, FAT32 will only be selected is explicitly requested.
+ *   Make a FAT file system image on the specified block device
  *
  * Inputs:
  *   pathname - the full path to a registered block driver
@@ -177,7 +173,6 @@ static inline int mkfatfs_getgeometry(FAR struct fat_format_s *fmt,
  *     device is indeterminate (but likely not good).
  *
  ****************************************************************************/
-
 int mkfatfs(FAR const char *pathname, FAR struct fat_format_s *fmt)
 {
   struct fat_var_s var;
@@ -196,14 +191,14 @@ int mkfatfs(FAR const char *pathname, FAR struct fat_format_s *fmt)
 #ifdef CONFIG_DEBUG
   if (!pathname)
     {
-      fdbg("ERROR: No block driver path\n");
+      fdbg("No block driver path\n");
       ret = -EINVAL;
       goto errout;
     }
 
   if (fmt->ff_nfats < 1 || fmt->ff_nfats > 4)
     {
-      fdbg("ERROR: Invalid number of fats: %d\n", fmt->ff_nfats);
+      fdbg("Invalid number of fats: %d\n", fmt->ff_nfats);
       ret = -EINVAL;
       goto errout;
     }
@@ -211,48 +206,35 @@ int mkfatfs(FAR const char *pathname, FAR struct fat_format_s *fmt)
   if (fmt->ff_fattype != 0  && fmt->ff_fattype != 12 &&
       fmt->ff_fattype != 16 && fmt->ff_fattype != 32)
     {
-      fdbg("ERROR: Invalid FAT size: %d\n", fmt->ff_fattype);
+      fdbg("Invalid FAT size: %d\n", fmt->ff_fattype);
       ret = -EINVAL;
       goto errout;
     }
 #endif
-
-  /* 0 will auto-selected by FAT12 and FAT16 (only).  Otherwise,
-   * fv_fattype will specify the exact format to use.
-   */
-
   var.fv_fattype = fmt->ff_fattype;
 
   /* The valid range off ff_clustshift is {0,1,..7} corresponding to
    * cluster sizes of {1,2,..128} sectors.  The special value of 0xff
    * means that we should autoselect the cluster sizel.
    */
-
 #ifdef CONFIG_DEBUG
   if (fmt->ff_clustshift > 7 && fmt->ff_clustshift != 0xff)
     {
-      fdbg("ERROR: Invalid cluster shift value: %d\n", fmt->ff_clustshift);
-
+      fdbg("Invalid cluster shift value: %d\n", fmt->ff_clustshift);
       ret = -EINVAL;
       goto errout;
     }
 
-   if (fmt->ff_rootdirentries != 0 &&
-       (fmt->ff_rootdirentries < 16 || fmt->ff_rootdirentries > 32767))
+   if (fmt->ff_rootdirentries != 0 && (fmt->ff_rootdirentries < 16 || fmt->ff_rootdirentries > 32767))
     {
-      fdbg("ERROR: Invalid number of root dir entries: %d\n",
-           fmt->ff_rootdirentries);
-
+      fdbg("Invalid number of root dir entries: %d\n", fmt->ff_rootdirentries);
       ret = -EINVAL;
       goto errout;
     }
 
-   if (fmt->ff_rsvdseccount != 0 && (fmt->ff_rsvdseccount < 1 ||
-       fmt->ff_rsvdseccount > 32767))
+   if (fmt->ff_rsvdseccount != 0 && (fmt->ff_rsvdseccount < 1 || fmt->ff_rsvdseccount > 32767))
     {
-      fdbg("ERROR: Invalid number of reserved sectors: %d\n",
-           fmt->ff_rsvdseccount);
-
+      fdbg("Invalid number of reserved sectors: %d\n", fmt->ff_rsvdseccount);
       ret = -EINVAL;
       goto errout;
     }
@@ -263,7 +245,7 @@ int mkfatfs(FAR const char *pathname, FAR struct fat_format_s *fmt)
   ret = open_blockdriver(pathname, 0, &var.fv_inode);
   if (ret < 0)
     {
-      fdbg("ERROR: Failed to open %s\n", pathname);
+      fdbg("Failed to open %s\n", pathname);
       goto errout;
     }
 
@@ -271,9 +253,7 @@ int mkfatfs(FAR const char *pathname, FAR struct fat_format_s *fmt)
 
   if (!var.fv_inode->u.i_bops->write || !var.fv_inode->u.i_bops->geometry)
     {
-      fdbg("ERROR: %s does not support write or geometry methods\n",
-            pathname);
-
+      fdbg("%s does not support write or geometry methods\n", pathname);
       ret = -EACCES;
       goto errout_with_driver;
     }
@@ -301,7 +281,7 @@ int mkfatfs(FAR const char *pathname, FAR struct fat_format_s *fmt)
   var.fv_sect = (uint8_t*)kmalloc(var.fv_sectorsize);
   if (!var.fv_sect)
     {
-      fdbg("ERROR: Failed to allocate working buffers\n");
+      fdbg("Failed to allocate working buffers\n");
       goto errout_with_driver;
     }
 
@@ -327,7 +307,7 @@ errout:
   if (ret < 0)
     {
       errno = -ret;
-      return ERROR;
+      return ERROR; 
     }
 
   return OK;

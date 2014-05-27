@@ -63,51 +63,43 @@
 #  define VERIFY(f) \
      { if ((f) < 0) up_assert((const uint8_t *)__FILE__, (int)__LINE__); }
 
-#  define PANIC() \
-     up_assert((const uint8_t *)__FILE__, (int)__LINE__)
-
 #  ifdef CONFIG_DEBUG
-
 #    define DEBUGASSERT(f) \
        { if (!(f)) up_assert((const uint8_t *)__FILE__, (int)__LINE__); }
-
 #    define DEBUGVERIFY(f) \
        { if ((f) < 0) up_assert((const uint8_t *)__FILE__, (int)__LINE__); }
-
-#    define DEBUGPANIC() \
-       up_assert((const uint8_t *)__FILE__, (int)__LINE__)
-
 #  else
-
 #    define DEBUGASSERT(f)
 #    define DEBUGVERIFY(f) ((void)(f))
-#    define DEBUGPANIC()
-
 #  endif /* CONFIG_DEBUG */
+
+#  define PANIC() \
+      up_assert((const uint8_t *)__FILE__, (int)__LINE__)
 
 #else
+#  define ASSERT(f) \
+     { if (!(f)) up_assert(); }
 
-#  define ASSERT(f)        { if (!(f)) up_assert(); }
-#  define VERIFY(f)        { if ((f) < 0) up_assert(); }
-#  define PANIC()          up_assert()
+#    define VERIFY(f) \
+       { if ((f) < 0) up_assert(); }
 
 #  ifdef CONFIG_DEBUG
-
-#    define DEBUGASSERT(f) { if (!(f)) up_assert(); }
-#    define DEBUGVERIFY(f) { if ((f) < 0) up_assert(); }
-#    define DEBUGPANIC()   up_assert()
-
+#    define DEBUGASSERT(f) \
+       { if (!(f)) up_assert(); }
+#    define DEBUGVERIFY(f) \
+       { if ((f) < 0) up_assert(); }
 #  else
-
 #    define DEBUGASSERT(f)
 #    define DEBUGVERIFY(f) ((void)(f))
-#    define DEBUGPANIC()
-
 #  endif /* CONFIG_DEBUG */
+
+#  define PANIC(code) \
+      up_assert()
+
 #endif
 
 #ifndef assert
-#  define assert ASSERT
+#define assert ASSERT
 #endif
 
 /****************************************************************************

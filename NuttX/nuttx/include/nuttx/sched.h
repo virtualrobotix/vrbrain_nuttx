@@ -184,7 +184,7 @@ typedef enum tstate_e tstate_t;
 
 /* The following is the form of a thread start-up function */
 
-typedef CODE void (*start_t)(void);
+typedef void (*start_t)(void);
 
 /* This is the entry point into the main thread of the task or into a created
  * pthread within the task.
@@ -221,7 +221,7 @@ typedef struct msgq_s msgq_t;
 
 /* struct child_status_s *********************************************************/
 /* This structure is used to maintin information about child tasks.
- * pthreads work differently, they have join information.  This is
+ * pthreads work differently, they have join information.  This is 
  * only for child tasks.
  */
 
@@ -246,7 +246,7 @@ struct child_status_s
 struct dspace_s
 {
   /* The life of the structure allocation is determined by this reference
-   * count.  This count is number of threads that shared the same D-Space.
+   * count.  This count is number of threads that shared the the same D-Space.
    * This includes the parent task as well as any pthreads created by the
    * parent task or any of its child threads.
    */
@@ -623,10 +623,6 @@ FAR struct tcb_s *sched_self(void);
  */
 
 void sched_foreach(sched_foreach_t handler, FAR void *arg);
-
-/* Give a task ID, look up the corresponding TCB */
-
-FAR struct tcb_s *sched_gettcb(pid_t pid);
 
 /* File system helpers **********************************************************/
 /* These functions all extract lists from the group structure assocated with the

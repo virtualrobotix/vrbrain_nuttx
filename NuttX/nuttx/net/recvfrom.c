@@ -1,7 +1,7 @@
 /****************************************************************************
  * net/recvfrom.c
  *
- *   Copyright (C) 2007-2009, 2011-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2009, 2011-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -173,23 +173,19 @@ static inline void recvfrom_newtcpdata(FAR struct uip_driver_s *dev,
 
  if (recvlen < dev->d_len)
    {
-#ifdef CONFIG_NET_TCP_READAHEAD
+#if CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
       FAR struct uip_conn *conn   = (FAR struct uip_conn *)pstate->rf_sock->s_conn;
       FAR uint8_t         *buffer = (FAR uint8_t *)dev->d_appdata + recvlen;
       uint16_t             buflen = dev->d_len - recvlen;
-#ifdef CONFIG_DEBUG_NET
       uint16_t             nsaved;
 
       nsaved = uip_datahandler(conn, buffer, buflen);
-#else
-      (void)uip_datahandler(conn, buffer, buflen);
-#endif
 
       /* There are complicated buffering issues that are not addressed fully
        * here.  For example, what if up_datahandler() cannot buffer the
        * remainder of the packet?  In that case, the data will be dropped but
        * still ACKed.  Therefore it would not be resent.
-       *
+       * 
        * This is probably not an issue here because we only get here if the
        * read-ahead buffers are empty and there would have to be something
        * serioulsy wrong with the configuration not to be able to buffer a
@@ -263,7 +259,7 @@ static inline void recvfrom_newudpdata(FAR struct uip_driver_s *dev,
  *
  ****************************************************************************/
 
-#if defined(CONFIG_NET_TCP) && defined(CONFIG_NET_TCP_READAHEAD)
+#if defined(CONFIG_NET_TCP) && CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
 static inline void recvfrom_readahead(struct recvfrom_s *pstate)
 {
   FAR struct uip_conn        *conn = (FAR struct uip_conn *)pstate->rf_sock->s_conn;
@@ -324,7 +320,7 @@ static inline void recvfrom_readahead(struct recvfrom_s *pstate)
             }
           else
             {
-              uip_tcpreadahead_release(readahead);
+              uip_tcpreadaheadrelease(readahead);
             }
         }
     }
@@ -414,7 +410,7 @@ static int recvfrom_timeout(struct recvfrom_s *pstate)
  *
  * Parameters:
  *   dev    - The device driver data structure
- *   pstate - the recvfrom state structure
+ *   pstate - the recvfrom state structure 
  *
  * Returned Value:
  *   None
@@ -513,7 +509,7 @@ static uint16_t recvfrom_tcpinterrupt(FAR struct uip_driver_s *dev,
            *    bit to determine if more data will be received.  You might
            *    do this if read-ahead buffereing is disabled and we want to
            *    minimize the loss of back-to-back packets.  In this case,
-           *    the transfer is complete when either a) the entire user buffer
+           *    the transfer is complete when either a) the entire user buffer 
            *    is full or 2) when the receive timeout occurs (below).
            */
 
@@ -624,7 +620,7 @@ static uint16_t recvfrom_tcpinterrupt(FAR struct uip_driver_s *dev,
           pstate->rf_cb->priv    = NULL;
           pstate->rf_cb->event   = NULL;
 
-          /* Report an error only if no data has been received. (If
+          /* Report an error only if no data has been received. (If 
            * CONFIG_NET_TCP_RECVDELAY then rf_recvlen should always be
            * zero).
            */
@@ -659,7 +655,7 @@ static uint16_t recvfrom_tcpinterrupt(FAR struct uip_driver_s *dev,
  *
  * Parameters:
  *   dev    - The device driver data structure
- *   pstate - the recvfrom state structure
+ *   pstate - the recvfrom state structure 
  *
  * Returned Value:
  *   None
@@ -953,9 +949,9 @@ static ssize_t udp_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
       state.rf_cb->priv    = (void*)&state;
       state.rf_cb->event   = recvfrom_udpinterrupt;
 
-      /* Notify the device driver of the receive call */
+      /* Enable the UDP socket */
 
-      netdev_rxnotify(conn->ripaddr);
+      uip_udpenable(conn);
 
       /* Wait for either the receive to complete or for an error/timeout to occur.
        * NOTES:  (1) uip_lockedwait will also terminate if a signal is received, (2)
@@ -967,6 +963,7 @@ static ssize_t udp_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
 
       /* Make sure that no further interrupts are processed */
 
+      uip_udpdisable(conn);
       uip_udpcallbackfree(conn, state.rf_cb);
       ret = recvfrom_result(ret, &state);
     }
@@ -1028,7 +1025,7 @@ static ssize_t tcp_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
    * socket has been disconnected.
    */
 
-#ifdef CONFIG_NET_TCP_READAHEAD
+#if CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
   recvfrom_readahead(&state);
 
   /* The default return value is the number of bytes that we just copied into
@@ -1036,7 +1033,7 @@ static ssize_t tcp_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
    * or if the user request was completely satisfied with data from the readahead
    * buffers.
    */
-
+   
   ret = state.rf_recvlen;
 
 #else
@@ -1062,7 +1059,7 @@ static ssize_t tcp_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
        * end-of-file indication.
        */
 
-#ifdef CONFIG_NET_TCP_READAHEAD
+#if CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
       if (ret <= 0 && !_SS_ISCLOSED(psock->s_flags))
 #else
       if (!_SS_ISCLOSED(psock->s_flags))
@@ -1084,7 +1081,7 @@ static ssize_t tcp_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
    */
 
   else
-#ifdef CONFIG_NET_TCP_READAHEAD
+#if CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
   if (_SS_ISNONBLOCK(psock->s_flags))
     {
       /* Return the number of bytes read from the read-ahead buffer if
@@ -1114,14 +1111,14 @@ static ssize_t tcp_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
    *    (state.rf_buflen > 0).  This could be zero, for example, if read-ahead
    *    buffering was enabled and we filled the user buffer with data from
    *    the read-ahead buffers.  Aand
-   * 2) if read-ahead buffering is enabled (CONFIG_NET_TCP_READAHEAD)
+   * 2) if read-ahead buffering is enabled (CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0)
    *    and delay logic is disabled (CONFIG_NET_TCP_RECVDELAY == 0), then we
    *    not want to wait if we already obtained some data from the read-ahead
    *    buffer.  In that case, return now with what we have (don't want for more
    *    because there may be no timeout).
    */
 
-#if CONFIG_NET_TCP_RECVDELAY == 0 && defined(CONFIG_NET_TCP_READAHEAD)
+#if CONFIG_NET_TCP_RECVDELAY == 0 && CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
   if (state.rf_recvlen == 0 && state.rf_buflen > 0)
 #else
   if (state.rf_buflen > 0)

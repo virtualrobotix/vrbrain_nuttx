@@ -53,8 +53,8 @@
 
 #include <nuttx/kmalloc.h>
 #include <nuttx/fs/ioctl.h>
-#include <nuttx/spi/spi.h>
-#include <nuttx/mtd/mtd.h>
+#include <nuttx/spi.h>
+#include <nuttx/mtd.h>
 
 /************************************************************************************
  * Pre-processor Definitions
@@ -1152,7 +1152,7 @@ FAR struct mtd_dev_s *w25_initialize(FAR struct spi_dev_s *spi)
         }
       else
         {
-          /* Make sure that the FLASH is unprotected so that we can write into it */
+          /* Make sure the the FLASH is unprotected so that we can write into it */
 
 #ifndef CONFIG_W25_READONLY
           w25_unprotect(priv);
@@ -1173,12 +1173,6 @@ FAR struct mtd_dev_s *w25_initialize(FAR struct spi_dev_s *spi)
 #endif
         }
     }
-
-  /* Register the MTD with the procfs system if enabled */
-
-#ifdef CONFIG_MTD_REGISTRATION
-  mtd_register(&priv->mtd, "w25");
-#endif
 
   /* Return the implementation-specific state structure as the MTD device */
 

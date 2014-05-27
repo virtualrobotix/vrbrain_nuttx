@@ -39,31 +39,60 @@
 
 #include <nuttx/config.h>
 
-#include <sys/types.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
+#include <ctype.h>
 #include <errno.h>
-#include <assert.h>
+#include <debug.h>
+
+#include <nuttx/ascii.h>
+#include <nuttx/vt100.h>
 
 #include <apps/readline.h>
-#include "readline.h"
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Definitions
  ****************************************************************************/
+/* In some systems, the underlying serial logic may automatically echo
+ * characters back to the console.  We will assume that that is not the case
+ & here
+ */
+
+#define CONFIG_READLINE_ECHO 1
+
+/* Some environments may return CR as end-of-line, others LF, and others
+ * both.  If not specified, the logic here assumes either (but not both) as
+ * the default.
+ */
+
+#if defined(CONFIG_EOL_IS_CR)
+#  undef  CONFIG_EOL_IS_LF
+#  undef  CONFIG_EOL_IS_BOTH_CRLF
+#  undef  CONFIG_EOL_IS_EITHER_CRLF
+#elif defined(CONFIG_EOL_IS_LF)
+#  undef  CONFIG_EOL_IS_CR
+#  undef  CONFIG_EOL_IS_BOTH_CRLF
+#  undef  CONFIG_EOL_IS_EITHER_CRLF
+#elif defined(CONFIG_EOL_IS_BOTH_CRLF)
+#  undef  CONFIG_EOL_IS_CR
+#  undef  CONFIG_EOL_IS_LF
+#  undef  CONFIG_EOL_IS_EITHER_CRLF
+#elif defined(CONFIG_EOL_IS_EITHER_CRLF)
+#  undef  CONFIG_EOL_IS_CR
+#  undef  CONFIG_EOL_IS_LF
+#  undef  CONFIG_EOL_IS_BOTH_CRLF
+#else
+#  undef  CONFIG_EOL_IS_CR
+#  undef  CONFIG_EOL_IS_LF
+#  undef  CONFIG_EOL_IS_BOTH_CRLF
+#  define CONFIG_EOL_IS_EITHER_CRLF 1
+#endif
 
 /****************************************************************************
  * Private Type Declarations
  ****************************************************************************/
-
-struct readline_s
-{
-  struct rl_common_s vtbl;
-  int infd;
-#ifdef CONFIG_READLINE_ECHO
-  int outfd;
-#endif
-};
 
 /****************************************************************************
  * Private Function Prototypes
@@ -76,22 +105,22 @@ struct readline_s
 /****************************************************************************
  * Private Data
  ****************************************************************************/
+/* <esc>[K is the VT100 command erases to the end of the line. */
+
+static const char g_erasetoeol[] = VT100_CLEAREOL;
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: readline_getc
+ * Name: readline_rawgetc
  ****************************************************************************/
 
-static int readline_getc(FAR struct rl_common_s *vtbl)
+static inline int readline_rawgetc(int infd)
 {
-  FAR struct readline_s *priv = (FAR struct readline_s *)vtbl;
   char buffer;
   ssize_t nread;
-
-  DEBUGASSERT(priv);
 
   /* Loop until we successfully read a character (or until an unexpected
    * error occurs).
@@ -101,10 +130,10 @@ static int readline_getc(FAR struct rl_common_s *vtbl)
     {
       /* Read one character from the incoming stream */
 
-      nread = read(priv->infd, &buffer, 1);
+      nread = read(infd, &buffer, 1);
 
       /* Check for end-of-file. */
-
+ 
       if (nread == 0)
         {
           /* Return EOF on end-of-file */
@@ -137,17 +166,14 @@ static int readline_getc(FAR struct rl_common_s *vtbl)
 }
 
 /****************************************************************************
- * Name: readline_putc
+ * Name: readline_consoleputc
  ****************************************************************************/
 
 #ifdef CONFIG_READLINE_ECHO
-static void readline_putc(FAR struct rl_common_s *vtbl, int ch)
+static inline void readline_consoleputc(int ch, int outfd)
 {
-  FAR struct readline_s *priv = (FAR struct readline_s *)vtbl;
   char buffer = ch;
   ssize_t nwritten;
-
-  DEBUGASSERT(priv);
 
   /* Loop until we successfully write a character (or until an unexpected
    * error occurs).
@@ -157,10 +183,10 @@ static void readline_putc(FAR struct rl_common_s *vtbl, int ch)
     {
       /* Write the character to the outgoing stream */
 
-      nwritten = write(priv->outfd, &buffer, 1);
+      nwritten = write(outfd, &buffer, 1);
 
       /* Check for irrecoverable write errors. */
-
+ 
       if (nwritten < 0 && errno != EINTR)
         {
           break;
@@ -171,17 +197,13 @@ static void readline_putc(FAR struct rl_common_s *vtbl, int ch)
 #endif
 
 /****************************************************************************
- * Name: readline_write
+ * Name: readline_consolewrite
  ****************************************************************************/
 
 #ifdef CONFIG_READLINE_ECHO
-static void readline_write(FAR struct rl_common_s *vtbl,
-                           FAR const char *buffer, size_t buflen)
+static inline void readline_consolewrite(int outfd, FAR const char *buffer, size_t buflen)
 {
-  FAR struct readline_s *priv = (FAR struct readline_s *)vtbl;
-  DEBUGASSERT(priv && buffer && buflen > 0);
-
-  (void)write(priv->outfd, buffer, buflen);
+  (void)write(outfd, buffer, buflen);
 }
 #endif
 
@@ -220,24 +242,187 @@ static void readline_write(FAR struct rl_common_s *vtbl,
 
 ssize_t readline(FAR char *buf, int buflen, FILE *instream, FILE *outstream)
 {
-  struct readline_s vtbl;
+  int  infd;
+  int  outfd;
+  int  escape;
+  int  nch;
 
   /* Sanity checks */
 
-  DEBUGASSERT(instream && outstream);
+  if (!instream || !outstream || !buf || buflen < 1)
+    {
+      return -EINVAL;
+    }
 
-  /* Set up the vtbl structure */
+  if (buflen < 2)
+    {
+      *buf = '\0';
+      return 0;
+    }
 
-  vtbl.vtbl.rl_getc  = readline_getc;
-  vtbl.infd          = instream->fs_fd;
+  /* Extract the file descriptions.  This is cheating (and horribly non-
+   * standard)
+   */
+
+  infd   = instream->fs_filedes;
+  outfd  = outstream->fs_filedes;
+
+  /* <esc>[K is the VT100 command that erases to the end of the line. */
 
 #ifdef CONFIG_READLINE_ECHO
-  vtbl.vtbl.rl_putc  = readline_putc;
-  vtbl.vtbl.rl_write = readline_write;
-  vtbl.outfd         = outstream->fs_fd;
+  readline_consolewrite(outfd, g_erasetoeol, sizeof(g_erasetoeol));
 #endif
 
-  /* The let the common readline logic do the work */
+  /* Read characters until we have a full line. On each the loop we must
+   * be assured that there are two free bytes in the line buffer:  One for
+   * the next character and one for the null terminator.
+   */
 
-  return readline_common(&vtbl.vtbl, buf, buflen);
+  escape = 0;
+  nch    = 0;
+
+  for(;;)
+    {
+      /* Get the next character. readline_rawgetc() returns EOF on any
+       * errors or at the end of file.
+       */
+
+      int ch = readline_rawgetc(infd);
+
+      /* Check for end-of-file or read error */
+
+      if (ch == EOF)
+        {
+          /* Did we already received some data? */
+
+          if (nch > 0)
+            {
+              /* Yes.. Terminate the line (which might be zero length)
+               * and return the data that was received.  The end-of-file
+               * or error condition will be reported next time.
+               */
+
+              buf[nch] = '\0';
+              return nch;
+            }
+
+          return EOF;
+        }
+
+      /* Are we processing a VT100 escape sequence */
+
+      else if (escape)
+        {
+          /* Yes, is it an <esc>[, 3 byte sequence */
+
+          if (ch != ASCII_LBRACKET || escape == 2)
+            {
+              /* We are finished with the escape sequence */
+
+              escape = 0;
+              ch = 'a';
+            }
+          else
+            {
+              /* The next character is the end of a 3-byte sequence.
+               * NOTE:  Some of the <esc>[ sequences are longer than
+               * 3-bytes, but I have not encountered any in normal use
+               * yet and, so, have not provided the decoding logic.
+               */
+
+              escape = 2;
+            }
+        }
+
+      /* Check for backspace
+       *
+       * There are several notions of backspace, for an elaborate summary see
+       * http://www.ibb.net/~anne/keyboard.html. There is no clean solution.
+       * Here both DEL and backspace are treated like backspace here.  The
+       * Unix/Linux screen terminal by default outputs  DEL (0x7f) when the
+       * backspace key is pressed.
+       */
+
+      else if (ch == ASCII_BS || ch == ASCII_DEL)
+        {
+          /* Eliminate that last character in the buffer. */
+
+          if (nch > 0)
+            {
+              nch--;
+
+#ifdef CONFIG_READLINE_ECHO
+              /* Echo the backspace character on the console.  Always output
+               * the backspace character because the VT100 terminal doesn't
+               * understand DEL properly.
+               */
+
+              readline_consoleputc(ASCII_BS, outfd);
+              readline_consolewrite(outfd, g_erasetoeol, sizeof(g_erasetoeol));
+#endif
+            }
+        }
+
+      /* Check for the beginning of a VT100 escape sequence */
+
+      else if (ch == ASCII_ESC)
+        {
+          /* The next character is escaped */
+
+          escape = 1;
+        }
+
+      /* Check for end-of-line.  This is tricky only in that some
+       * environments may return CR as end-of-line, others LF, and
+       * others both.
+       */
+
+#if  defined(CONFIG_EOL_IS_LF) || defined(CONFIG_EOL_IS_BOTH_CRLF)
+      else if (ch == '\n')
+#elif defined(CONFIG_EOL_IS_CR)
+      else if (ch == '\r')
+#elif CONFIG_EOL_IS_EITHER_CRLF
+      else if (ch == '\n' || ch == '\r')
+#endif
+        {
+          /* The newline is stored in the buffer along with the null
+           * terminator.
+           */
+
+          buf[nch++] = '\n';
+          buf[nch]   = '\0';
+
+#ifdef CONFIG_READLINE_ECHO
+          /* Echo the newline to the console */
+
+          readline_consoleputc('\n', outfd);
+#endif
+          return nch;
+        }
+
+      /* Otherwise, check if the character is printable and, if so, put the
+       * character in the line buffer
+       */
+
+      else if (isprint(ch))
+        {
+          buf[nch++] = ch;
+
+#ifdef CONFIG_READLINE_ECHO
+          /* Echo the character to the console */
+
+          readline_consoleputc(ch, outfd);
+#endif
+          /* Check if there is room for another character and the line's
+           * null terminator.  If not then we have to end the line now.
+           */
+
+          if (nch + 1 >= buflen)
+            {
+              buf[nch] = '\0';
+              return nch;
+            }
+        }
+    }
 }
+

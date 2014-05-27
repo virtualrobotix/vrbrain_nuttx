@@ -641,7 +641,7 @@ static int stm32_settimeout(FAR struct watchdog_lowerhalf_s *lower,
  * Name: stm32_iwdginitialize
  *
  * Description:
- *   Initialize the IWDG watchdog time.  The watchdog timer is initialized and
+ *   Initialize the IWDG watchdog time.  The watchdog timer is intialized and
  *   registers as 'devpath.  The initial state of the watchdog time is
  *   disabled.
  *
@@ -673,7 +673,7 @@ void stm32_iwdginitialize(FAR const char *devpath, uint32_t lsifreq)
 
   /* Make sure that the LSI ocsillator is enabled.  NOTE:  The LSI oscillator
    * is enabled here but is not disabled by this file (because this file does
-   * not know the global usage of the oscillator.  Any clock management
+   * not know the the global usage of the oscillator.  Any clock management
    * logic (say, as part of a power management scheme) needs handle other
    * LSI controls outside of this file.
    */

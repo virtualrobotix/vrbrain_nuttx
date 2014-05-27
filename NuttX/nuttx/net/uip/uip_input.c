@@ -2,7 +2,7 @@
  * netuip/uip_input.c
  * The uIP TCP/IP stack code.
  *
- *   Copyright (C) 2007-2009, 2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2009, 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Adapted for NuttX from logic in uIP which also has a BSD-like license:
@@ -170,7 +170,7 @@ static uint8_t uip_reass(void)
    * fragment into the buffer.
    */
 
-  if (uiphdr_addr_cmp(pbuf->srcipaddr, pfbuf->srcipaddr) &&
+  if (uiphdr_addr_cmp(pbuf->srcipaddr, pfbuf->srcipaddr) && 
       uiphdr_addr_cmp(pbuf->destipaddr == pfbuf->destipaddr) &&
       pbuf->g_ipid[0] == pfbuf->g_ipid[0] && pbuf->g_ipid[1] == pfbuf->g_ipid[1])
     {
@@ -291,18 +291,11 @@ nullreturn:
  *
  * Description:
  *
- * Returned Value:
- *   OK    The packet was processed (or dropped) and can be discarded.
- *   ERROR There is a matching connection, but could not dispatch the packet
- *         yet.  Currently useful for UDP when a packet arrives before a recv
- *         call is in place.
- *
- *
  * Assumptions:
  *
  ****************************************************************************/
 
-int uip_input(struct uip_driver_s *dev)
+void uip_input(struct uip_driver_s *dev)
 {
   struct uip_ip_hdr *pbuf = BUF;
   uint16_t iplen;
@@ -318,7 +311,7 @@ int uip_input(struct uip_driver_s *dev)
 #ifdef CONFIG_NET_IPv6
   /* Check validity of the IP header. */
 
-  if ((pbuf->vtc & 0xf0) != 0x60)
+  if ((pbuf->vtc & 0xf0) != 0x60) 
     {
       /* IP version and header length. */
 
@@ -412,7 +405,8 @@ int uip_input(struct uip_driver_s *dev)
       uip_ipaddr_cmp(pbuf->destipaddr, g_alloneaddr))
 #endif
     {
-      return uip_udpinput(dev);
+      uip_udpinput(dev);
+      return;
     }
 
   /* In most other cases, the device must be assigned a non-zero IP
@@ -435,7 +429,7 @@ int uip_input(struct uip_driver_s *dev)
         {
           nlldbg("Possible ping config packet received\n");
           uip_icmpinput(dev);
-          goto drop;
+          goto done;
         }
       else
 #endif
@@ -541,16 +535,11 @@ int uip_input(struct uip_driver_s *dev)
         goto drop;
     }
 
-  /* Return and let the caller do any pending transmission. */
+  /* Return and let the caller do any actual transmission. */
 
-  return OK;
-
-  /* Drop the packet.  NOTE that OK is returned meaning that the
-   * packet has been processed (although processed unsuccessfully).
-   */
+  return;
 
 drop:
   dev->d_len = 0;
-  return OK;
 }
 #endif /* CONFIG_NET */

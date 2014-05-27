@@ -119,14 +119,14 @@ static void dumptrace(void)
 #endif
 
 /****************************************************************************
- * Name: usbterm_listener
+ * Name: dumptrace
  *
  * Description:
  *   Entry point for the listener thread.
  *
  ****************************************************************************/
 
-static FAR void *usbterm_listener(FAR void *parameter)
+FAR void *usbterm_listener(FAR void *parameter)
 {
   message("usbterm_listener: Waiting for remote input\n");
   for (;;)
@@ -350,7 +350,7 @@ int usbterm_main(int argc, char *argv[])
         }
       else
         {
-          printf("Still waiting for remote peer.  Please try again later.\n");
+          printf("Still waiting for remote peer.  Please try again later.\n", ret);
         }
 
       /* If USB tracing is enabled, then dump all collected trace data to stdout */

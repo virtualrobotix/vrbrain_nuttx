@@ -172,8 +172,8 @@ else
 DEFAULT_VISIBILITY = default
 endif
 
-CFLAGS		+= -fvisibility=$(DEFAULT_VISIBILITY) -include $(VRBRAIN_INCLUDE_DIR)visibility.h
-CXXFLAGS	+= -fvisibility=$(DEFAULT_VISIBILITY) -include $(VRBRAIN_INCLUDE_DIR)visibility.h
+CFLAGS		+= -fvisibility=$(DEFAULT_VISIBILITY) -include $(VRX_INCLUDE_DIR)visibility.h
+CXXFLAGS	+= -fvisibility=$(DEFAULT_VISIBILITY) -include $(VRX_INCLUDE_DIR)visibility.h
 
 ################################################################################
 # Build rules

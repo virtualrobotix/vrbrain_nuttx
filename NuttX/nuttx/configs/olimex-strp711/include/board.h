@@ -171,6 +171,11 @@ extern "C" {
  * Public Functions
  ****************************************************************************/
 
+#ifdef CONFIG_ARCH_BUTTONS
+EXTERN void up_buttoninit(void);
+EXTERN uint8_t up_buttons(void);
+#endif
+
 #undef EXTERN
 #ifdef __cplusplus
 }

@@ -127,12 +127,10 @@ int up_timerisr(int irq, uint32_t * regs)
   if (tick++ > 100)
     {
       tick = 0;
-      lpc2378_statledoff();
+      up_statledoff();
     }
   else
-    {
-      lpc2378_statledon();
-    }
+    up_statledon();
 
   return 0;
 }
@@ -192,12 +190,10 @@ void up_timerinit(void)
   /* Attach the timer interrupt vector */
 
 #ifdef CONFIG_VECTORED_INTERRUPTS
-  up_attach_vector(IRQ_SYSTIMER, ???, (vic_vector_t) up_timerisr);
+  up_attach_vector(IRQ_SYSTIMER, PRIORITY_HIGHEST, (vic_vector_t) up_timerisr);
 #else
   (void)irq_attach(IRQ_SYSTIMER, (xcpt_t) up_timerisr);
-#ifdef CONFIG_ARCH_IRQPRIO
   up_prioritize_irq(IRQ_SYSTIMER, PRIORITY_HIGHEST);
-#endif
 #endif
 
   /* And enable the system timer interrupt */

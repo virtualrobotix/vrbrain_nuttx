@@ -40,7 +40,6 @@
 
 #include <nuttx/config.h>
 #include <arch/irq.h>
-#include <arch/board/board.h>
 #include "common/up_internal.h"
 
 /**************************************************************************
@@ -54,7 +53,7 @@
 	xref	_z16f_clkinit:EROM
 	xref	_z16f_lowinit:EROM
 #ifdef CONFIG_ARCH_LEDS
-	xref	_board_led_initialize:EROM
+	xref	_up_ledinit:EROM
 #endif
 #if defined(USE_LOWUARTINIT)
 	xref	_z16f_lowuartinit:EROM
@@ -86,10 +85,10 @@
 
 	define FOPTIONSEG, SPACE=ROM, ORG=0
 	segment FOPTIONSEG
-	db BOARD_FLOPTION0
-	db BOARD_FLOPTION1
-	db BOARD_FLOPTION2
-	db BOARD_FLOPTION3
+	db %FF
+	db %FF
+	db %FF
+	db %FF
 
 /**************************************************************************
  * vectors
@@ -158,7 +157,7 @@ _z16f_reset:
 	/* Initialize onboard LEDs */
 
 #ifdef CONFIG_ARCH_LEDS
-	call	_board_led_initialize
+	call	_up_ledinit
 #endif
 	/* Perform VERY early UART initialization so that we can use it here */
 

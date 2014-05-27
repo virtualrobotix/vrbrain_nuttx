@@ -53,7 +53,7 @@
 #include <errno.h>
 
 #include <nuttx/arch.h>
-#include <nuttx/spi/spi.h>
+#include <nuttx/spi.h>
 #include <nuttx/i2c.h>
 #include <nuttx/mmcsd.h>
 #include <nuttx/analog/adc.h>
@@ -128,7 +128,7 @@ __EXPORT void stm32_boardinitialize(void)
 	stm32_spiinitialize();
 
 	/* configure LEDs (empty call to NuttX' ledinit) */
-	//board_led_initialize();
+
 
 	/* configure BUZZERSs */
 	buzzer_init();
@@ -246,12 +246,12 @@ __EXPORT int nsh_archinitialize(void)
 
 	/* initial LED state */
 	drv_led_start();
-	board_led_off(LED_AMBER);
-	board_led_off(LED_BLUE);
-	board_led_off(LED_GREEN);
-	board_led_off(LED_EXT1);
-	board_led_off(LED_EXT2);
-	board_led_off(LED_EXT3);
+	led_off(LED_AMBER);
+	led_off(LED_BLUE);
+	led_off(LED_GREEN);
+	led_off(LED_EXT1);
+	led_off(LED_EXT2);
+	led_off(LED_EXT3);
 
 	message("[boot] Initializing USB detect\n");
 	stm32_usbinitialize();

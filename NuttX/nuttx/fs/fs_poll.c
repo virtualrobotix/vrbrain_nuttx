@@ -97,7 +97,7 @@ static void poll_semtake(FAR sem_t *sem)
 static int poll_fdsetup(int fd, FAR struct pollfd *fds, bool setup)
 {
   FAR struct filelist *list;
-  FAR struct file     *filep;
+  FAR struct file     *this_file;
   FAR struct inode    *inode;
   int                  ret = -ENOSYS;
 
@@ -122,20 +122,23 @@ static int poll_fdsetup(int fd, FAR struct pollfd *fds, bool setup)
   /* Get the thread-specific file list */
 
   list = sched_getfiles();
-  DEBUGASSERT(list);
+  if (!list)
+    {
+      return -EMFILE;
+    }
 
   /* Is a driver registered? Does it support the poll method?
    * If not, return -ENOSYS
    */
 
-  filep = &list->fl_files[fd];
-  inode = filep->f_inode;
+  this_file = &list->fl_files[fd];
+  inode     = this_file->f_inode;
 
   if (inode && inode->u.i_ops && inode->u.i_ops->poll)
     {
       /* Yes, then setup the poll */
 
-      ret = (int)inode->u.i_ops->poll(filep, fds, setup);
+      ret = (int)inode->u.i_ops->poll(this_file, fds, setup);
     }
 
   return ret;
@@ -153,8 +156,8 @@ static int poll_fdsetup(int fd, FAR struct pollfd *fds, bool setup)
 #if CONFIG_NFILE_DESCRIPTORS > 0
 static inline int poll_setup(FAR struct pollfd *fds, nfds_t nfds, sem_t *sem)
 {
-  unsigned int i;
   int ret;
+  int i;
 
   /* Process each descriptor in the list */
 
@@ -203,9 +206,9 @@ static inline int poll_setup(FAR struct pollfd *fds, nfds_t nfds, sem_t *sem)
 #if CONFIG_NFILE_DESCRIPTORS > 0
 static inline int poll_teardown(FAR struct pollfd *fds, nfds_t nfds, int *count)
 {
-  unsigned int i;
   int status;
   int ret = OK;
+  int i;
 
   /* Process each descriptor in the list */
 

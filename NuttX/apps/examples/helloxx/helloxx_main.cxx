@@ -48,13 +48,6 @@
 //***************************************************************************
 // Definitions
 //***************************************************************************
-// Configuration ************************************************************
-// C++ initialization requires CXX initializer support
-
-#if !defined(CONFIG_HAVE_CXX) || !defined(CONFIG_HAVE_CXXINITIALIZE)
-#  undef CONFIG_EXAMPLES_HELLOXX_CXXINITIALIZE
-#endif
-
 // Debug ********************************************************************
 // Non-standard debug that may be enabled just for testing the constructors
 
@@ -142,7 +135,7 @@ extern "C"
     // If C++ initialization for static constructors is supported, then do
     // that first
 
-#ifdef CONFIG_EXAMPLES_HELLOXX_CXXINITIALIZE
+#ifdef CONFIG_HAVE_CXXINITIALIZE
     up_cxxinitialize();
 #endif
 

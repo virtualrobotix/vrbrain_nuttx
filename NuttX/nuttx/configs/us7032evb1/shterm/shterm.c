@@ -110,7 +110,6 @@ static void putconsole(char ch)
     {
       (void)putc(ch, g_logstream);
     }
-
   (void)putchar(ch);
 }
 
@@ -140,7 +139,6 @@ static void printconsole(const char *fmt, ...)
     {
       (void)vfprintf(g_logstream, fmt, ap);
     }
-
   (void)vprintf(fmt, ap);
   va_end(ap);
 }
@@ -437,7 +435,7 @@ static void close_tty(void)
       (void)close(g_fd);
     }
 
-  if (g_logstream)
+  if (g_logstream >= 0)
     {
       (void)fclose(g_logstream);
     }
@@ -719,7 +717,7 @@ int main(int argc, char **argv, char **envp)
                 {
                   sendfile(g_fd, filename, 0);
                 }
-              else if (ch1 == 'v' || ch1 == 'V')
+              else if (ch1 == 'v' || ch1 == 'v')
                 {
                   sendfile(g_fd, filename, 1);
                 }

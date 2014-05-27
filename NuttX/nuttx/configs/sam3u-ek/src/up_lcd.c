@@ -38,7 +38,7 @@
  * touch-screen, FTM280C12D, with integratd driver IC HX8346. The LCD display size
  * is 2.8 inches, with a native resolution of 240 x 320 pixels.
  *
- *   LCD Module Pin Out:                         SAM3U PIO:
+ *   LCD Module Pin Out:                         AT91SAM3U PIO:
  *  -------------------------------------------- --------------------------------------
  *   Pin Symbol Function                         LCD            PeriphA  PeriphB Extra
  *  ---- ------ -------------------------------- -------------- -------- ------- ------
@@ -119,13 +119,13 @@
 
 #include <nuttx/arch.h>
 #include <nuttx/lcd/lcd.h>
-#include <nuttx/video/rgbcolors.h>
+#include <nuttx/rgbcolors.h>
 
 #include <arch/irq.h>
 
 #include "up_arch.h"
 #include "sam_gpio.h"
-#include "chip/sam_pmc.h"
+#include "chip/sam3u_pmc.h"
 #include "chip/sam_smc.h"
 #include "sam3u-ek.h"
 
@@ -143,7 +143,7 @@
 
 #ifndef CONFIG_DEBUG
 #  undef CONFIG_DEBUG_VERBOSE
-#  undef CONFIG_DEBUG_LED
+#  undef CONFIG_DEBUG_GRAPHICS
 #endif
 
 #ifndef CONFIG_DEBUG_VERBOSE
@@ -159,17 +159,9 @@
 /* Debug ******************************************************************************/
 
 #ifdef CONFIG_LCD_REGDEBUG
-#  define regdbg(format, arg...)  vdbg(format, ##arg)
+# define regdbg(format, arg...)  vdbg(format, ##arg)
 #else
-#  define regdbg(x...)
-#endif
-
-#ifdef CONFIG_DEBUG_LCD
-#  define lcddbg(format, arg...)  dbg(format, ##arg)
-#  define lcdvdbg(format, arg...) vdbg(format, ##arg)
-#else
-#  define lcddbg(x...)
-#  define lcdvdbg(x...)
+# define regdbg(x...)
 #endif
 
 /* Graphics Capbilities ***************************************************************/
@@ -313,9 +305,7 @@ struct sam_dev_s
 /* Low-level HX834x Register access */
 
 static void sam_putreg(uint16_t reg,  uint16_t data);
-#ifdef CONFIG_DEBUG_LCD
 static uint16_t sam_getreg(uint16_t reg);
-#endif
 
 /* Misc. LCD Helper Functions */
 
@@ -326,8 +316,10 @@ static inline uint16_t sam_rdram(void);
 static void sam_lcdon(void);
 static void sam_lcdoff(void);
 
-#if 0 /* CONFIG_DEBUG_LCD */
+#ifdef CONFIG_DEBUG_GRAPHICS
 static void sam_dumpreg(uint8_t startreg, uint8_t endreg);
+#else
+#  define sam_dumpreg(startreg,endreg)
 #endif
 
 /* LCD Data Transfer Methods */
@@ -450,7 +442,6 @@ static void sam_putreg(uint16_t reg,  uint16_t data)
  *
  **************************************************************************************/
 
-#ifdef CONFIG_DEBUG_LCD
 static uint16_t sam_getreg(uint16_t reg)
 {
   uint16_t data;
@@ -459,7 +450,6 @@ static uint16_t sam_getreg(uint16_t reg)
   regdbg("base: %08x RS: %04x data: %04x\n", LCD_BASE, LCD_BASE + HX843X_LCD_RS, data);
   return data;
 }
-#endif
 
 /**************************************************************************************
  * Name:  sam_setcursor
@@ -543,7 +533,7 @@ static void sam_lcdon(void)
 {
   /* Display ON Setting */
 
-  lcdvdbg("ON\n");
+  gvdbg("ON\n");
   sam_putreg(HX8347_R90H, 0x7f);      /* SAP=0111 1111 */
   sam_putreg(HX8347_R26H, 0x04);      /* GON=0 DTE=0 D=01 */
   up_mdelay(100);
@@ -563,7 +553,7 @@ static void sam_lcdon(void)
 
 static void sam_lcdoff(void)
 {
-  lcdvdbg("OFF\n");
+  gvdbg("OFF\n");
   sam_putreg(HX8347_R90H, 0x00);      /* SAP=0000 0000 */
   sam_putreg(HX8347_R26H, 0x00);      /* GON=0 DTE=0 D=00 */
 }
@@ -576,7 +566,7 @@ static void sam_lcdoff(void)
  *
  **************************************************************************************/
 
-#if 0 /* CONFIG_DEBUG_LCD */
+#ifdef CONFIG_DEBUG_GRAPHICS
 static void sam_dumpreg(uint8_t startreg, uint8_t endreg)
 {
   uint16_t value;
@@ -585,7 +575,7 @@ static void sam_dumpreg(uint8_t startreg, uint8_t endreg)
   for (addr = startreg; addr <= endreg; addr++)
     {
       value = sam_getreg(addr);
-      lcddbg(" %02x: %04x\n", addr, value);
+      gdbg(" %02x: %04x\n", addr, value);
     }
 }
 #endif
@@ -612,7 +602,7 @@ static int sam_putrun(fb_coord_t row, fb_coord_t col, FAR const uint8_t *buffer,
 
   /* Buffer must be provided and aligned to a 16-bit address boundary */
 
-  lcdvdbg("row: %d col: %d npixels: %d\n", row, col, npixels);
+  gvdbg("row: %d col: %d npixels: %d\n", row, col, npixels);
   DEBUGASSERT(buffer && ((uintptr_t)buffer & 1) == 0);
 
 #ifdef CONFIG_LCD_PORTRAIT
@@ -678,7 +668,7 @@ static int sam_getrun(fb_coord_t row, fb_coord_t col, FAR uint8_t *buffer,
 
   /* Buffer must be provided and aligned to a 16-bit address boundary */
 
-  lcdvdbg("row: %d col: %d npixels: %d\n", row, col, npixels);
+  gvdbg("row: %d col: %d npixels: %d\n", row, col, npixels);
   DEBUGASSERT(buffer && ((uintptr_t)buffer & 1) == 0);
 
 #ifdef CONFIG_LCD_PORTRAIT
@@ -729,8 +719,8 @@ static int sam_getvideoinfo(FAR struct lcd_dev_s *dev,
                             FAR struct fb_videoinfo_s *vinfo)
 {
   DEBUGASSERT(dev && vinfo);
-  lcdvdbg("fmt: %d xres: %d yres: %d nplanes: %d\n",
-          g_videoinfo.fmt, g_videoinfo.xres, g_videoinfo.yres, g_videoinfo.nplanes);
+  gvdbg("fmt: %d xres: %d yres: %d nplanes: %d\n",
+         g_videoinfo.fmt, g_videoinfo.xres, g_videoinfo.yres, g_videoinfo.nplanes);
   memcpy(vinfo, &g_videoinfo, sizeof(struct fb_videoinfo_s));
   return OK;
 }
@@ -747,7 +737,7 @@ static int sam_getplaneinfo(FAR struct lcd_dev_s *dev, unsigned int planeno,
                             FAR struct lcd_planeinfo_s *pinfo)
 {
   DEBUGASSERT(dev && pinfo && planeno == 0);
-  lcdvdbg("planeno: %d bpp: %d\n", planeno, g_planeinfo.bpp);
+  gvdbg("planeno: %d bpp: %d\n", planeno, g_planeinfo.bpp);
   memcpy(pinfo, &g_planeinfo, sizeof(struct lcd_planeinfo_s));
   return OK;
 }
@@ -765,7 +755,7 @@ static int sam_getpower(struct lcd_dev_s *dev)
 {
   struct sam_dev_s *priv = (struct sam_dev_s *)dev;
   DEBUGASSERT(dev);
-  lcdvdbg("power: %d\n", priv->power);
+  gvdbg("power: %d\n", priv->power);
   return priv->power;
 }
 
@@ -789,7 +779,7 @@ static int sam_setpower(struct lcd_dev_s *dev, int power)
   struct sam_dev_s *priv = (struct sam_dev_s *)dev;
   unsigned int i;
 
-  lcdvdbg("power: %d\n", power);
+  gvdbg("power: %d\n", power);
   DEBUGASSERT(power <= CONFIG_LCD_MAXPOWER);
 
   /* Switch off backlight */
@@ -833,7 +823,7 @@ static int sam_setpower(struct lcd_dev_s *dev, int power)
 
 static int sam_getcontrast(struct lcd_dev_s *dev)
 {
-  lcdvdbg("Not implemented\n");
+  gvdbg("Not implemented\n");
   return -ENOSYS;
 }
 
@@ -847,7 +837,7 @@ static int sam_getcontrast(struct lcd_dev_s *dev)
 
 static int sam_setcontrast(struct lcd_dev_s *dev, unsigned int contrast)
 {
-  lcdvdbg("contrast: %d\n", contrast);
+  gvdbg("contrast: %d\n", contrast);
   return -ENOSYS;
 }
 
@@ -867,13 +857,13 @@ static int sam_setcontrast(struct lcd_dev_s *dev, unsigned int contrast)
 
 int up_lcdinitialize(void)
 {
-#ifdef CONFIG_DEBUG_LCD
+#ifdef CONFIG_DEBUG_GRAPHICS
   uint16_t hxregval;
 #endif
   uint32_t regval;
   unsigned int i;
 
-  lcdvdbg("Initializing\n");
+  gvdbg("Initializing\n");
 
   /* Enable LCD EXTCS2 pins */
 
@@ -906,7 +896,7 @@ int up_lcdinitialize(void)
 
   /* Configure LCD Backlight Pin */
 
-  sam_configgpio(GPIO_LCD_BKL);
+  sam_configgpio(GPIO_LCD_D15);
 
   /* Enable SMC peripheral clock */
 
@@ -940,12 +930,12 @@ int up_lcdinitialize(void)
 
   /* Check HX8347 Chip ID */
 
-#ifdef CONFIG_DEBUG_LCD
+#ifdef CONFIG_DEBUG_GRAPHICS
   hxregval = sam_getreg(HX8347_R67H);
-  lcdvdbg("Chip ID: %04x\n", hxregval);
+  gvdbg("Chip ID: %04x\n", hxregval);
   if (hxregval != HX8347_CHIPID)
     {
-      lcddbg("Bad chip ID: %04x Expected: %04x\n", hxregval, HX8347_CHIPID);
+      gdbg("Bad chip ID: %04x Expected: %04x\n", hxregval, HX8347_CHIPID);
       return -ENODEV;
     }
 #endif
@@ -1048,7 +1038,7 @@ int up_lcdinitialize(void)
 
 FAR struct lcd_dev_s *up_lcdgetdev(int lcddev)
 {
-  lcdvdbg("lcddev: %d\n", lcddev);
+  gvdbg("lcddev: %d\n", lcddev);
   return lcddev == 0 ? &g_lcddev_s.dev : NULL;
 }
 

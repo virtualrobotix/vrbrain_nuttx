@@ -1,7 +1,8 @@
 /****************************************************************************
- * arch/arm/src/nuc1xx/nuc_irq.c
+ * arch/arm/src/stm32/nuc_irq.c
+ * arch/arm/src/chip/nuc_irq.c
  *
- *   Copyright (C) 2009-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2009-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,34 +86,34 @@ volatile uint32_t *current_regs;
  *
  ****************************************************************************/
 
-#if defined(CONFIG_DEBUG_IRQ)
+#if defined(CONFIG_DEBUG_IRQ) && defined (CONFIG_DEBUG)
 static void nuc_dumpnvic(const char *msg, int irq)
 {
   irqstate_t flags;
 
   flags = irqsave();
 
-  lldbg("NVIC (%s, irq=%d):\n", msg, irq);
-  lldbg("  ISER:       %08x ICER:   %08x\n",
-        getreg32(ARMV6M_NVIC_ISER), getreg32(ARMV6M_NVIC_ICER));
-  lldbg("  ISPR:       %08x ICPR:   %08x\n",
-        getreg32(ARMV6M_NVIC_ISPR), getreg32(ARMV6M_NVIC_ICPR));
-  lldbg("  IRQ PRIO:   %08x %08x %08x %08x\n",
+  slldbg("NVIC (%s, irq=%d):\n", msg, irq);
+  slldbg("  ISER:       %08x ICER:   %08x\n",
+         getreg32(ARMV6M_NVIC_ISER), getreg32(ARMV6M_NVIC_ICER));
+  slldbg("  ISPR:       %08x ICPR:   %08x\n",
+         getreg32(ARMV6M_NVIC_ISPR), getreg32(ARMV6M_NVIC_ICPR));
+  slldbg("  IRQ PRIO:   %08x %08x %08x %08x\n", 
         getreg32(ARMV6M_NVIC_IPR0), getreg32(ARMV6M_NVIC_IPR1),
         getreg32(ARMV6M_NVIC_IPR2), getreg32(ARMV6M_NVIC_IPR3));
-  lldbg("              %08x %08x %08x %08x\n",
+  slldbg("              %08x %08x %08x %08x\n", 
         getreg32(ARMV6M_NVIC_IPR4), getreg32(ARMV6M_NVIC_IPR5),
         getreg32(ARMV6M_NVIC_IPR6), getreg32(ARMV6M_NVIC_IPR7));
 
-  lldbg("SYSCON:\n");
-  lldbg("  CPUID:      %08x\n",
-        getreg32(ARMV6M_SYSCON_CPUID));
-  lldbg("  ICSR:       %08x AIRCR:  %08x\n",
-        getreg32(ARMV6M_SYSCON_ICSR), getreg32(ARMV6M_SYSCON_AIRCR));
-  lldbg("  SCR:        %08x CCR:    %08x\n",
-        getreg32(ARMV6M_SYSCON_SCR), getreg32(ARMV6M_SYSCON_CCR));
-  lldbg("  SHPR2:      %08x SHPR3:  %08x\n",
-        getreg32(ARMV6M_SYSCON_SHPR2), getreg32(ARMV6M_SYSCON_SHPR3));
+  slldbg("SYSCON:\n");
+  slldbg("  CPUID:      %08x\n",
+         getreg32(ARMV6M_SYSCON_CPUID));
+  slldbg("  ICSR:       %08x AIRCR:  %08x\n",
+         getreg32(ARMV6M_SYSCON_ICSR), getreg32(ARMV6M_SYSCON_AIRCR));
+  slldbg("  SCR:        %08x CCR:    %08x\n",
+         getreg32(ARMV6M_SYSCON_SCR), getreg32(ARMV6M_SYSCON_CCR));
+  slldbg("  SHPR2:      %08x SHPR3:  %08x\n",
+         getreg32(ARMV6M_SYSCON_SHPR2), getreg32(ARMV6M_SYSCON_SHPR3));
 
   irqrestore(flags);
 }
@@ -257,6 +258,11 @@ void up_irqinitialize(void)
 
 void up_disable_irq(int irq)
 {
+  /* This will be called on each interrupt (via up_maskack_irq()) whether
+   * the interrupt can be disabled or not.  So this assertion is necessarily
+   * lame.
+   */
+
   DEBUGASSERT((unsigned)irq < NR_IRQS);
 
   /* Check for an external interrupt */
@@ -318,15 +324,16 @@ void up_enable_irq(int irq)
 }
 
 /****************************************************************************
- * Name: up_ack_irq
+ * Name: up_maskack_irq
  *
  * Description:
- *   Acknowledge the IRQ
+ *   Mask the IRQ and acknowledge it
  *
  ****************************************************************************/
 
-void up_ack_irq(int irq)
+void up_maskack_irq(int irq)
 {
+  up_disable_irq(irq);
   nuc_clrpend(irq);
 }
 
@@ -352,7 +359,7 @@ int up_prioritize_irq(int irq, int priority)
               irq == NUC_IRQ_PENDSV ||
               irq == NUC_IRQ_SYSTICK ||
              (irq >= NUC_IRQ_INTERRUPT && irq < NR_IRQS));
-  DEBUGASSERT(priority >= NVIC_SYSH_PRIORITY_MAX &&
+  DEBUGASSERT(priority >= NVIC_SYSH_DISABLE_PRIORITY &&
               priority <= NVIC_SYSH_PRIORITY_MIN);
 
   /* Check for external interrupt */

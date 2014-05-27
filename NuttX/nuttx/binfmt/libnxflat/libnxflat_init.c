@@ -97,6 +97,7 @@ int nxflat_init(const char *filename, struct nxflat_loadinfo_s *loadinfo)
 {
   uint32_t datastart;
   uint32_t dataend;
+  uint32_t bssstart;
   uint32_t bssend;
   int      ret;
 
@@ -151,6 +152,7 @@ int nxflat_init(const char *filename, struct nxflat_loadinfo_s *loadinfo)
 
   datastart             = ntohl(loadinfo->header.h_datastart);
   dataend               = ntohl(loadinfo->header.h_dataend);
+  bssstart              = dataend;
   bssend                = ntohl(loadinfo->header.h_bssend);
 
   /* And put this information into the loadinfo structure as well.

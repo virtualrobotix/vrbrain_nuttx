@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/avr/include/atmega/irq.h
+ * arch/avr/include/avr/atmega/irq.h
  *
  *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

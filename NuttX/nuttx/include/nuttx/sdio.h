@@ -1,7 +1,7 @@
 /****************************************************************************
  * include/nuttx/sdio.h
  *
- *   Copyright (C) 2009, 2011-2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2009, 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -107,7 +107,7 @@
                                * -Addressed Command, R2 response 31:16=RCA */
 #  define MMCSD_CMDIDX10  10  /* SEND_CID: Asks card to send its card identification (CID)
                                * -Addressed Command, R2 response 31:16=RCA */
-#  define MMC_CMDIDX11    11  /* READ_DAT_UNTIL_STOP
+#  define MMC_CMDIDX11    11  /* READ_DAT_UNTIL_STOP   
                                * -Addressed data transfer command, R1 response 31:0=DADR */
 #  define MMCSD_CMDIDX12  12  /* STOP_TRANSMISSION: Forces the card to stop transmission
                                * -Addressed Command, R1b response */
@@ -582,19 +582,8 @@
  * Description:
  *   Enable/disable of a set of SDIO wait events.  This is part of the
  *   the SDIO_WAITEVENT sequence.  The set of to-be-waited-for events is
- *   configured before calling either calling SDIO_DMARECVSETUP,
- *   SDIO_DMASENDSETUP, or or SDIO_WAITEVENT.  This is the recommended
- *   ordering:
- *
- *     SDIO_WAITENABLE:    Discard any pending interrupts, enable event(s)
- *                         of interest
- *     SDIO_DMARECVSETUP/
- *     SDIO_DMASENDSETUP:  Setup the logic that will trigger the event the
- *                         event(s) of interest
- *     SDIO_WAITEVENT:     Wait for the event of interest (which might
- *                         already have occurred)
- *
- *   This sequency should eliminate race conditions between the command/trasnfer
+ *   configured before calling SDIO_EVENTWAIT.  This is done in this way
+ *   to help the driver to eliminate race conditions between the command
  *   setup and the subsequent events.
  *
  *   The enabled events persist until either (1) SDIO_WAITENABLE is called
@@ -725,9 +714,8 @@
  *
  ****************************************************************************/
 
-#if defined(CONFIG_SDIO_DMA) && defined(CONFIG_SDIO_PREFLIGHT)
-#  define SDIO_DMAPREFLIGHT(dev,buffer,len) \
-    ((dev)->dmapreflight?(dev)->dmapreflight(dev,buffer,len):OK)
+#ifdef CONFIG_SDIO_DMA
+#  define SDIO_DMAPREFLIGHT(dev,buffer,len) ((dev)->dmapreflight?(dev)->dmapreflight(dev,buffer,len):OK)
 #else
 #  define SDIO_DMAPREFLIGHT(dev,buffer,len) (OK)
 #endif
@@ -872,10 +860,8 @@ struct sdio_dev_s
 
 #ifdef CONFIG_SDIO_DMA
   bool  (*dmasupported)(FAR struct sdio_dev_s *dev);
-#ifdef CONFIG_SDIO_PREFLIGHT
   int   (*dmapreflight)(FAR struct sdio_dev_s *dev, FAR uint8_t *buffer,
           size_t buflen);
-#endif
   int   (*dmarecvsetup)(FAR struct sdio_dev_s *dev, FAR uint8_t *buffer,
           size_t buflen);
   int   (*dmasendsetup)(FAR struct sdio_dev_s *dev, FAR const uint8_t *buffer,

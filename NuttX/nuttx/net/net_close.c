@@ -1,7 +1,7 @@
 /****************************************************************************
  * net/net_close.c
  *
- *   Copyright (C) 2007-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,23 +43,14 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include <errno.h>
 #include <debug.h>
 
 #include <arch/irq.h>
 #include <nuttx/net/uip/uip-arch.h>
 
-#ifdef CONFIG_NET_SOLINGER
-#  include <nuttx/clock.h>
-#endif
-
 #include "net_internal.h"
 #include "uip/uip_internal.h"
-
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
 
 /****************************************************************************
  * Private Types
@@ -68,67 +59,15 @@
 #ifdef CONFIG_NET_TCP
 struct tcp_close_s
 {
-  FAR struct uip_callback_s *cl_cb;     /* Reference to TCP callback instance */
-#ifdef CONFIG_NET_SOLINGER
-  FAR struct socket         *cl_psock;  /* Reference to the TCP socket */
-  sem_t                      cl_sem;    /* Signals disconnect completion */
-  int                        cl_result; /* The result of the close */
-#ifndef CONFIG_DISABLE_CLOCK
-  uint32_t                   cl_start;  /* Time close started (in ticks) */
-#endif
-#endif
+  FAR struct socket         *cl_psock; /* Reference to the TCP socket */
+  FAR struct uip_callback_s *cl_cb;    /* Reference to TCP callback instance */
+  sem_t                       cl_sem;   /* Semaphore signals disconnect completion */
 };
 #endif
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-
-/****************************************************************************
- * Function: close_timeout
- *
- * Description:
- *   Check for a timeout on a lingering close.
- *
- * Parameters:
- *   pstate - close state structure
- *
- * Returned Value:
- *   TRUE:timeout FALSE:no timeout
- *
- * Assumptions:
- *   Running at the interrupt level
- *
- ****************************************************************************/
-
-#if defined(CONFIG_NET_TCP) && defined(CONFIG_NET_SOLINGER) && \
-   !defined(CONFIG_DISABLE_CLOCK)
-static inline int close_timeout(FAR struct tcp_close_s *pstate)
-{
-  FAR struct socket *psock = 0;
-
-  /* Make sure that we are performing a lingering close */
-
-  if (pstate)
-    {
-     /* Yes Check for a timeout configured via setsockopts(SO_LINGER).
-      * If none... we well let the send wait forever.
-      */
-
-     psock = pstate->cl_psock;
-     if (psock && psock->s_linger != 0)
-       {
-         /* Check if the configured timeout has elapsed */
-
-         return net_timeo(pstate->cl_start, psock->s_linger);
-       }
-    }
-
-  /* No timeout */
-
-  return FALSE;
-}
-#endif /* CONFIG_NET_SOCKOPTS && CONFIG_NET_SOLINGER && !CONFIG_DISABLE_CLOCK */
 
 /****************************************************************************
  * Function: netclose_interrupt
@@ -148,107 +87,41 @@ static inline int close_timeout(FAR struct tcp_close_s *pstate)
  ****************************************************************************/
 
 #ifdef CONFIG_NET_TCP
-static uint16_t netclose_interrupt(FAR struct uip_driver_s *dev,
-                                   FAR void *pvconn, FAR void *pvpriv,
-                                   uint16_t flags)
+static uint16_t netclose_interrupt(struct uip_driver_s *dev, void *pvconn,
+                                   void *pvpriv, uint16_t flags)
 {
-#ifdef CONFIG_NET_SOLINGER
-  FAR struct tcp_close_s *pstate = (struct tcp_close_s *)pvpriv;
-#endif
-  FAR struct uip_conn *conn = (FAR struct uip_conn *)pvconn;
+  struct tcp_close_s *pstate = (struct tcp_close_s *)pvpriv;
 
-  DEBUGASSERT(conn != NULL);
+  nllvdbg("flags: %04x\n", flags);
 
-  nllvdbg("conn: %p flags: %04x\n", conn, flags);
-
-  /* UIP_CLOSE:    The remote host has closed the connection
-   * UIP_ABORT:    The remote host has aborted the connection
-   * UIP_TIMEDOUT: The remote did not respond, the connection timed out
-   */
-
-  if ((flags & (UIP_CLOSE | UIP_ABORT | UIP_TIMEDOUT)) != 0)
+  if (pstate)
     {
-      /* The disconnection is complete */
-
-#ifdef CONFIG_NET_SOLINGER
-      /* pstate non-NULL means that we are performing a LINGERing close.*/
-
-      if (pstate)
-        {
-          /* Wake up the waiting thread with a successful result */
-
-          pstate->cl_result = OK;
-          goto end_wait;
-        }
-
-      /* Otherwise, nothing is waiting on the close event and we can perform
-       * the completion actions here.
+      /* UIP_CLOSE: The remote host has closed the connection
+       * UIP_ABORT: The remote host has aborted the connection
        */
 
+      if ((flags & (UIP_CLOSE|UIP_ABORT)) != 0)
+        {
+          /* The disconnection is complete */
+
+          pstate->cl_cb->flags   = 0;
+          pstate->cl_cb->priv    = NULL;
+          pstate->cl_cb->event   = NULL;
+          sem_post(&pstate->cl_sem);
+          nllvdbg("Resuming\n");
+        }
       else
-#endif
         {
-          /* Free connection resources */
+          /* Drop data received in this state and make sure that UIP_CLOSE
+           * is set in the response
+           */
 
-          uip_tcpfree(conn);
-
-          /* Stop further callbacks */
-
-          flags = 0;
+          dev->d_len = 0;
+          return (flags & ~UIP_NEWDATA) | UIP_CLOSE;
         }
-    }
-
-#if defined(CONFIG_NET_SOLINGER) && !defined(CONFIG_DISABLE_CLOCK)
-  /* Check for a timeout. */
-
-  else if (pstate && close_timeout(pstate))
-    {
-      /* Yes.. Wake up the waiting thread and report the timeout */
-
-      nlldbg("CLOSE timeout\n");
-      pstate->cl_result = -ETIMEDOUT;
-      goto end_wait;
-    }
-
-#endif /* CONFIG_NET_SOLINGER && !CONFIG_DISABLE_CLOCK */
-
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-  /* Check if all outstanding bytes have been ACKed */
-
-  else if (conn->unacked != 0)
-    {
-      /* No... we are still waiting for ACKs.  Drop any received data, but
-       * do not yet report UIP_CLOSE in the response.
-       */
-
-      dev->d_len = 0;     
-      flags = (flags & ~UIP_NEWDATA);     
-    }
-
-#endif /* CONFIG_NET_TCP_WRITE_BUFFERS */
-
-  else
-    {
-      /* Drop data received in this state and make sure that UIP_CLOSE
-       * is set in the response
-       */
-
-      dev->d_len = 0;
-      flags = (flags & ~UIP_NEWDATA) | UIP_CLOSE;
     }
 
   return flags;
-
-#ifdef CONFIG_NET_SOLINGER
-end_wait:
-  pstate->cl_cb->flags = 0;
-  pstate->cl_cb->priv  = NULL;
-  pstate->cl_cb->event = NULL;
-  sem_post(&pstate->cl_sem);
-
-  nllvdbg("Resuming\n");
-  return 0;
-#endif
 }
 #endif /* CONFIG_NET_TCP */
 
@@ -270,126 +143,56 @@ end_wait:
  ****************************************************************************/
 
 #ifdef CONFIG_NET_TCP
-static inline int netclose_disconnect(FAR struct socket *psock)
+static inline void netclose_disconnect(FAR struct socket *psock)
 {
   struct tcp_close_s state;
-  FAR struct uip_conn *conn;
   uip_lock_t flags;
-#ifdef CONFIG_NET_SOLINGER
-  bool linger;
-#endif
-  int ret = OK;
 
   /* Interrupts are disabled here to avoid race conditions */
 
   flags = uip_lock();
-  conn = (struct uip_conn*)psock->s_conn;
 
-  /* If we have a semi-permanent write buffer callback in place, then
-   * release it now.
-   */
+  /* Is the TCP socket in a connected state? */
 
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-  if (psock->s_sndcb)
+  if (_SS_ISCONNECTED(psock->s_flags))
     {
-      uip_tcpcallbackfree(conn, psock->s_sndcb);
-      psock->s_sndcb = NULL;
-    }
-#endif
+       struct uip_conn *conn = (struct uip_conn*)psock->s_conn;
 
-  /* There shouldn't be any callbacks registered. */
+       /* Check for the case where the host beat us and disconnected first */
 
-  DEBUGASSERT(conn && conn->list == NULL);
+       if (conn->tcpstateflags == UIP_ESTABLISHED)
+         {
+           /* Set up to receive TCP data event callbacks */
 
-  /* Check for the case where the host beat us and disconnected first */
+           state.cl_cb = uip_tcpcallbackalloc(conn);
+           if (state.cl_cb)
+             {
+               state.cl_psock       = psock;
+               sem_init(&state.cl_sem, 0, 0);
 
-  if (conn->tcpstateflags == UIP_ESTABLISHED &&
-      (state.cl_cb = uip_tcpcallbackalloc(conn)) != NULL)
-    {
-      /* Set up to receive TCP data event callbacks */
+               state.cl_cb->flags   = UIP_NEWDATA|UIP_POLL|UIP_CLOSE|UIP_ABORT;
+               state.cl_cb->priv    = (void*)&state;
+               state.cl_cb->event   = netclose_interrupt;
 
-      state.cl_cb->flags = (UIP_NEWDATA | UIP_POLL | UIP_CLOSE | UIP_ABORT | \
-                            UIP_TIMEDOUT);
-      state.cl_cb->event = netclose_interrupt;
+              /* Notify the device driver of the availaibilty of TX data */
 
-#ifdef CONFIG_NET_SOLINGER
-      /* Check for a lingering close */
+               netdev_txnotify(&conn->ripaddr);
 
-      linger = _SO_GETOPT(psock->s_options, SO_LINGER);
+               /* Wait for the disconnect event */
 
-      /* Has a lingering close been requested */
+               (void)uip_lockedwait(&state.cl_sem);
 
-      if (linger)
-        {
-          /* A non-NULL value of the priv field means that lingering is
-           * enabled.
-           */
+               /* We are now disconnected */
 
-          state.cl_cb->priv  = (FAR void *)&state;
-
-          /* Set up for the lingering wait */
-
-          state.cl_psock     = psock;
-          state.cl_result    = -EBUSY;
-          sem_init(&state.cl_sem, 0, 0);
-
-#ifndef CONFIG_DISABLE_CLOCK
-          /* Record the time that we started the wait (in ticks) */
-
-          state.cl_start = clock_systimer();
-#endif
+               sem_destroy(&state.cl_sem);
+               uip_tcpcallbackfree(conn, state.cl_cb);
+            }
         }
-      else
-#endif /* CONFIG_NET_SOLINGER */
-
-        {
-          /* We will close immediately. The NULL priv field signals this */
-
-          state.cl_cb->priv  = NULL;
-
-          /* No further references on the connection */
-
-          conn->crefs = 0;
-        }
-
-      /* Notify the device driver of the availability of TX data */
-
-      netdev_txnotify(conn->ripaddr);
-
-#ifdef CONFIG_NET_SOLINGER
-      /* Wait only if we are lingering */
-
-      if (linger)
-        {
-          /* Wait for the disconnect event */
-
-          (void)uip_lockedwait(&state.cl_sem);
-
-          /* We are now disconnected */
-
-          sem_destroy(&state.cl_sem);
-          uip_tcpcallbackfree(conn, state.cl_cb);
-
-          /* Free the connection */
-
-          conn->crefs = 0;             /* No more references on the connection */
-          uip_tcpfree(conn);           /* Free uIP resources */
-
-          /* Get the result of the close */
-
-          ret = state.cl_result;
-        }
-#endif /* CONFIG_NET_SOLINGER */
-    }
-  else
-    {
-      uip_tcpfree(conn);
     }
 
   uip_unlock(flags);
-  return ret;
 }
-#endif /* CONFIG_NET_TCP */
+#endif
 
 /****************************************************************************
  * Public Functions
@@ -439,24 +242,17 @@ int psock_close(FAR struct socket *psock)
               struct uip_conn *conn = psock->s_conn;
 
               /* Is this the last reference to the connection structure (there
-               * could be more if the socket was dup'ed).
+               * could be more if the socket was dup'ed.
                */
 
               if (conn->crefs <= 1)
                 {
-                  /* Yes... then perform the disconnection now */
+                  /* Yes... free the connection structure */
 
-                  uip_unlisten(conn);                /* No longer accepting connections */
-                  conn->crefs = 0;                   /* Discard our reference to the connection */
-                  err = netclose_disconnect(psock);  /* Break any current connections */
-                  if (err < 0)
-                    {
-                      /* This would normally occur only if there is a timeout
-                       * from a lingering close.
-                       */
-
-                      goto errout_with_psock;
-                    }
+                  uip_unlisten(conn);          /* No longer accepting connections */
+                  netclose_disconnect(psock);  /* Break any current connections */
+                  conn->crefs = 0;             /* No more references on the connection */
+                  uip_tcpfree(conn);           /* Free uIP resources */
                 }
               else
                 {
@@ -474,7 +270,7 @@ int psock_close(FAR struct socket *psock)
               struct uip_udp_conn *conn = psock->s_conn;
 
               /* Is this the last reference to the connection structure (there
-               * could be more if the socket was dup'ed).
+               * could be more if the socket was dup'ed.
                */
 
               if (conn->crefs <= 1)
@@ -505,13 +301,8 @@ int psock_close(FAR struct socket *psock)
   sock_release(psock);
   return OK;
 
-#ifdef CONFIG_NET_TCP
-errout_with_psock:
-  sock_release(psock);
-#endif
-
 errout:
-  set_errno(err);
+  errno = err;
   return ERROR;
 }
 

@@ -1,7 +1,7 @@
 /****************************************************************************
  * fs/nxffs/nxffs_cache.c
  *
- *   Copyright (C) 2011, 2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * References: Linux/Documentation/filesystems/romfs.txt
@@ -45,7 +45,7 @@
 #include <errno.h>
 #include <debug.h>
 
-#include <nuttx/mtd/mtd.h>
+#include <nuttx/mtd.h>
 
 #include "nxffs.h"
 
@@ -98,7 +98,7 @@ int nxffs_rdcache(FAR struct nxffs_volume_s *volume, off_t block)
       nxfrd = MTD_BREAD(volume->mtd, block, 1, volume->cache);
       if (nxfrd != 1)
         {
-          fdbg("ERROR: Read block %d failed: %d\n", block, nxfrd);
+          fvdbg("Read block %d failed: %d\n", block, nxfrd);
           return -EIO;
         }
 
@@ -106,7 +106,6 @@ int nxffs_rdcache(FAR struct nxffs_volume_s *volume, off_t block)
 
       volume->cblock  = block;
     }
-
   return OK;
 }
 
@@ -133,7 +132,7 @@ int nxffs_wrcache(FAR struct nxffs_volume_s *volume)
   nxfrd = MTD_BWRITE(volume->mtd, volume->cblock, 1, volume->cache);
   if (nxfrd != 1)
     {
-      fdbg("ERROR: Write block %d failed: %d\n", volume->cblock, nxfrd);
+      fdbg("Write block %d failed: %d\n", volume->cblock, nxfrd);
       return -EIO;
     }
 
@@ -203,7 +202,7 @@ off_t nxffs_iotell(FAR struct nxffs_volume_s *volume)
  * Returned Value:
  *   Zero is returned on success.  Otherwise, a negated errno indicating the
  *   nature of the failure.
- *
+ *   
  ****************************************************************************/
 
 int nxffs_getc(FAR struct nxffs_volume_s *volume, uint16_t reserve)
@@ -232,7 +231,7 @@ int nxffs_getc(FAR struct nxffs_volume_s *volume, uint16_t reserve)
           /* Set up the seek to the data just after the header in the
            * next block.
            */
-
+           
           volume->ioblock  = nextblock;
           volume->iooffset = SIZEOF_NXFFS_BLOCK_HDR;
         }
@@ -246,25 +245,13 @@ int nxffs_getc(FAR struct nxffs_volume_s *volume, uint16_t reserve)
       ret = nxffs_verifyblock(volume, volume->ioblock);
       if (ret < 0 && ret != -ENOENT)
         {
-#ifndef CONFIG_NXFFS_NAND
-          /* Read errors are fatal */
-
-          fdbg("ERROR: Failed to read valid data into cache: %d\n", ret);
+          fvdbg("Failed to read valid data into cache: %d\n", ret);
           return ret;
-#else
-          /* A read error occurred.  This probably means that we are
-           * using NAND memory this block has an uncorrectable bit error.
-           * Ignore the error (after complaining) and try the next
-           * block.
-           */
-
-          fdbg("ERROR: Failed to read valid data into cache: %d\n", ret);
-#endif
         }
     }
   while (ret != OK);
 
-  /* Return the character at this offset.  Note that on return,
+  /* Return the the character at this offset.  Note that on return,
    * iooffset could point to the byte outside of the current block.
    */
 

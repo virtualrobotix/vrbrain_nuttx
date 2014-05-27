@@ -1,7 +1,7 @@
 /****************************************************************************
- * drivers/dev_zero.c
+ * drivers/dev_null.c
  *
- *   Copyright (C) 2008-2009, 2012-2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2008-2009, 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@
 static ssize_t devzero_read(FAR struct file *, FAR char *, size_t);
 static ssize_t devzero_write(FAR struct file *, FAR const char *, size_t);
 #ifndef CONFIG_DISABLE_POLL
-static int     devzero_poll(FAR struct file *filep, FAR struct pollfd *fds,
+static int     devzero_poll(FAR struct file *filp, FAR struct pollfd *fds,
                             bool setup);
 #endif
 
@@ -82,8 +82,7 @@ static const struct file_operations devzero_fops =
  * Name: devzero_read
  ****************************************************************************/
 
-static ssize_t devzero_read(FAR struct file *filep, FAR char *buffer,
-                            size_t len)
+static ssize_t devzero_read(FAR struct file *filp, FAR char *buffer, size_t len)
 {
   memset(buffer, 0, len);
   return len;
@@ -93,8 +92,7 @@ static ssize_t devzero_read(FAR struct file *filep, FAR char *buffer,
  * Name: devzero_write
  ****************************************************************************/
 
-static ssize_t devzero_write(FAR struct file *filep, FAR const char *buffer,
-                             size_t len)
+static ssize_t devzero_write(FAR struct file *filp, FAR const char *buffer, size_t len)
 {
   return len;
 }
@@ -104,7 +102,7 @@ static ssize_t devzero_write(FAR struct file *filep, FAR const char *buffer,
  ****************************************************************************/
 
 #ifndef CONFIG_DISABLE_POLL
-static int devzero_poll(FAR struct file *filep, FAR struct pollfd *fds,
+static int devzero_poll(FAR struct file *filp, FAR struct pollfd *fds,
                         bool setup)
 {
   if (setup)

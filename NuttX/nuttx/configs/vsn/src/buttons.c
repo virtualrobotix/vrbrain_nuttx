@@ -34,23 +34,20 @@
  *
  ****************************************************************************/
 
-/****************************************************************************
- * Included Files
- ****************************************************************************/
-
-#include <nuttx/config.h>
-
-#include <stdint.h>
-
-#include <nuttx/arch.h>
-#include <arch/board/board.h>
-
-#include "vsn.h"
+/** \file
+ *  \author Uros Platise
+ *  \brief VSN Button
+ */
 
 #ifdef CONFIG_ARCH_BUTTONS
 
+#include <nuttx/config.h>
+#include <stdint.h>
+#include <arch/board/board.h>
+#include "vsn.h"
+
 /****************************************************************************
- * Pre-processor Definitions
+ * Definitions
  ****************************************************************************/
 
 /****************************************************************************
@@ -76,13 +73,13 @@ void buttons_callback(void)
  * Public Functions
  ****************************************************************************/
 
-void board_button_initialize(void)
+void up_buttoninit(void)
 {
   stm32_configgpio(GPIO_PUSHBUTTON);
 }
 
 
-uint8_t board_buttons(void)
+uint8_t up_buttons(void)
 {
   return stm32_gpioread(GPIO_PUSHBUTTON);
 }

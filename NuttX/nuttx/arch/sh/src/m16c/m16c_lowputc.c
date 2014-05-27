@@ -333,9 +333,11 @@ void up_lowsetup(void)
   up_lowserialsetup()
 #endif
 
-  /* The LCD is initialized here if the LCD is used for console output.  */
+  /* The LCD is initialized here to because it may be that the LCD is
+   * used for console output.
+   */
 
-#ifdef CONFIG_LCD_CONSOLE
+#ifdef CONFIG_ARCH_LCD
   up_lcdinit();
 #endif
 }

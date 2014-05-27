@@ -196,9 +196,6 @@ struct fs_dirent_s
 #ifdef CONFIG_FS_BINFS
       struct fs_binfsdir_s   binfs;
 #endif
-#ifdef CONFIG_FS_PROCFS
-      FAR void              *procfs;
-#endif
 #ifdef CONFIG_FS_NXFFS
       struct fs_nxffsdir_s   nxffs;
 #endif

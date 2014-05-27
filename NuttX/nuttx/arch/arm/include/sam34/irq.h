@@ -37,6 +37,7 @@
  * nuttx/irq.h
  */
 
+
 #ifndef __ARCH_ARM_INCLUDE_SAM34_IRQ_H
 #define __ARCH_ARM_INCLUDE_SAM34_IRQ_H
 
@@ -78,14 +79,10 @@
 
 #if defined(CONFIG_ARCH_CHIP_SAM3U)
 #  include <arch/sam34/sam3u_irq.h>
-#elif defined(CONFIG_ARCH_CHIP_SAM3X) || defined(CONFIG_ARCH_CHIP_SAM3A)
-#  include <arch/sam34/sam3x_irq.h>
 #elif defined(CONFIG_ARCH_CHIP_SAM4L)
 #  include <arch/sam34/sam4l_irq.h>
 #elif defined(CONFIG_ARCH_CHIP_SAM4S)
 #  include <arch/sam34/sam4s_irq.h>
-#elif defined(CONFIG_ARCH_CHIP_SAM4E)
-#  include <arch/sam34/sam4e_irq.h>
 #else
 #  error Unrecognized SAM architecture
 #endif
@@ -118,3 +115,4 @@ extern "C" {
 #endif
 
 #endif /* __ARCH_ARM_INCLUDE_SAM34_IRQ_H */
+

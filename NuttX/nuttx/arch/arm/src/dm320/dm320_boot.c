@@ -227,7 +227,7 @@ void up_boot(void)
   /* Set up the board-specific LEDs */
 
 #ifdef CONFIG_ARCH_LEDS
-  board_led_initialize();
+  up_ledinit();
 #endif
   /* Perform early serial initialization */
 

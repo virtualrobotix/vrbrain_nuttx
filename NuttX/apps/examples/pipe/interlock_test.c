@@ -172,8 +172,7 @@ int interlock_test(void)
     }
   else if (ret != 0)
     {
-      fprintf(stderr, "interlock_test: Read %d bytes of data -- aborting: %d\n",
-              nbytes, errno);
+      fprintf(stderr, "interlock_test: Read %d bytes of data -- aborting: %d\n", nbytes);
       ret = 5;
       goto errout_with_file;
     }

@@ -1,5 +1,6 @@
 /****************************************************************************
  * arch/arm/src/kl/kl_start.c
+ * arch/arm/src/chip/kl_start.c
  *
  *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -94,7 +95,7 @@ const uint32_t g_idle_topstack = IDLE_STACK;
  *
  ****************************************************************************/
 
-#if defined(CONFIG_DEBUG)
+#if defined(CONFIG_DEBUG) && defined(HAVE_SERIAL_CONSOLE)
 #  define showprogress(c) kl_lowputc((uint32_t)c)
 #else
 #  define showprogress(c)
@@ -137,7 +138,7 @@ void __start(void)
     }
   showprogress('B');
 
-  /* Move the initialized data section from his temporary holding spot in
+  /* Move the intialized data section from his temporary holding spot in
    * FLASH into the correct place in SRAM.  The correct place in SRAM is
    * give by _sdata and _edata.  The temporary location is in FLASH at the
    * end of all of the other read-only data (.text, .rodata) at _eronly.

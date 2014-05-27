@@ -86,23 +86,23 @@ static inline void set_led(bool v)
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_led_initialize
+ * Name: up_ledinit
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_LEDS
-void board_led_initialize(void)
+void up_ledinit(void)
 {
   /* Configure LED GPIO for output */
   stm32_configgpio(GPIO_LED);
 }
 
 /****************************************************************************
- * Name: board_led_on
+ * Name: up_ledon
  ****************************************************************************/
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
-  ledvdbg("board_led_on(%d)\n",led);
+  ledvdbg("up_ledon(%d)\n",led);
   switch (led)
     {
     case LED_STARTED:
@@ -118,10 +118,10 @@ void board_led_on(int led)
 }
 
 /****************************************************************************
- * Name: board_led_off
+ * Name: up_ledoff
  ****************************************************************************/
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
   switch (led)
     {

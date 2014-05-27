@@ -235,7 +235,6 @@ void CImage::drawContents(CGraphicsPort *port)
       // This is the number of rows that we have to pad on the right if the display
       // width is wider than the image width
 
-#if 0 // Not used
       nxgl_coord_t nRightPad;
       if (nLeftPixels >= rect.getWidth())
         {
@@ -245,7 +244,6 @@ void CImage::drawContents(CGraphicsPort *port)
         {
           nRightPad = rect.getWidth() - nLeftPixels;
         }
-#endif
 
       // Apply the padding to the right hand side
 

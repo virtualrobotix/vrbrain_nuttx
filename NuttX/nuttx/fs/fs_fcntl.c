@@ -42,7 +42,6 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <assert.h>
 
 #include <nuttx/fs/fs.h>
 #include <nuttx/net/net.h>
@@ -63,22 +62,26 @@
  ****************************************************************************/
 
 #if CONFIG_NFILE_DESCRIPTORS > 0
-static inline int file_vfcntl(int fd, int cmd, va_list ap)
+static inline int file_vfcntl(int fildes, int cmd, va_list ap)
 {
   FAR struct filelist *list;
-  FAR struct file *filep;
+  FAR struct file *this_file;
   int err = 0;
   int ret = OK;
 
   /* Get the thread-specific file list */
 
   list = sched_getfiles();
-  DEBUGASSERT(list);
+  if (!list)
+    {
+      err = EMFILE;
+      goto errout;
+    }
 
   /* Was this file opened ? */
 
-  filep = &list->fl_files[fd];
-  if (!filep->f_inode)
+  this_file = &list->fl_files[fildes];
+  if (!this_file->f_inode)
     {
       err = EBADF;
       goto errout;
@@ -98,20 +101,20 @@ static inline int file_vfcntl(int fd, int cmd, va_list ap)
          */
 
         {
-          ret = file_dup(fd, va_arg(ap, int));
+          ret = file_dup(fildes, va_arg(ap, int));
         }
         break;
 
       case F_GETFD:
         /* Get the file descriptor flags defined in <fcntl.h> that are associated
-         * with the file descriptor fd.  File descriptor flags are associated
+         * with the file descriptor fildes.  File descriptor flags are associated
          * with a single file descriptor and do not affect other file descriptors
          * that refer to the same file.
          */
 
       case F_SETFD:
         /* Set the file descriptor flags defined in <fcntl.h>, that are associated
-         * with fd, to the third argument, arg, taken as type int. If the
+         * with fildes, to the third argument, arg, taken as type int. If the
          * FD_CLOEXEC flag in the third argument is 0, the file shall remain open
          * across the exec functions; otherwise, the file shall be closed upon
          * successful execution of one  of  the  exec  functions.
@@ -122,7 +125,7 @@ static inline int file_vfcntl(int fd, int cmd, va_list ap)
 
       case F_GETFL:
         /* Get the file status flags and file access modes, defined in <fcntl.h>,
-         * for the file description associated with fd. The file access modes
+         * for the file description associated with fildes. The file access modes
          * can be extracted from the return value using the mask O_ACCMODE, which is
          * defined  in <fcntl.h>. File status flags and file access modes are associated
          * with the file description and do not affect other file descriptors that
@@ -130,13 +133,13 @@ static inline int file_vfcntl(int fd, int cmd, va_list ap)
          */
 
         {
-          ret = filep->f_oflags;
+          ret = this_file->f_oflags;
         }
         break;
 
       case F_SETFL:
         /* Set the file status flags, defined in <fcntl.h>, for the file description
-         * associated with fd from the corresponding  bits in the third argument,
+         * associated with fildes from the corresponding  bits in the third argument,
          * arg, taken as type int. Bits corresponding to the file access mode and
          * the file creation flags, as defined in <fcntl.h>, that are set in arg shall
          * be ignored. If any bits in arg other than those mentioned here are changed
@@ -146,25 +149,25 @@ static inline int file_vfcntl(int fd, int cmd, va_list ap)
         {
           int oflags = va_arg(ap, int);
 
-          oflags          &=  FFCNTL;
-          filep->f_oflags &= ~FFCNTL;
-          filep->f_oflags |=  oflags;
+          oflags              &=  FFCNTL;
+          this_file->f_oflags &= ~FFCNTL;
+          this_file->f_oflags |=  oflags;
         }
         break;
 
       case F_GETOWN:
-        /* If fd refers to a socket, get the process or process group ID specified
+        /* If fildes refers to a socket, get the process or process group ID specified
          * to receive SIGURG signals when out-of-band data is available. Positive values
          * indicate a process ID; negative values, other than -1, indicate a process group
-         * ID. If fd does not refer to a socket, the results are unspecified.
+         * ID. If fildes does not refer to a socket, the results are unspecified.
          */
 
       case F_SETOWN:
-        /* If fd refers to a socket, set the process or process group ID specified
+        /* If fildes refers to a socket, set the process or process group ID specified
          * to receive SIGURG signals when out-of-band data is available, using the value
          * of the third argument, arg, taken as type int. Positive values indicate a 
          * process ID; negative values, other than -1, indicate a process group ID. If
-         * fd does not refer to a socket, the results are unspecified.
+         * fildes does not refer to a socket, the results are unspecified.
          */
 
         err = EBADF; /* Only valid on socket descriptors */
@@ -224,7 +227,7 @@ errout:
  * Name: fcntl
  ****************************************************************************/
 
-int fcntl(int fd, int cmd, ...)
+int fcntl(int fildes, int cmd, ...)
 {
   va_list ap;
   int ret;
@@ -236,11 +239,11 @@ int fcntl(int fd, int cmd, ...)
   /* Did we get a valid file descriptor? */
 
 #if CONFIG_NFILE_DESCRIPTORS > 0
-  if ((unsigned int)fd < CONFIG_NFILE_DESCRIPTORS)
+  if ((unsigned int)fildes < CONFIG_NFILE_DESCRIPTORS)
     {
        /* Yes.. defer file operations to file_vfcntl() */
 
-       ret = file_vfcntl(fd, cmd, ap);
+       ret = file_vfcntl(fildes, cmd, ap);
     }
   else
 #endif
@@ -248,11 +251,11 @@ int fcntl(int fd, int cmd, ...)
       /* No... check for operations on a socket descriptor */
 
 #if defined(CONFIG_NET) && CONFIG_NSOCKET_DESCRIPTORS > 0
-      if ((unsigned int)fd < (CONFIG_NFILE_DESCRIPTORS+CONFIG_NSOCKET_DESCRIPTORS))
+      if ((unsigned int)fildes < (CONFIG_NFILE_DESCRIPTORS+CONFIG_NSOCKET_DESCRIPTORS))
         {
           /* Yes.. defer socket descriptor operations to net_vfcntl() */
 
-          ret = net_vfcntl(fd, cmd, ap);
+          ret = net_vfcntl(fildes, cmd, ap);
         }
       else
 #endif

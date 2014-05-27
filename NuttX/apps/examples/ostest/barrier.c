@@ -83,13 +83,13 @@ static void *barrier_func(void *parameter)
     {
       printf("barrier_func: Thread %d, back with "
              "status=0 (I am not special)\n",
-             id);
+             id, status);
     }
   else if (status == PTHREAD_BARRIER_SERIAL_THREAD)
     {
       printf("barrier_func: Thread %d, back with "
              "status=PTHREAD_BARRIER_SERIAL_THREAD (I AM SPECIAL)\n",
-             id);
+             id, status);
     }
   else
     {
@@ -142,7 +142,7 @@ void barrier_test(void)
 
   /* Create the barrier */
 
-  (void)pthread_barrierattr_init(&barrierattr);
+  status = pthread_barrierattr_init(&barrierattr);
 
   /* Start CONFIG_EXAMPLES_OSTEST_NBARRIER_THREADS thread instances */
 

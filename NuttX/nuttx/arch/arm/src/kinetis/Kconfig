@@ -228,7 +228,7 @@ config KINETIS_VREF
 config KINETIS_SDHC
 	bool "SDHC"
 	default n
-	select ARCH_HAVE_SDIO
+	select MMCSD_SDIO
 	---help---
 		Support SD host controller
 

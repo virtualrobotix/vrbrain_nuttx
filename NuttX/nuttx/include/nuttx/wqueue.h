@@ -96,19 +96,15 @@
    */
 
 #  ifndef __KERNEL__
-
 #    undef CONFIG_SCHED_HPWORK
 #    undef CONFIG_SCHED_LPWORK
 
-#    ifndef CONFIG_SCHED_USRWORK
-#      undef CONFIG_SCHED_WORKQUEUE
-#    endif
-
   /* User-space worker threads are not built in a kernel build when we are
-   * building the kernel-space libraries (but we still need to know that it
-   * is configured).
+   * building the kernel-space libraries.
    */
 
+#  else
+#    undef CONFIG_SCHED_USRWORK
 #  endif
 
   /* User-space worker threads are not built in a flat build
@@ -140,11 +136,17 @@
 #  undef CONFIG_SCHED_LPWORK
 #endif
 
+/* We might not be building any work queue support in this context */
+
+#if !defined(CONFIG_SCHED_HPWORK) && !defined(CONFIG_SCHED_LPWORK) && !defined(CONFIG_SCHED_USRWORK)
+#  undef CONFIG_SCHED_WORKQUEUE
+#endif
+
 #ifdef CONFIG_SCHED_WORKQUEUE
 
 /* We are building work queues... Work queues need signal support */
 
-#ifdef CONFIG_DISABLE_SIGNALS
+#if defined(CONFIG_SCHED_WORKQUEUE) && defined(CONFIG_DISABLE_SIGNALS)
 #  warning "Worker thread support requires signals"
 #endif
 
@@ -375,7 +377,7 @@ int work_hpthread(int argc, char *argv[]);
 int work_lpthread(int argc, char *argv[]);
 #endif
 
-#if defined(CONFIG_SCHED_USRWORK) && !defined(__KERNEL__)
+#ifdef CONFIG_SCHED_USRWORK
 int work_usrthread(int argc, char *argv[]);
 #endif
 
@@ -394,7 +396,7 @@ int work_usrthread(int argc, char *argv[]);
  *
  ****************************************************************************/
 
-#if defined(CONFIG_SCHED_USRWORK) && !defined(__KERNEL__)
+#ifdef CONFIG_SCHED_USRWORK
 int work_usrstart(void);
 #endif
 
@@ -417,8 +419,8 @@ int work_usrstart(void);
  *   work   - The work structure to queue
  *   worker - The worker callback to be invoked.  The callback will invoked
  *            on the worker thread of execution.
- *   arg    - The argument that will be passed to the worker callback when
- *            it is invoked.
+ *   arg    - The argument that will be passed to the workder callback when
+ *            int is invoked.
  *   delay  - Delay (in clock ticks) from the time queue until the worker
  *            is invoked. Zero means to perform the work immediately.
  *

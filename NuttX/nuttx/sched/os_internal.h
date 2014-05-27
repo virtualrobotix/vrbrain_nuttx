@@ -1,7 +1,7 @@
 /****************************************************************************
  * sched/os_internal.h
  *
- *   Copyright (C) 2007-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,18 @@
 #define MAX_TASKS_MASK      (CONFIG_MAX_TASKS-1)
 #define PIDHASH(pid)        ((pid) & MAX_TASKS_MASK)
 
+/* One processor family supported by NuttX has a single, fixed hardware stack.
+ * That is the 8051 family.  So for that family only, there is a variant form
+ * of kernel_thread() that does not take a stack size parameter.  The following
+ * helper macro is provided to work around the ugliness of that exception.
+ */
+
+#ifndef CONFIG_CUSTOM_STACK
+#  define KERNEL_THREAD(n,p,s,e,a)   kernel_thread(n,p,s,e,a)
+#else
+#  define KERNEL_THREAD(n,p,s,e,a)   kernel_thread(n,p,e,a)
+#endif
+
 /* A more efficient ways to access the errno */
 
 #define SET_ERRNO(e) \
@@ -81,24 +93,15 @@
  * Public Type Definitions
  ****************************************************************************/
 
-/* This structure defines the format of the hash table that is used to (1)
- * determine if a task ID is unique, and (2) to map a process ID to its
- * corresponding TCB.
- *
- * NOTE also that CPU load measurement data is retained in his table vs. in
- * the TCB which would seem to be the more logic place.  It is place in the
- * hash table, instead, to facilitate CPU load adjustments on all threads
- * during timer interrupt handling. sched_foreach() could do this too, but
- * this would require a little more overhead.
+/* This structure defines the format of the hash table that
+ * is used to (1) determine if a task ID is unique, and (2)
+ * to map a process ID to its corresponding TCB.
  */
 
 struct pidhash_s
 {
-  FAR struct tcb_s *tcb;       /* TCB assigned to this PID */
-  pid_t pid;                   /* The full PID value */
-#ifdef CONFIG_SCHED_CPULOAD
-  uint32_t ticks;              /* Number of ticks on this thread */
-#endif
+  FAR struct tcb_s *tcb;
+  pid_t pid;
 };
 
 typedef struct pidhash_s  pidhash_t;
@@ -219,14 +222,6 @@ extern pidhash_t g_pidhash[CONFIG_MAX_TASKS];
 
 extern const tasklist_t g_tasklisttable[NUM_TASK_STATES];
 
-#ifdef CONFIG_SCHED_CPULOAD
-/* This is the total number of clock tick counts.  Essentially the
- * 'denominator' for all CPU load calculations.
- */
-
-extern volatile uint32_t g_cpuload_total;
-#endif
-
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
@@ -243,6 +238,14 @@ int  task_exit(void);
 int  task_terminate(pid_t pid, bool nonblocking);
 void task_exithook(FAR struct tcb_s *tcb, int status, bool nonblocking);
 void task_recover(FAR struct tcb_s *tcb);
+
+#ifndef CONFIG_CUSTOM_STACK
+int  kernel_thread(FAR const char *name, int priority, int stack_size,
+                   main_t entry, FAR char * const argv[]);
+#else
+int  kernel_thread(FAR const char *name, int priority, main_t entry,
+                   FAR char * const argv[]);
+#endif
 bool sched_addreadytorun(FAR struct tcb_s *rtrtcb);
 bool sched_removereadytorun(FAR struct tcb_s *rtrtcb);
 bool sched_addprioritized(FAR struct tcb_s *newTcb, DSEG dq_queue_t *list);
@@ -255,10 +258,9 @@ int  sched_reprioritize(FAR struct tcb_s *tcb, int sched_priority);
 #else
 #  define sched_reprioritize(tcb,sched_priority) sched_setpriority(tcb,sched_priority)
 #endif
-#ifdef CONFIG_SCHED_CPULOAD
-void weak_function sched_process_cpuload(void);
-#endif
+FAR struct tcb_s *sched_gettcb(pid_t pid);
 bool sched_verifytcb(FAR struct tcb_s *tcb);
+
 int  sched_releasetcb(FAR struct tcb_s *tcb, uint8_t ttype);
 
 #endif /* __SCHED_OS_INTERNAL_H */

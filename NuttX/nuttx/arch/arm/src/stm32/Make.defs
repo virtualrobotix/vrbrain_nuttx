@@ -45,7 +45,7 @@ CMN_UCSRCS =
 CMN_ASRCS  = up_saveusercontext.S up_fullcontextrestore.S up_switchcontext.S
 CMN_ASRCS += vfork.S
 
-CMN_CSRCS  = up_assert.c up_blocktask.c up_copyfullstate.c
+CMN_CSRCS  = up_assert.c up_blocktask.c up_copystate.c
 CMN_CSRCS += up_createstack.c up_mdelay.c up_udelay.c up_exit.c
 CMN_CSRCS += up_initialize.c up_initialstate.c up_interruptcontext.c
 CMN_CSRCS += up_memfault.c up_modifyreg8.c up_modifyreg16.c up_modifyreg32.c
@@ -53,6 +53,10 @@ CMN_CSRCS += up_releasepending.c up_releasestack.c up_reprioritizertr.c
 CMN_CSRCS += up_schedulesigaction.c up_sigdeliver.c up_systemreset.c
 CMN_CSRCS += up_unblocktask.c up_usestack.c up_doirq.c up_hardfault.c
 CMN_CSRCS += up_svcall.c up_vfork.c
+
+ifeq ($(CONFIG_ARMV7M_STACKCHECK),y)
+CMN_CSRCS += up_stackcheck.c
+endif
 
 ifeq ($(CONFIG_ARMV7M_CMNVECTOR),y)
 CMN_ASRCS += up_exception.S
@@ -85,9 +89,6 @@ endif
 
 ifeq ($(CONFIG_ARCH_FPU),y)
 CMN_ASRCS += up_fpu.S
-ifneq ($(CONFIG_ARMV7M_CMNVECTOR),y)
-CMN_CSRCS += up_copyarmstate.c
-endif
 endif
 
 CHIP_ASRCS  = 
@@ -95,7 +96,7 @@ CHIP_ASRCS  =
 CHIP_CSRCS  = stm32_allocateheap.c stm32_start.c stm32_rcc.c stm32_lse.c
 CHIP_CSRCS += stm32_lsi.c stm32_gpio.c stm32_exti_gpio.c stm32_flash.c stm32_irq.c
 CHIP_CSRCS += stm32_timerisr.c stm32_dma.c stm32_lowputc.c stm32_serial.c
-CHIP_CSRCS += stm32_spi.c stm32_sdio.c stm32_tim.c stm32_waste.c stm32_ccm.c
+CHIP_CSRCS += stm32_spi.c stm32_sdio.c stm32_tim.c stm32_i2c.c stm32_waste.c
 
 ifeq ($(CONFIG_ARMV7M_CMNVECTOR),y)
 CHIP_ASRCS += stm32_vectors.S
@@ -105,20 +106,11 @@ ifeq ($(CONFIG_NUTTX_KERNEL),y)
 CHIP_CSRCS += stm32_userspace.c stm32_mpuinit.c
 endif
 
-ifeq ($(CONFIG_STM32_STM32F30XX),y)
-CHIP_CSRCS += stm32f30xxx_i2c.c
-else
-CHIP_CSRCS += stm32_i2c.c
-endif
-
 ifeq ($(CONFIG_USBDEV),y)
 ifeq ($(CONFIG_STM32_USB),y)
 CHIP_CSRCS += stm32_usbdev.c
 endif
 ifeq ($(CONFIG_STM32_OTGFS),y)
-CHIP_CSRCS += stm32_otgfsdev.c
-endif
-ifeq ($(CONFIG_STM32_OTGFS2),y)
 CHIP_CSRCS += stm32_otgfsdev.c
 endif
 endif
@@ -127,18 +119,15 @@ ifeq ($(CONFIG_USBHOST),y)
 ifeq ($(CONFIG_STM32_OTGFS),y)
 CHIP_CSRCS += stm32_otgfshost.c
 endif
-ifeq ($(CONFIG_STM32_OTGFS2),y)
-CHIP_CSRCS += stm32_otgfshost.c
-endif
 endif
 
-ifneq ($(CONFIG_ARCH_IDLE_CUSTOM),y)
+ifneq ($(CONFIG_IDLE_CUSTOM),y)
 CHIP_CSRCS += stm32_idle.c
 endif
 
 CHIP_CSRCS += stm32_pmstop.c stm32_pmstandby.c stm32_pmsleep.c
 
-ifneq ($(CONFIG_ARCH_CUSTOM_PMINIT),y)
+ifneq ($(CONFIG_PM_CUSTOMINIT),y)
 CHIP_CSRCS += stm32_pminitialize.c
 endif
 
@@ -167,10 +156,6 @@ endif
 
 ifeq ($(CONFIG_DEV_RANDOM),y)
 CHIP_CSRCS += stm32_rng.c
-endif
-
-ifeq ($(CONFIG_STM32_LTDC),y)
-CHIP_CSRCS += stm32_ltdc.c
 endif
 
 ifeq ($(CONFIG_PWM),y)

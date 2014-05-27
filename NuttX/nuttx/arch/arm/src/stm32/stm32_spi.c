@@ -37,7 +37,7 @@
  * The external functions, stm32_spi1/2/3select and stm32_spi1/2/3status must be
  * provided by board-specific logic.  They are implementations of the select
  * and status methods of the SPI interface defined by struct spi_ops_s (see
- * include/nuttx/spi/spi.h). All other methods (including up_spiinitialize())
+ * include/nuttx/spi.h). All other methods (including up_spiinitialize())
  * are provided by common STM32 logic.  To use this common SPI logic on your
  * board:
  *
@@ -69,7 +69,7 @@
 #include <debug.h>
 
 #include <nuttx/arch.h>
-#include <nuttx/spi/spi.h>
+#include <nuttx/spi.h>
 
 #include <arch/board/board.h>
 
@@ -195,14 +195,12 @@ struct stm32_spidev_s
   DMA_HANDLE       txdma;      /* DMA channel handle for TX transfers */
   sem_t            rxsem;      /* Wait for RX DMA to complete */
   sem_t            txsem;      /* Wait for TX DMA to complete */
-  uint32_t         txccr;      /* DMA control register for TX transfers */
-  uint32_t         rxccr;      /* DMA control register for RX transfers */
 #endif
 #ifndef CONFIG_SPI_OWNBUS
   sem_t            exclsem;    /* Held while chip is selected for mutual exclusion */
   uint32_t         frequency;  /* Requested clock frequency */
   uint32_t         actual;     /* Actual clock frequency */
-  int8_t           nbits;      /* Width of word in bits (8 or 16) */
+  uint8_t          nbits;      /* Width of word in bits (8 or 16) */
   uint8_t          mode;       /* Mode 0,1,2,3 */
 #endif
 };
@@ -750,6 +748,8 @@ static void spi_dmatxcallback(DMA_HANDLE handle, uint8_t isr, void *arg)
 static void spi_dmarxsetup(FAR struct stm32_spidev_s *priv, FAR void *rxbuffer,
                            FAR void *rxdummy, size_t nwords)
 {
+  uint32_t ccr;
+
   /* 8- or 16-bit mode? */
 
   if (spi_16bitmode(priv))
@@ -758,12 +758,12 @@ static void spi_dmarxsetup(FAR struct stm32_spidev_s *priv, FAR void *rxbuffer,
 
       if (rxbuffer)
         {
-          priv->rxccr = SPI_RXDMA16_CONFIG;
+          ccr      = SPI_RXDMA16_CONFIG;
         }
       else
         {
-          rxbuffer    = rxdummy;
-          priv->rxccr = SPI_RXDMA16NULL_CONFIG;
+          rxbuffer = rxdummy;
+          ccr      = SPI_RXDMA16NULL_CONFIG;
         }
     }
   else
@@ -772,19 +772,18 @@ static void spi_dmarxsetup(FAR struct stm32_spidev_s *priv, FAR void *rxbuffer,
 
       if (rxbuffer)
         {
-          priv->rxccr = SPI_RXDMA8_CONFIG;
+          ccr = SPI_RXDMA8_CONFIG;
         }
       else
         {
-          rxbuffer    = rxdummy;
-          priv->rxccr = SPI_RXDMA8NULL_CONFIG;
+          rxbuffer = rxdummy;
+          ccr      = SPI_RXDMA8NULL_CONFIG;
         }
      }
 
   /* Configure the RX DMA */
 
-  stm32_dmasetup(priv->rxdma, priv->spibase + STM32_SPI_DR_OFFSET,
-                 (uint32_t)rxbuffer, nwords, priv->rxccr);
+  stm32_dmasetup(priv->rxdma, priv->spibase + STM32_SPI_DR_OFFSET, (uint32_t)rxbuffer, nwords, ccr);
 }
 #endif
 
@@ -800,6 +799,8 @@ static void spi_dmarxsetup(FAR struct stm32_spidev_s *priv, FAR void *rxbuffer,
 static void spi_dmatxsetup(FAR struct stm32_spidev_s *priv, FAR const void *txbuffer,
                            FAR const void *txdummy, size_t nwords)
 {
+  uint32_t ccr;
+
   /* 8- or 16-bit mode? */
 
   if (spi_16bitmode(priv))
@@ -808,12 +809,12 @@ static void spi_dmatxsetup(FAR struct stm32_spidev_s *priv, FAR const void *txbu
 
       if (txbuffer)
         {
-          priv->txccr = SPI_TXDMA16_CONFIG;
+          ccr      = SPI_TXDMA16_CONFIG;
         }
       else
         {
-          txbuffer    = txdummy;
-          priv->txccr = SPI_TXDMA16NULL_CONFIG;
+          txbuffer = txdummy;
+          ccr      = SPI_TXDMA16NULL_CONFIG;
         }
     }
   else
@@ -822,19 +823,18 @@ static void spi_dmatxsetup(FAR struct stm32_spidev_s *priv, FAR const void *txbu
 
       if (txbuffer)
         {
-          priv->txccr = SPI_TXDMA8_CONFIG;
+          ccr      = SPI_TXDMA8_CONFIG;
         }
       else
         {
-          txbuffer    = txdummy;
-          priv->txccr = SPI_TXDMA8NULL_CONFIG;
+          txbuffer = txdummy;
+          ccr      = SPI_TXDMA8NULL_CONFIG;
         }
     }
 
   /* Setup the TX DMA */
 
-  stm32_dmasetup(priv->txdma, priv->spibase + STM32_SPI_DR_OFFSET,
-                 (uint32_t)txbuffer, nwords, priv->txccr);
+  stm32_dmasetup(priv->txdma, priv->spibase + STM32_SPI_DR_OFFSET,(uint32_t)txbuffer, nwords, ccr);
 }
 #endif
 
@@ -1110,9 +1110,7 @@ static void spi_setmode(FAR struct spi_dev_s *dev, enum spi_mode_e mode)
           return;
         }
 
-        spi_modifycr1(priv, 0, SPI_CR1_SPE);
         spi_modifycr1(priv, setbits, clrbits);
-        spi_modifycr1(priv, SPI_CR1_SPE, 0);
 
         /* Save the mode so that subsequent re-configurations will be faster */
 
@@ -1155,24 +1153,14 @@ static void spi_setbits(FAR struct spi_dev_s *dev, int nbits)
 
       switch (nbits)
         {
-        case -8:
-          setbits = SPI_CR1_LSBFIRST;
-          clrbits = SPI_CR1_DFF;
-          break;
-
         case 8:
           setbits = 0;
-          clrbits = SPI_CR1_DFF|SPI_CR1_LSBFIRST;
-          break;
-
-        case -16:
-          setbits = SPI_CR1_DFF|SPI_CR1_LSBFIRST;
-          clrbits = 0;
+          clrbits = SPI_CR1_DFF;
           break;
 
         case 16:
           setbits = SPI_CR1_DFF;
-          clrbits = SPI_CR1_LSBFIRST;
+          clrbits = 0;
           break;
 
         default:
@@ -1182,7 +1170,7 @@ static void spi_setbits(FAR struct spi_dev_s *dev, int nbits)
       spi_modifycr1(priv, 0, SPI_CR1_SPE);
       spi_modifycr1(priv, setbits, clrbits);
       spi_modifycr1(priv, SPI_CR1_SPE, 0);
-
+      
       /* Save the selection so the subsequence re-configurations will be faster */
 
 #ifndef CONFIG_SPI_OWNBUS
@@ -1355,11 +1343,9 @@ static void spi_exchange_nodma(FAR struct spi_dev_s *dev, FAR const void *txbuff
 static void spi_exchange(FAR struct spi_dev_s *dev, FAR const void *txbuffer,
                          FAR void *rxbuffer, size_t nwords)
 {
-  FAR struct stm32_spidev_s *priv = (FAR struct stm32_spidev_s *)dev;
-
 #ifdef CONFIG_STM32_DMACAPABLE
-  if ((txbuffer && !stm32_dmacapable((uint32_t)txbuffer, nwords, priv->txccr)) ||
-      (rxbuffer && !stm32_dmacapable((uint32_t)rxbuffer, nwords, priv->rxccr)))
+  if ((txbuffer && !stm32_dmacapable((uint32_t)txbuffer)) ||
+      (rxbuffer && !stm32_dmacapable((uint32_t)rxbuffer)))
     {
       /* Unsupported memory region, fall back to non-DMA method. */
 
@@ -1368,6 +1354,7 @@ static void spi_exchange(FAR struct spi_dev_s *dev, FAR const void *txbuffer,
   else
 #endif
     {
+      FAR struct stm32_spidev_s *priv = (FAR struct stm32_spidev_s *)dev;
       static uint16_t rxdummy = 0xffff;
       static const uint16_t txdummy = 0xffff;
 
@@ -1516,7 +1503,7 @@ static void spi_portinitialize(FAR struct stm32_spidev_s *priv)
   priv->rxdma = stm32_dmachannel(priv->rxch);
   priv->txdma = stm32_dmachannel(priv->txch);
   DEBUGASSERT(priv->rxdma && priv->txdma);
-
+  
   spi_putreg(priv, STM32_SPI_CR2_OFFSET, SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN);
 #endif
 

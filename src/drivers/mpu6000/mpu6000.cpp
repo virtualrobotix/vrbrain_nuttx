@@ -672,7 +672,9 @@ MPU6000::_set_dlpf_filter(uint16_t frequency_hz)
 	/* 
 	   choose next highest filter frequency available
 	 */
-	if (frequency_hz <= 5) {
+	if (frequency_hz == 0) {
+		filter = BITS_DLPF_CFG_2100HZ_NOLPF;
+	} else if (frequency_hz <= 5) {
 		filter = BITS_DLPF_CFG_5HZ;
 	} else if (frequency_hz <= 10) {
 		filter = BITS_DLPF_CFG_10HZ;
@@ -928,10 +930,11 @@ MPU6000::ioctl(struct file *filp, int cmd, unsigned long arg)
 		return _accel_filter_x.get_cutoff_freq();
 
 	case ACCELIOCSLOWPASS:
-		
-		// XXX decide on relationship of both filters
-		// i.e. disable the on-chip filter
-		//_set_dlpf_filter((uint16_t)arg);
+		if (arg == 0) {
+			// allow disabling of on-chip filter using
+			// zero as desired filter frequency
+			_set_dlpf_filter(0);
+		}
 		_accel_filter_x.set_cutoff_frequency(1.0e6f / _call_interval, arg);
 		_accel_filter_y.set_cutoff_frequency(1.0e6f / _call_interval, arg);
 		_accel_filter_z.set_cutoff_frequency(1.0e6f / _call_interval, arg);
@@ -1015,8 +1018,11 @@ MPU6000::gyro_ioctl(struct file *filp, int cmd, unsigned long arg)
 		_gyro_filter_x.set_cutoff_frequency(1.0e6f / _call_interval, arg);
 		_gyro_filter_y.set_cutoff_frequency(1.0e6f / _call_interval, arg);
 		_gyro_filter_z.set_cutoff_frequency(1.0e6f / _call_interval, arg);
-		// XXX check relation to the internal lowpass
-		//_set_dlpf_filter((uint16_t)arg);
+		if (arg == 0) {
+			// allow disabling of on-chip filter using 0
+			// as desired frequency
+			_set_dlpf_filter(0);
+		}
 		return OK;
 
 	case GYROIOCSSCALE:
@@ -1248,7 +1254,13 @@ MPU6000::measure()
 	/*
 	 * Swap axes and negate y
 	 */
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+	int16_t accel_xt = report.accel_y;
+	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+
+	int16_t gyro_xt = report.gyro_y;
+	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
 	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
 	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
 	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
@@ -1273,6 +1285,14 @@ MPU6000::measure()
 	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
 	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
+	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+
+	int16_t gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
 	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
 	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
 	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);

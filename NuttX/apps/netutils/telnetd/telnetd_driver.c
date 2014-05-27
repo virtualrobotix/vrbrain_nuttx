@@ -121,7 +121,7 @@ struct telnetd_dev_s
 
 #ifdef CONFIG_TELNETD_DUMPBUFFER
 static inline void telnetd_dumpbuffer(FAR const char *msg,
-                 FAR const char *buffer, unsigned int nbytes);
+                 FAR const char *buffer, unsigned int nbytes)
 #else
 # define telnetd_dumpbuffer(msg,buffer,nbytes)
 #endif
@@ -215,7 +215,7 @@ static void telnetd_getchar(FAR struct telnetd_dev_s *priv, uint8_t ch,
  * Name: telnetd_receive
  *
  * Description:
- *   Process a received Telnet buffer
+ *   Process a received telenet buffer
  *
  ****************************************************************************/
 
@@ -500,20 +500,12 @@ static int telnetd_close(FAR struct file *filep)
         }
       else
         {
-          /* Un-register the character driver */
+          /* Unregister the character driver */
 
           ret = unregister_driver(devpath);
           if (ret < 0)
             {
-              /* NOTE: a return value of -EBUSY is not an error, it simply
-               * means that the Telnet driver is busy now and cannot be
-               * registered now because there are other sessions using the
-               * connection.  The driver will be properly unregistered when
-               * the final session terminates.
-               */
-
-              nlldbg("Failed to unregister the driver %s: %d\n",
-                     devpath, ret);
+              nlldbg("Failed to unregister the driver %s: %d\n", ret);
             }
 
           free(devpath);

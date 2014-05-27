@@ -875,13 +875,6 @@ VRINPUT::task_main()
 			/* pull status and alarms from IO */
 			io_get_status();
 
-
-
-
-
-
-
-
 			/* get raw R/C input from IO */
 			io_publish_raw_rc();
 
@@ -988,7 +981,6 @@ out:
 int
 VRINPUT::io_set_control_groups()
 {
-
 
 
 
@@ -1431,14 +1423,12 @@ VRINPUT::io_get_raw_rc_input(rc_input_values &input_rc)
 	 */
 	input_rc.timestamp_publication = hrt_absolute_time();
 
-//	ret = io_reg_get(PX4IO_PAGE_RAW_RC_INPUT, PX4IO_P_RAW_RC_COUNT, &regs[0], prolog + 9);
 	for (unsigned i = 0; i < prolog + 9; i++) {
 		regs[i] = io_reg_get(PX4IO_PAGE_RAW_RC_INPUT, PX4IO_P_RAW_RC_COUNT + i);
-//		printf("[VRINPUT] %u - %u\n", i, regs[i]);
 	}
 
-//	if (ret != OK)
-//		return ret;
+
+
 
 	/*
 	 * Get the channel count any any extra channels. This is no more expensive than reading the
@@ -1464,13 +1454,12 @@ VRINPUT::io_get_raw_rc_input(rc_input_values &input_rc)
 	input_rc.timestamp_last_signal = _rc_last_valid;
 
 	if (channel_count > 9) {
-//		ret = io_reg_get(PX4IO_PAGE_RAW_RC_INPUT, PX4IO_P_RAW_RC_BASE + 9, &regs[prolog + 9], channel_count - 9);
 		for (unsigned int i = 0; i < channel_count - 9; i++) {
 			regs[prolog + 9 + i] = io_reg_get(PX4IO_PAGE_RAW_RC_INPUT, PX4IO_P_RAW_RC_BASE + 9 + i);
 		}
 
-//		if (ret != OK)
-//			return ret;
+
+
 	}
 
 	input_rc.channel_count = channel_count;

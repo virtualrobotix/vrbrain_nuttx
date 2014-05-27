@@ -1,7 +1,7 @@
 /************************************************************************
  * libc/string/lib_strcpy.c
  *
- *   Copyright (C) 2007, 2009, 2011, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007, 2009, 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,23 +42,11 @@
 #include <string.h>
 
 /************************************************************************
- * Public Functions
- ************************************************************************/
-
-/************************************************************************
- * Name: strcpy
- *
- * Description:
- *   Copies the string pointed to by 'src' (including the terminating NUL
- *   character) into the array pointed to by 'des'.
- *
- * Returned value:
- *   The strcpy() function returns the 'dest' pointer
- *
+ * Global Functions
  ************************************************************************/
 
 #ifndef CONFIG_ARCH_STRCPY
-FAR char *strcpy(FAR char *dest, FAR const char *src)
+char *strcpy(char *dest, const char *src)
 {
   char *tmp = dest;
   while ((*dest++ = *src++) != '\0');

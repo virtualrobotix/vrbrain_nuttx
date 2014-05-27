@@ -1,7 +1,7 @@
 /************************************************************************************
  * include/nuttx/usb/usbhost.h
  *
- *   Copyright (C) 2010-2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2010-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * References:
@@ -152,36 +152,32 @@
 #define CLASS_DISCONNECTED(class) ((class)->disconnected(class))
 
 /*******************************************************************************
- * Name: CONN_WAIT
+ * Name: DRVR_WAIT
  *
  * Description:
- *   Wait for a device to be connected or disconnected to/from a root hub port.
+ *   Wait for a device to be connected or disconneced.
  *
  * Input Parameters:
- *   conn - The USB host connection instance obtained as a parameter from the call to
- *      the USB driver initialization logic.
- *   connected - A pointer to an array of n boolean values corresponding to
- *      root hubs 1 through n.  For each boolean value: TRUE: Wait for a device
- *      to be connected on the root hub; FALSE: wait for device to be
- *      disconnected from the root hub.
+ *   drvr - The USB host driver instance obtained as a parameter from the call to
+ *      the class create() method.
+ *   connected - TRUE: Wait for device to be connected; FALSE: wait for device to
+ *      be disconnected
  *
  * Returned Values:
- *   And index [0..(n-1)} corresponding to the root hub port number {1..n} is
- *   returned when a device in connected or disconnectd. This function will not
- *   return until either (1) a device is connected or disconntect to/from any
- *   root hub port or until (2) some failure occurs.  On a failure, a negated
- *   errno value is returned indicating the nature of the failure
+ *   Zero (OK) is returned when a device in connected. This function will not
+ *   return until either (1) a device is connected or (2) some failure occurs.
+ *   On a failure, a negated errno value is returned indicating the nature of
+ *   the failure
  *
  * Assumptions:
- *   - Called from a single thread so no mutual exclusion is required.
- *   - Never called from an interrupt handler.
+ *   This function will *not* be called from an interrupt handler.
  *
  *******************************************************************************/
 
-#define CONN_WAIT(conn, connected) ((conn)->wait(conn,connected))
+#define DRVR_WAIT(drvr, connected) ((drvr)->wait(drvr,connected))
 
 /************************************************************************************
- * Name: CONN_ENUMERATE
+ * Name: DRVR_ENUMERATE
  *
  * Description:
  *   Enumerate the connected device.  As part of this enumeration process,
@@ -194,9 +190,8 @@
  *   charge of the sequence of operations.
  *
  * Input Parameters:
- *   conn - The USB host connection instance obtained as a parameter from the call to
- *      the USB driver initialization logic.
- *   rphndx - Root hub port index.  0-(n-1) corresponds to root hub port 1-n.
+ *   drvr - The USB host driver instance obtained as a parameter from the call to
+ *      the class create() method.
  *
  * Returned Values:
  *   On success, zero (OK) is returned. On a failure, a negated errno value is
@@ -207,7 +202,7 @@
  *
  ************************************************************************************/
 
-#define CONN_ENUMERATE(conn,rhpndx) ((conn)->enumerate(conn,rhpndx))
+#define DRVR_ENUMERATE(drvr) ((drvr)->enumerate(drvr))
 
 /************************************************************************************
  * Name: DRVR_EP0CONFIGURE
@@ -235,35 +230,6 @@
  ************************************************************************************/
 
 #define DRVR_EP0CONFIGURE(drvr,funcaddr,mps) ((drvr)->ep0configure(drvr,funcaddr,mps))
-
-/************************************************************************************
- * Name: DRVR_GETDEVINFO
- *
- * Description:
- *   Get information about the connected device.
- *
- * Input Parameters:
- *   drvr - The USB host driver instance obtained as a parameter from the call to
- *      the class create() method.
- *   devinfo - A pointer to memory provided by the caller in which to return the
- *      device information.
- *
- * Returned Values:
- *   On success, zero (OK) is returned. On a failure, a negated errno value is
- *   returned indicating the nature of the failure
- *
- * Assumptions:
- *   This function will *not* be called from an interrupt handler.
- *
- ************************************************************************************/
-
-#define DRVR_GETDEVINFO(drvr,devinfo) ((drvr)->getdevinfo(drvr,devinfo))
-
-/* struct usbhost_devinfo_s speed settings */
-
-#define DEVINFO_SPEED_LOW  0
-#define DEVINFO_SPEED_FULL 1
-#define DEVINFO_SPEED_HIGH 2
 
 /************************************************************************************
  * Name: DRVR_EPALLOC
@@ -607,13 +573,6 @@ struct usbhost_epdesc_s
   uint16_t mxpacketsize; /* Max packetsize */
 };
 
-/* This structure provides information about the connected device */
-
-struct usbhost_devinfo_s
-{
-  uint8_t speed:2;       /* Device speed: 0=low, 1=full, 2=high */
-};
-
 /* This type represents one endpoint configured by the epalloc() method.
  * The actual form is know only internally to the USB host controller
  * (for example, for an OHCI driver, this would probably be a pointer
@@ -622,36 +581,28 @@ struct usbhost_devinfo_s
 
 typedef FAR void *usbhost_ep_t;
 
-/* struct usbhost_connection_s provides as interface between platform-specific
- * connection monitoring and the USB host driver connectin and enumeration
- * logic.
- */
-
-struct usbhost_connection_s
-{
-  /* Wait for a device to connect or disconnect. */
-
-  int (*wait)(FAR struct usbhost_connection_s *conn, FAR const bool *connected);
-
-  /* Enumerate the device connected on a root hub port.  As part of this
-   * enumeration process, the driver will (1) get the device's configuration
-   * descriptor, (2) extract the class ID info from the configuration
-   * descriptor, (3) call usbhost_findclass() to find the class that supports
-   * this device, (4) call the create() method on the struct usbhost_registry_s
-   * interface to get a class instance, and finally (5) call the connect()
-   * method of the struct usbhost_class_s interface.  After that, the class is
-   * in charge of the sequence of operations.
-   */
-
-  int (*enumerate)(FAR struct usbhost_connection_s *conn, int rhpndx);
-};
-
 /* struct usbhost_driver_s provides access to the USB host driver from the
  * USB host class implementation.
  */
 
 struct usbhost_driver_s
 {
+  /* Wait for a device to connect or disconnect. */
+
+  int (*wait)(FAR struct usbhost_driver_s *drvr, bool connected);
+
+  /* Enumerate the connected device.  As part of this enumeration process,
+   * the driver will (1) get the device's configuration descriptor, (2)
+   * extract the class ID info from the configuration descriptor, (3) call
+   * usbhost_findclass() to find the class that supports this device, (4)
+   * call the create() method on the struct usbhost_registry_s interface
+   * to get a class instance, and finally (5) call the connect() method
+   * of the struct usbhost_class_s interface.  After that, the class is in
+   * charge of the sequence of operations.
+   */
+
+  int (*enumerate)(FAR struct usbhost_driver_s *drvr);
+
   /* Configure endpoint 0.  This method is normally used internally by the
    * enumerate() method but is made available at the interface to support
    * an external implementation of the enumeration logic.
@@ -660,17 +611,11 @@ struct usbhost_driver_s
   int (*ep0configure)(FAR struct usbhost_driver_s *drvr, uint8_t funcaddr,
                       uint16_t maxpacketsize);
 
-  /* Get information about the connected device */
-
-  int (*getdevinfo)(FAR struct usbhost_driver_s *drvr,
-                   FAR struct usbhost_devinfo_s *devinfo);
-
   /* Allocate and configure an endpoint. */
 
   int (*epalloc)(FAR struct usbhost_driver_s *drvr,
-                 FAR const struct usbhost_epdesc_s *epdesc,
-                 FAR usbhost_ep_t *ep);
-  int (*epfree)(FAR struct usbhost_driver_s *drvr, FAR usbhost_ep_t ep);
+                const FAR struct usbhost_epdesc_s *epdesc, usbhost_ep_t *ep);
+  int (*epfree)(FAR struct usbhost_driver_s *drvr, usbhost_ep_t ep);
 
   /* Some hardware supports special memory in which transfer descriptors can
    * be accessed more efficiently.  The following methods provide a mechanism
@@ -697,7 +642,7 @@ struct usbhost_driver_s
    */
 
   int (*ioalloc)(FAR struct usbhost_driver_s *drvr,
-                 FAR uint8_t **buffer, size_t buflen);
+               FAR uint8_t **buffer, size_t buflen);
   int (*iofree)(FAR struct usbhost_driver_s *drvr, FAR uint8_t *buffer);
 
   /* Process a IN or OUT request on the control endpoint.  These methods
@@ -744,8 +689,7 @@ struct usbhost_driver_s
 #undef EXTERN
 #if defined(__cplusplus)
 #define EXTERN extern "C"
-extern "C"
-{
+extern "C" {
 #else
 #define EXTERN extern
 #endif
@@ -774,7 +718,7 @@ extern "C"
  *
  ************************************************************************************/
 
-int usbhost_registerclass(struct usbhost_registry_s *class);
+EXTERN int usbhost_registerclass(struct usbhost_registry_s *class);
 
 /************************************************************************************
  * Name: usbhost_findclass
@@ -796,7 +740,7 @@ int usbhost_registerclass(struct usbhost_registry_s *class);
  *
  ************************************************************************************/
 
-const struct usbhost_registry_s *usbhost_findclass(const struct usbhost_id_s *id);
+EXTERN const struct usbhost_registry_s *usbhost_findclass(const struct usbhost_id_s *id);
 
 /****************************************************************************
  * Name: usbhost_storageinit
@@ -815,7 +759,7 @@ const struct usbhost_registry_s *usbhost_findclass(const struct usbhost_id_s *id
  *
  ****************************************************************************/
 
-int usbhost_storageinit(void);
+EXTERN int usbhost_storageinit(void);
 
 /****************************************************************************
  * Name: usbhost_kbdinit
@@ -834,26 +778,7 @@ int usbhost_storageinit(void);
  *
  ****************************************************************************/
 
-int usbhost_kbdinit(void);
-
-/****************************************************************************
- * Name: usbhost_mouse_init
- *
- * Description:
- *   Initialize the USB storage HID mouse class driver.  This function
- *   should be called be platform-specific code in order to initialize and
- *   register support for the USB host HID mouse class device.
- *
- * Input Parameters:
- *   None
- *
- * Returned Values:
- *   On success this function will return zero (OK);  A negated errno value
- *   will be returned on failure.
- *
- ****************************************************************************/
-
-int usbhost_mouse_init(void);
+EXTERN int usbhost_kbdinit(void);
 
 /****************************************************************************
  * Name: usbhost_wlaninit
@@ -872,7 +797,34 @@ int usbhost_mouse_init(void);
  *
  ****************************************************************************/
 
-int usbhost_wlaninit(void);
+EXTERN int usbhost_wlaninit(void);
+
+/*******************************************************************************
+ * Name: usbhost_initialize
+ *
+ * Description:
+ *   Initialize USB host device controller hardware.
+ *
+ * Input Parameters:
+ *   controller -- If the device supports more than USB host controller, then
+ *     this identifies which controller is being intialized.  Normally, this
+ *     is just zero.
+ *
+ * Returned Value:
+ *   And instance of the USB host interface.  The controlling task should
+ *   use this interface to (1) call the wait() method to wait for a device
+ *   to be connected, and (2) call the enumerate() method to bind the device
+ *   to a class driver.
+ *
+ * Assumptions:
+ * - This function should called in the initialization sequence in order
+ *   to initialize the USB device functionality.
+ * - Class drivers should be initialized prior to calling this function.
+ *   Otherwise, there is a race condition if the device is already connected.
+ *
+ *******************************************************************************/
+
+EXTERN FAR struct usbhost_driver_s *usbhost_initialize(int controller);
 
 /*******************************************************************************
  * Name: usbhost_enumerate
@@ -911,8 +863,9 @@ int usbhost_wlaninit(void);
  *
  *******************************************************************************/
 
-int usbhost_enumerate(FAR struct usbhost_driver_s *drvr, uint8_t funcaddr,
-                      FAR struct usbhost_class_s **class);
+EXTERN int usbhost_enumerate(FAR struct usbhost_driver_s *drvr,
+                             uint8_t funcaddr,
+                             FAR struct usbhost_class_s **class);
 
 #undef EXTERN
 #if defined(__cplusplus)

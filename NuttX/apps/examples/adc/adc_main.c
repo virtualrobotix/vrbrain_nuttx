@@ -40,7 +40,6 @@
 #include <nuttx/config.h>
 
 #include <sys/types.h>
-#include <sys/ioctl.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -311,18 +310,7 @@ int adc_main(int argc, char *argv[])
 
     msgflush();
 
-#ifdef CONFIG_EXAMPLES_ADC_SWTRIG
-    /* Issue the software trigger to start ADC conversion */
-
-    ret = ioctl(fd, ANIOC_TRIGGER, 0);
-    if (ret < 0)
-      {
-        int errcode = errno;
-        message("adc_main: ANIOC_TRIGGER ioctl failed: %d\n", errcode);
-      }
-#endif
-
-    /* Read up to CONFIG_EXAMPLES_ADC_GROUPSIZE samples */
+    /* Read CONFIG_EXAMPLES_ADC_GROUPSIZE samples */
 
     readsize = CONFIG_EXAMPLES_ADC_GROUPSIZE * sizeof(struct adc_msg_s);
     nbytes = read(fd, sample, readsize);
@@ -363,7 +351,7 @@ int adc_main(int argc, char *argv[])
             for (i = 0; i < nsamples ; i++)
               {
                 message("%d: channel: %d value: %d\n",
-                        i+1, sample[i].am_channel, sample[i].am_data);
+                         i, sample[i].am_channel, sample[i].am_data);
               }
           }
       }

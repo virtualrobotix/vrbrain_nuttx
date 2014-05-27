@@ -128,19 +128,19 @@ void nuc_ledinit(void)
 }
 
 /****************************************************************************
- * Name: board_led_on
+ * Name: up_ledon
  ****************************************************************************/
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
   nuc_gpiowrite(GPIO_LED, false);
 }
 
 /****************************************************************************
- * Name: board_led_off
+ * Name: up_ledoff
  ****************************************************************************/
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
   nuc_gpiowrite(GPIO_LED, true);
 }

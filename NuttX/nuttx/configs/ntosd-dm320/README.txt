@@ -63,13 +63,13 @@ GNU Toolchain Options
   add one of the following configuration options to your .config (or defconfig)
   file:
 
-    CONFIG_ARM_TOOLCHAIN_CODESOURCERYW=y  : CodeSourcery under Windows
-    CONFIG_ARM_TOOLCHAIN_CODESOURCERYL=y  : CodeSourcery under Linux
-    CONFIG_ARM_TOOLCHAIN_DEVKITARM=y      : devkitARM under Windows
-    CONFIG_ARM_TOOLCHAIN_BUILDROOT=y	    : NuttX buildroot under Linux or Cygwin (default)
-    CONFIG_ARM_TOOLCHAIN_GNU_EABIL : Generic arm-none-eabi toolchain
+    CONFIG_DM320_CODESOURCERYW=y  : CodeSourcery under Windows
+    CONFIG_DM320_CODESOURCERYL=y  : CodeSourcery under Linux
+    CONFIG_DM320_DEVKITARM=y      : devkitARM under Windows
+    CONFIG_DM320_BUILDROOT=y	    : NuttX buildroot under Linux or Cygwin (default)
+    CONFIG_ARM_TOOLCHAIN_GNU_EABI : Generic arm-none-eabi toolchain
 
-  If you are not using CONFIG_ARM_TOOLCHAIN_BUILDROOT, then you may also have to modify
+  If you are not using CONFIG_DM320_BUILDROOT, then you may also have to modify
   the PATH in the setenv.h file if your make cannot find the tools.
 
   The toolchain may also be set using the kconfig-mconf utility (make menuconfig)
@@ -233,11 +233,11 @@ ARM/DM320-specific Configuration Options
 	CONFIG_ENDIAN_BIG - define if big endian (default is little
 	   endian)
 
-	CONFIG_RAM_SIZE - Describes the installed DRAM.
+	CONFIG_DRAM_SIZE - Describes the installed DRAM.
 
-	CONFIG_RAM_START - The start address of installed DRAM
+	CONFIG_DRAM_START - The start address of installed DRAM
 
-	CONFIG_RAM_VSTART - The startaddress of DRAM (virtual)
+	CONFIG_DRAM_VSTART - The startaddress of DRAM (virtual)
 
 	CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
 	   have LEDs
@@ -282,68 +282,58 @@ ARM/DM320-specific Configuration Options
 Configurations
 ^^^^^^^^^^^^^^
 
-Common Configuration Notes
---------------------------
+Each Neuros OSD configuration is maintained in a sub-directory and
+can be selected as follow:
 
-  1. Each Neuros OSD configuration is maintained in a sub-directory and
-     can be selected as follow:
+	cd tools
+	./configure.sh ntosd-dm320/<subdir>
+	cd -
+	. ./setenv.sh
 
-       cd tools
-       ./configure.sh ntosd-dm320/<subdir>
-       cd -
-       . ./setenv.sh
+Where <subdir> is one of the following:
 
-     Where <subdir> is one of the configuration sub-directories described in
-     the following paragraph.
+nettest
+^^^^^^^
 
-  2. These configurations use the mconf-based configuration tool.  To
-     change a configurations using that tool, you should:
+This alternative configuration directory may be used to
+enable networking using the OSDs DM9000A Ethernet interface.
+It uses examples/nettest to excercise the TCP/IP network.
 
-     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-        and misc/tools/
+nsh
+^^^
 
-     b. Execute 'make menuconfig' in nuttx/ in order to start the
-        reconfiguration process.
+Configures the NuttShell (nsh) located at examples/nsh.  The
+Configuration enables both the serial and telnetd NSH interfaces.
 
-  3. By default, all configurations assume the CodeSourcery toolchain under
-     Linux.  This is easily reconfigured:
+ostest
+^^^^^^
 
-        CONFIG_HOST_LINUX=y
-        CONFIG_ARM_TOOLCHAIN_CODESOURCERYL=y
+This configuration directory, performs a simple OS test using
+examples/ostest.
 
-Configuration Sub-Directories
------------------------------
+poll
+^^^^
 
-  nettest
+This configuration exercises the poll()/select() text at
+examples/poll
 
-    This alternative configuration directory may be used to
-    enable networking using the OSDs DM9000A Ethernet interface.
-    It uses examples/nettest to excercise the TCP/IP network.
+thttpd
+^^^^^^
 
-  nsh
+This builds the THTTPD web server example using the THTTPD and
+the examples/thttpd application.
 
-    Configures the NuttShell (nsh) located at examples/nsh.  The
-    Configuration enables both the serial and telnetd NSH interfaces.
+udp
+^^^
 
-  poll
+This alternative configuration directory is similar to nettest
+except that is use examples/upd to exercise UDP.
 
-    This configuration exercises the poll()/select() text at
-    examples/poll
+uip
+^^^
 
-  thttpd
-
-    This builds the THTTPD web server example using the THTTPD and
-    the examples/thttpd application.
-
-  udp
-
-    This alternative configuration directory is similar to nettest
-    except that is use examples/upd to exercise UDP.
-
-  uip
-
-    This configuration file demonstrates the tiny webserver
-    at examples/uip.
+This configuration file demonstrates the tiny webserver
+at examples/uip.
 
 Configuration Options
 ^^^^^^^^^^^^^^^^^^^^^
@@ -365,8 +355,8 @@ specific to the DM320:
  CONFIG_ARCH_BOARD_name - for use in C code
  CONFIG_BOARD_LOOPSPERMSEC - for delay loops
  CONFIG_ARCH_LEDS - Use LEDs to show state.
- CONFIG_RAM_SIZE - Describes the internal DRAM.
- CONFIG_RAM_START - The start address of internal DRAM
+ CONFIG_DRAM_SIZE - Describes the internal DRAM.
+ CONFIG_DRAM_START - The start address of internal DRAM
  CONFIG_ARCH_STACKDUMP - Do stack dumps after assertions
 
 DM320 specific device driver settings

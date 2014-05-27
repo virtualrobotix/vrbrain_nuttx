@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/crc32.h
+ * include/crc.h
  *
  *   Copyright (C) 2010 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -49,8 +49,7 @@
 
 #ifdef __cplusplus
 #define EXTERN extern "C"
-extern "C"
-{
+extern "C" {
 #else
 #define EXTERN extern
 #endif
@@ -63,7 +62,8 @@ extern "C"
  *
  ****************************************************************************/
 
-uint32_t crc32part(FAR const uint8_t *src, size_t len, uint32_t crc32val);
+EXTERN uint32_t crc32part(FAR const uint8_t *src, size_t len,
+                          uint32_t crc32val);
 
 /****************************************************************************
  * Name: crc32
@@ -73,7 +73,7 @@ uint32_t crc32part(FAR const uint8_t *src, size_t len, uint32_t crc32val);
  *
  ****************************************************************************/
 
-uint32_t crc32(FAR const uint8_t *src, size_t len);
+EXTERN uint32_t crc32(FAR const uint8_t *src, size_t len);
 
 #undef EXTERN
 #ifdef __cplusplus

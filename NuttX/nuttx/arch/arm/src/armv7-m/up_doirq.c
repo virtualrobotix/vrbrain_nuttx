@@ -1,7 +1,7 @@
 /****************************************************************************
  * arch/arm/src/armv7-m/up_doirq.c
  *
- *   Copyright (C) 2009, 2011, 2013-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2009, 2011, 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,7 +72,7 @@
 
 uint32_t *up_doirq(int irq, uint32_t *regs)
 {
-  board_led_on(LED_INIRQ);
+  up_ledon(LED_INIRQ);
 #ifdef CONFIG_SUPPRESS_INTERRUPTS
   PANIC();
 #else
@@ -93,9 +93,9 @@ uint32_t *up_doirq(int irq, uint32_t *regs)
   savestate    = (uint32_t*)current_regs;
   current_regs = regs;
 
-  /* Acknowledge the interrupt */
+  /* Mask and acknowledge the interrupt */
 
-  up_ack_irq(irq);
+  up_maskack_irq(irq);
 
   /* Deliver the IRQ */
 
@@ -115,7 +115,11 @@ uint32_t *up_doirq(int irq, uint32_t *regs)
    */
 
   current_regs = savestate;
+
+  /* Unmask the last interrupt (global interrupts are still disabled) */
+
+  up_enable_irq(irq);
 #endif
-  board_led_off(LED_INIRQ);
+  up_ledoff(LED_INIRQ);
   return regs;
 }

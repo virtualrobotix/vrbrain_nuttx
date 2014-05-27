@@ -49,24 +49,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#undef FS_HAVE_WRITABLE_MOUNTPOINT
-#if !defined(CONFIG_DISABLE_MOUNTPOINT) && defined(CONFIG_FS_WRITABLE) && \
-    CONFIG_NFILE_STREAMS > 0
-#  define FS_HAVE_WRITABLE_MOUNTPOINT 1
-#endif
-
-#undef FS_HAVE_PSEUDOFS_OPERATIONS
-#if !defined(CONFIG_DISABLE_PSEUDOFS_OPERATIONS) && CONFIG_NFILE_STREAMS > 0
-#  define FS_HAVE_PSEUDOFS_OPERATIONS 1
-#endif
-
-#undef FS_HAVE_UNLINK
-#if defined(FS_HAVE_WRITABLE_MOUNTPOINT) || defined(FS_HAVE_PSEUDOFS_OPERATIONS)
-#  define FS_HAVE_UNLINK 1
-#endif
-
-#ifdef FS_HAVE_UNLINK
-
 /****************************************************************************
  * Private Variables
  ****************************************************************************/
@@ -94,7 +76,6 @@ int unlink(FAR const char *pathname)
 {
   FAR struct inode *inode;
   const char       *relpath = NULL;
-  int               errcode;
   int               ret;
 
   /* Get an inode for this file */
@@ -102,93 +83,38 @@ int unlink(FAR const char *pathname)
   inode = inode_find(pathname, &relpath);
   if (!inode)
     {
-      /* There is no inode that includes in this path */
+      /* There is no mountpoint that includes in this path */
 
-      errcode = ENOENT;
+      ret = ENOENT;
       goto errout;
     }
 
-#ifndef CONFIG_DISABLE_MOUNTPOINT
-  /* Check if the inode is a valid mountpoint. */
+  /* Verify that the inode is a valid mountpoint. */
 
-  if (INODE_IS_MOUNTPT(inode) && inode->u.i_mops)
+  if (!INODE_IS_MOUNTPT(inode) || !inode->u.i_mops)
     {
-      /* Perform the unlink operation using the relative path at the
-       * mountpoint.
-       */
+      ret = ENXIO;
+      goto errout_with_inode;
+    }
 
-      if (inode->u.i_mops->unlink)
+  /* Perform the unlink operation using the relative path
+   * at the mountpoint.
+   */
+
+  if (inode->u.i_mops->unlink)
+    {
+      ret = inode->u.i_mops->unlink(inode, relpath);
+      if (ret < 0)
         {
-          ret = inode->u.i_mops->unlink(inode, relpath);
-          if (ret < 0)
-            {
-              errcode = -ret;
-              goto errout_with_inode;
-            }
-        }
-      else
-        {
-          errcode = ENOSYS;
+          ret = -ret;
           goto errout_with_inode;
         }
     }
   else
-#endif
-
-#ifndef CONFIG_DISABLE_PSEUDOFS_OPERATIONS
-  /* If this is a "dangling" pseudo-file node (i.e., it has operations) then rm
-   * should remove the node.
-   */
-
-  if (inode->u.i_ops)
-    {
-      /* If this is a pseudo-file node (i.e., it has no operations)
-       * then rmdir should remove the node.
-       */
-
-      if (inode->u.i_ops)
-        {
-          inode_semtake();
-
-          /* Refuse to unlink the inode if it has children.  I.e., if it is
-           * functioning as a directory and the directory is not empty.
-           */
-
-          if (inode->i_child != NULL)
-            {
-              errcode = ENOTEMPTY;
-              inode_semgive();
-              goto errout_with_inode;
-            }
-
-          /* Remove the old inode.  Because we hold a reference count on the
-           * inode, it will not be deleted now.  It will be deleted when all
-           * of the references to to the inode have been released (perhaps
-           * when inode_release() is called below).  inode_remove() will
-           * return -EBUSY to indicate that the inode was not deleted now.
-           */
-
-          ret = inode_remove(pathname);
-          inode_semgive();
-
-          if (ret < 0 && ret != -EBUSY)
-            {
-              errcode = -ret;
-              goto errout_with_inode;
-            }
-        }
-      else
-        {
-          errcode = EISDIR;
-          goto errout_with_inode;
-        }
-    }
-#else
-    {
-      errcode = ENXIO;
+    { 
+      ret = ENOSYS;
       goto errout_with_inode;
     }
-#endif
 
   /* Successfully unlinked */
 
@@ -198,8 +124,7 @@ int unlink(FAR const char *pathname)
  errout_with_inode:
   inode_release(inode);
  errout:
-  set_errno(errcode);
+  set_errno(ret);
   return ERROR;
 }
 
-#endif /* FS_HAVE_UNLINK */

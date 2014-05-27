@@ -44,15 +44,21 @@ void VRBRAINGPIO::init()
     if (ioctl(_led_fd, LED_OFF, LED_GREEN) != 0) {
          hal.console->printf("GPIO: Unable to setup GPIO LED GREEN\n");
     }
+#if !defined(CONFIG_ARCH_BOARD_VRHERO_V10)
     if (ioctl(_led_fd, LED_OFF, LED_EXT1) != 0) {
          hal.console->printf("GPIO: Unable to setup GPIO LED EXT 1\n");
     }
+#endif
+#if !defined(CONFIG_ARCH_BOARD_VRHERO_V10)
     if (ioctl(_led_fd, LED_OFF, LED_EXT2) != 0) {
          hal.console->printf("GPIO: Unable to setup GPIO LED EXT 2\n");
     }
+#endif
+#if !defined(CONFIG_ARCH_BOARD_VRHERO_V10) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
     if (ioctl(_led_fd, LED_OFF, LED_EXT3) != 0) {
          hal.console->printf("GPIO: Unable to setup GPIO LED EXT 3\n");
     }
+#endif
 
     _buzzer_fd = open(BUZZER_DEVICE_PATH, O_RDWR);
     if (_buzzer_fd == -1) {
@@ -112,19 +118,23 @@ void VRBRAINGPIO::write(uint8_t pin, uint8_t value)
             break;
 
         case EXTERNAL_LED_GPS:
+#if !defined(CONFIG_ARCH_BOARD_VRHERO_V10)
             if (value == LOW) {
                 ioctl(_led_fd, LED_OFF, LED_EXT1);
             } else {
                 ioctl(_led_fd, LED_ON, LED_EXT1);
             }
+#endif
             break;
 
         case EXTERNAL_LED_ARMED:
+#if !defined(CONFIG_ARCH_BOARD_VRHERO_V10)
             if (value == LOW) {
                 ioctl(_led_fd, LED_OFF, LED_EXT2);
             } else {
                 ioctl(_led_fd, LED_ON, LED_EXT2);
             }
+#endif
             break;
 
         case EXTERNAL_LED_MOTOR1:
@@ -160,11 +170,15 @@ void VRBRAINGPIO::toggle(uint8_t pin)
             break;
 
         case EXTERNAL_LED_GPS:
+#if !defined(CONFIG_ARCH_BOARD_VRHERO_V10)
 			ioctl(_led_fd, LED_TOGGLE, LED_EXT1);
+#endif
             break;
 
         case EXTERNAL_LED_ARMED:
+#if !defined(CONFIG_ARCH_BOARD_VRHERO_V10)
 			ioctl(_led_fd, LED_TOGGLE, LED_EXT2);
+#endif
             break;
 
         case EXTERNAL_LED_MOTOR1:
@@ -176,7 +190,7 @@ void VRBRAINGPIO::toggle(uint8_t pin)
             break;
 
         case BUZZER_PIN:
-			ioctl(_led_fd, LED_TOGGLE, BUZZER_EXT);
+			ioctl(_buzzer_fd, BUZZER_TOGGLE, BUZZER_EXT);
             break;
 
         default:

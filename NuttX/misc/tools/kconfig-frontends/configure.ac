@@ -30,12 +30,8 @@ AS_IF(
 
 AM_INIT_AUTOMAKE([foreign])
 
-# For releases, enable silent rules, unless the user explicitly
-# disables them.
-# For the devel tree, do build with verbose output, unless user
-# explicitly enables silent rules
 AS_IF(
-    [test "$(${srcdir}/scripts/version.sh --internal)" = "git"],
+    [test "$(${srcdir}/scripts/version.sh --internal)" = "hg"],
     [AM_SILENT_RULES],
     [AM_SILENT_RULES([yes])])
 
@@ -67,12 +63,12 @@ AC_ARG_ENABLE(
         [*],   [wall_CFLAGS=""])])
 AC_SUBST([wall_CFLAGS],[${wall_CFLAGS}])
 
-# For releases, do not build with -Werror, unless the user explicitly
+# For releases, do not build with -Werror, unless the user explcitly
 # requests to build with -Werror.
 # For the devel tree, do build with -Werror by default, unless user
 # explicitly disables -Werror
 AS_IF(
-    [test "$(${srcdir}/scripts/version.sh --internal)" = "git"],
+    [test "$(${srcdir}/scripts/version.sh --internal)" = "hg"],
     [werror_CFLAGS=-Werror])
 AC_ARG_ENABLE(
     [werror],
@@ -97,7 +93,9 @@ AC_ARG_ENABLE(
         [yes], [root_menu=Configuration],
         [no],  [root_menu=],
                [# Escape the $ signs, otherwise they would get munged by make
-                root_menu="$( echo "$enableval" |sed -e 's/\$/\\$$/g;' )"])])
+                # Also, append a space at the end, to separate the package
+                # name from the literal 'Configuration'
+                root_menu="$( echo "$enableval" |sed -r -e 's/\$/\\$$/g;' )"])])
 AC_SUBST([root_menu], [${root_menu=Configuration}])
 
 AC_ARG_ENABLE(
@@ -219,22 +217,9 @@ AS_IF(
 AS_IF(
     [test "$need_pkgconfig" = "yes"],
     [PKG_PROG_PKG_CONFIG()])
-# Look for `lex'. If it cannot be found, autoconf sets $LEX to ':'.
 AC_PROG_LEX
-AS_IF(
-    [test "$LEX" = ":"],
-    [AC_MSG_ERROR([can not find a lexer generator (such as lex or flex)])])
 AC_SUBST([AM_LFLAGS], ["-L -P zconf"])
-# Look for `yacc'. If it cannot be found, autoconf sets $YACC to 'yacc'.
 AC_PROG_YACC
-AS_IF(
-    [test "$YACC" = "yacc"],
-    [AC_CHECK_PROGS(
-        [YACC_IN_PATH],
-        [yacc])]
-     AS_IF(
-        [test -z "$YACC_IN_PATH"],
-        [AC_MSG_ERROR([can not find a parser generator (such as yacc or bison)])]))
 AC_SUBST([AM_YFLAGS], ["-t -l -p zconf"])
 
 #----------------------------------------
@@ -272,24 +257,19 @@ AC_SUBST([intl_LIBS])
 # Check for ncurses, for the mconf & nconf frontends
 AS_IF(
     [test "$need_curses" = "yes" -o "$need_curses" = "auto"],
-    [AC_SUBST([ncurses_mconf_CPPFLAGS])
+    [AC_SUBST([CURSES_LOC])
      AC_SUBST([ncurses_LIBS])
      LIBS_old="$LIBS"
      LIBS=
      AC_CHECK_HEADERS(
         [ncursesw/curses.h ncurses/ncurses.h ncurses/curses.h ncurses.h curses.h],
-        [CURSES_LOC=$ac_header
-         ncurses_mconf_CPPFLAGS=-DCURSES_LOC=\\\"$ac_header\\\"
-         break # Stupid syntax-coloring in vim: "])
+        [CURSES_LOC=$ac_header; break])
      AS_IF(
         [test -z "$CURSES_LOC"],
         [AS_IF(
             [test "$need_curses" = "yes"],
             [AC_MSG_ERROR([could not find curses headers (frontends: mconf/nconf)])],
             [has_curses=no])])
-     AS_CASE(
-        [$CURSES_LOC],
-        [ncursesw/*],[ncurses_mconf_CPPFLAGS="$ncurses_mconf_CPPFLAGS -DNCURSES_WIDECHAR=1"])
      AC_SEARCH_LIBS(
         [initscr],
         [ncursesw ncurses curses],
@@ -300,10 +280,6 @@ AS_IF(
             [test "$need_curses" = "yes"],
             [AC_MSG_ERROR([could not find curses library (frontends: mconf/nconf)])],
             [has_curses=no])])
-     AC_SEARCH_LIBS(
-        [setupterm],
-        [tinfo],
-        [break])
      ncurses_LIBS="$LIBS"
      LIBS=$LIBS_old])
 
@@ -315,12 +291,12 @@ AS_IF(
 # Check for libpanel and libmenu, for the nconf frontend
 AS_IF(
     [test "$need_panel_menu" = "yes" -o "$need_panel_menu" = "auto"],
-    [AC_SUBST([ncurses_nconf_CPPFLAGS])
-     AC_SUBST([ncurses_panel_menu_LIBS])
+    [AC_SUBST([ncurses_extra_LIBS])
+     AC_SUBST([ncurses_extra_CPPFLAGS])
      AS_CASE(
         [$CURSES_LOC],
-        [ncursesw/*],[ncurses_nconf_CPPFLAGS="-I/usr/include/ncursesw"],
-        [ncurses/*],[ncurses_nconf_CPPFLAGS="-I/usr/include/ncurses"])
+        [ncursesw/*],[ncurses_extra_CPPFLAGS="-I/usr/include/ncursesw"],
+        [ncurses/*],[ncurses_extra_CPPFLAGS="-I/usr/include/ncurses"])
      LIBS_old="$LIBS"
      LIBS=
      AC_SEARCH_LIBS(
@@ -345,7 +321,7 @@ AS_IF(
             [test "$need_panel_menu" = "yes"],
             [AC_MSG_ERROR([could not find libmenu library (frontend: nconf)])],
             [has_panel_menu=no])])
-     ncurses_panel_menu_LIBS="$LIBS"
+     ncurses_extra_LIBS="$LIBS"
      LIBS=$LIBS_old])
 
 AS_IF(

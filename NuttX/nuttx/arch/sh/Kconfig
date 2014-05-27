@@ -4,20 +4,17 @@
 #
 
 if ARCH_SH
-
 choice
 	prompt "SH chip selection"
 	default ARCH_CHIP_SH7032
 
 config ARCH_CHIP_SH7032
 	bool "SH7032"
-	select ARCH_SH1
 	---help---
 		Hitachi/Renesas SH7032 (SH1)
 
 config ARCH_CHIP_M30262F8
 	bool "M30262F8"
-	select ARCH_M16C
 	---help---
 		Renesas M30262F8 (M16C)
 
@@ -25,11 +22,11 @@ endchoice
 
 config ARCH_SH1
 	bool
-	default n
+	default y			if ARCH_CHIP_SH7032
 
 config ARCH_M16C
 	bool
-	default n
+	default y			if ARCH_CHIP_M30262F8
 
 config ARCH_CHIP
 	string
@@ -40,4 +37,4 @@ source arch/sh/src/common/Kconfig
 source arch/sh/src/m16c/Kconfig
 source arch/sh/src/sh1/Kconfig
 
-endif # ARCH_SH
+endif

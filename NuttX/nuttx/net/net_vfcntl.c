@@ -1,7 +1,7 @@
 /****************************************************************************
  * net/net_vfcntl.c
  *
- *   Copyright (C) 2009, 2012-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2009, 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -97,14 +97,14 @@ int net_vfcntl(int sockfd, int cmd, va_list ap)
 
       case F_GETFD:
         /* Get the file descriptor flags defined in <fcntl.h> that are associated
-         * with the file descriptor fd.  File descriptor flags are associated
+         * with the file descriptor fildes.  File descriptor flags are associated
          * with a single file descriptor and do not affect other file descriptors
          * that refer to the same file.
          */
 
       case F_SETFD:
         /* Set the file descriptor flags defined in <fcntl.h>, that are associated
-         * with fd, to the third argument, arg, taken as type int. If the
+         * with fildes, to the third argument, arg, taken as type int. If the
          * FD_CLOEXEC flag in the third argument is 0, the file shall remain open
          * across the exec functions; otherwise, the file shall be closed upon
          * successful execution of one  of  the  exec  functions.
@@ -115,7 +115,7 @@ int net_vfcntl(int sockfd, int cmd, va_list ap)
 
       case F_GETFL:
         /* Get the file status flags and file access modes, defined in <fcntl.h>,
-         * for the file description associated with fd. The file access modes
+         * for the file description associated with fildes. The file access modes
          * can be extracted from the return value using the mask O_ACCMODE, which is
          * defined  in <fcntl.h>. File status flags and file access modes are associated
          * with the file description and do not affect other file descriptors that
@@ -127,9 +127,9 @@ int net_vfcntl(int sockfd, int cmd, va_list ap)
 
           ret = O_RDWR | O_SYNC | O_RSYNC;
 
-#ifdef CONFIG_NET_TCP_READAHEAD
           /* TCP/IP sockets may also be non-blocking if read-ahead is enabled */
 
+#if CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
           if (psock->s_type == SOCK_STREAM && _SS_ISNONBLOCK(psock->s_flags))
             {
               ret |= O_NONBLOCK;
@@ -140,7 +140,7 @@ int net_vfcntl(int sockfd, int cmd, va_list ap)
 
       case F_SETFL:
         /* Set the file status flags, defined in <fcntl.h>, for the file description
-         * associated with fd from the corresponding  bits in the third argument,
+         * associated with fildes from the corresponding  bits in the third argument,
          * arg, taken as type int. Bits corresponding to the file access mode and
          * the file creation flags, as defined in <fcntl.h>, that are set in arg shall
          * be ignored. If any bits in arg other than those mentioned here are changed
@@ -148,11 +148,11 @@ int net_vfcntl(int sockfd, int cmd, va_list ap)
          */
 
         {
-#ifdef CONFIG_NET_TCP_READAHEAD
            /* Non-blocking is the only configurable option.  And it applies only to
             * read operations on TCP/IP sockets when read-ahead is enabled.
             */
 
+#if CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0
           int mode =  va_arg(ap, int);
           if (psock->s_type == SOCK_STREAM)
             {
@@ -170,18 +170,18 @@ int net_vfcntl(int sockfd, int cmd, va_list ap)
         break;
 
       case F_GETOWN:
-        /* If fd refers to a socket, get the process or process group ID specified
+        /* If fildes refers to a socket, get the process or process group ID specified
          * to receive SIGURG signals when out-of-band data is available. Positive values
          * indicate a process ID; negative values, other than -1, indicate a process group
-         * ID. If fd does not refer to a socket, the results are unspecified.
+         * ID. If fildes does not refer to a socket, the results are unspecified.
          */
 
       case F_SETOWN:
-        /* If fd refers to a socket, set the process or process group ID specified
+        /* If fildes refers to a socket, set the process or process group ID specified
          * to receive SIGURG signals when out-of-band data is available, using the value
-         * of the third argument, arg, taken as type int. Positive values indicate a
+         * of the third argument, arg, taken as type int. Positive values indicate a 
          * process ID; negative values, other than -1, indicate a process group ID. If
-         * fd does not refer to a socket, the results are unspecified.
+         * fildes does not refer to a socket, the results are unspecified.
          */
 
       case F_GETLK:

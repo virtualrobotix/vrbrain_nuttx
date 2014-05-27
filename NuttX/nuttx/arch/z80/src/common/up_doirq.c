@@ -72,7 +72,7 @@
 
 FAR chipreg_t *up_doirq(uint8_t irq, FAR chipreg_t *regs)
 {
-  board_led_on(LED_INIRQ);
+  up_ledon(LED_INIRQ);
 
 #ifdef CONFIG_SUPPRESS_INTERRUPTS
 
@@ -103,7 +103,7 @@ FAR chipreg_t *up_doirq(uint8_t irq, FAR chipreg_t *regs)
        IRQ_LEAVE(irq);
     }
 
-  board_led_off(LED_INIRQ);
+  up_ledoff(LED_INIRQ);
   return regs;
 #endif
 }

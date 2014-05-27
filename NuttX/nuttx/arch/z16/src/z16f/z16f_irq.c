@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/z16/src/z16f/z16f_irq.c
+ * z16f/z16f_irq.c
  *
- *   Copyright (C) 2008-2009, 2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2008-2009 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,8 +38,6 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-
-#include <errno.h>
 
 #include <nuttx/irq.h>
 #include <arch/irq.h>
@@ -209,10 +207,8 @@ void up_maskack_irq(int irq)
  *
  ****************************************************************************/
 
-int up_prioritize_irq(int irq, int priority)
+void up_prioritize_irq(int irq, int priority)
 {
   /* To be provided */
-
-  return -ENOSYS;
 }
 

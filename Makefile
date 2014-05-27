@@ -36,19 +36,30 @@
 #
 # Get path and tool configuration
 #
-export VRBRAIN_BASE		 := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/
-include $(VRBRAIN_BASE)makefiles/setup.mk
+export VRX_BASE		 := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/
+include $(VRX_BASE)makefiles/setup.mk
+
+#
+# Get a version string provided by git
+# This assumes that git command is available and that
+# the directory holding this file also contains .git directory
+#
+GIT_DESC := $(shell git log -1 --pretty=format:%H)
+ifneq ($(words $(GIT_DESC)),1)
+    GIT_DESC := "unknown_git_version"
+endif
+export GIT_DESC
 
 #
 # Canned firmware configurations that we (know how to) build.
 #
-KNOWN_CONFIGS		:= $(subst config_,,$(basename $(notdir $(wildcard $(VRBRAIN_MK_DIR)config_*.mk))))
+KNOWN_CONFIGS		:= $(subst config_,,$(basename $(notdir $(wildcard $(VRX_MK_DIR)config_*.mk))))
 CONFIGS			?= $(KNOWN_CONFIGS)
 
 #
 # Boards that we (know how to) build NuttX export kits for.
 #
-KNOWN_BOARDS		:= $(subst board_,,$(basename $(notdir $(wildcard $(VRBRAIN_MK_DIR)board_*.mk))))
+KNOWN_BOARDS		:= $(subst board_,,$(basename $(notdir $(wildcard $(VRX_MK_DIR)board_*.mk))))
 BOARDS			?= $(KNOWN_BOARDS)
 
 #
@@ -120,7 +131,7 @@ $(FIRMWARES): $(BUILD_DIR)%.build/firmware.vrx:
 	@$(ECHO) %%%%
 	$(Q) $(MKDIR) -p $(work_dir)
 	$(Q) $(MAKE) -r -C $(work_dir) \
-		-f $(VRBRAIN_MK_DIR)firmware.mk \
+		-f $(VRX_MK_DIR)firmware.mk \
 		CONFIG=$(config) \
 		WORK_DIR=$(work_dir) \
 		$(FIRMWARE_GOAL)
@@ -165,7 +176,7 @@ $(NUTTX_ARCHIVES): $(ARCHIVE_DIR)%.export: $(NUTTX_SRC)
 	@$(ECHO) %% Configuring NuttX for $(board)
 	$(Q) (cd $(NUTTX_SRC) && $(RMDIR) nuttx-export)
 	$(Q) $(MAKE) -r -j1 -C $(NUTTX_SRC) -r $(MQUIET) distclean
-	$(Q) (cd $(NUTTX_SRC)/configs && $(COPYDIR) $(VRBRAIN_BASE)nuttx-configs/$(board) .)
+	$(Q) (cd $(NUTTX_SRC)/configs && $(COPYDIR) $(VRX_BASE)nuttx-configs/$(board) .)
 	$(Q) (cd $(NUTTX_SRC)tools && ./configure.sh $(board)/$(configuration))
 	@$(ECHO) %% Exporting NuttX for $(board)
 	$(Q) $(MAKE) -r -j1 -C $(NUTTX_SRC) -r $(MQUIET) CONFIG_ARCH_BOARD=$(board) export
@@ -186,12 +197,12 @@ menuconfig: $(NUTTX_SRC)
 	@$(ECHO) %% Configuring NuttX for $(BOARD)
 	$(Q) (cd $(NUTTX_SRC) && $(RMDIR) nuttx-export)
 	$(Q) $(MAKE) -r -j1 -C $(NUTTX_SRC) -r $(MQUIET) distclean
-	$(Q) (cd $(NUTTX_SRC)/configs && $(COPYDIR) $(VRBRAIN_BASE)nuttx-configs/$(BOARD) .)
+	$(Q) (cd $(NUTTX_SRC)/configs && $(COPYDIR) $(VRX_BASE)nuttx-configs/$(BOARD) .)
 	$(Q) (cd $(NUTTX_SRC)tools && ./configure.sh $(BOARD)/nsh)
 	@$(ECHO) %% Running menuconfig for $(BOARD)
 	$(Q) $(MAKE) -r -j1 -C $(NUTTX_SRC) -r $(MQUIET) menuconfig
 	@$(ECHO) %% Saving configuration file
-	$(Q)$(COPY) $(NUTTX_SRC).config $(VRBRAIN_BASE)nuttx-configs/$(BOARD)/nsh/defconfig
+	$(Q)$(COPY) $(NUTTX_SRC).config $(VRX_BASE)nuttx-configs/$(BOARD)/nsh/defconfig
 else
 menuconfig:
 	@$(ECHO) ""
@@ -208,7 +219,7 @@ $(NUTTX_SRC):
 # Testing targets
 #
 testbuild:
-	$(Q) (cd $(VRBRAIN_BASE) && $(MAKE) distclean && $(MAKE) archives && $(MAKE) -j8)
+	$(Q) (cd $(VRX_BASE) && $(MAKE) distclean && $(MAKE) archives && $(MAKE) -j8)
 
 #
 # Cleanup targets.  'clean' should remove all built products and force
@@ -232,8 +243,8 @@ distclean: clean
 .PHONY: help
 help:
 	@$(ECHO) ""
-	@$(ECHO) " VRBRAIN firmware builder"
-	@$(ECHO) " ========================"
+	@$(ECHO) " VRX firmware builder"
+	@$(ECHO) " ===================="
 	@$(ECHO) ""
 	@$(ECHO) "  Available targets:"
 	@$(ECHO) "  ------------------"

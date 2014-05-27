@@ -95,7 +95,6 @@ static inline FAR const char *nsh_getwd(const char *wd)
     {
       val = g_home;
     }
-
   return val;
 }
 #endif
@@ -135,7 +134,6 @@ static inline char *nsh_getdirpath(FAR struct nsh_vtbl_s *vtbl,
     {
       nsh_output(vtbl, g_fmtcmdoutofmemory, "nsh_getdirpath");
     }
-
   return alloc;
 }
 
@@ -159,8 +157,7 @@ FAR const char *nsh_getcwd(void)
  ****************************************************************************/
 
 #if CONFIG_NFILE_DESCRIPTORS > 0 && !defined(CONFIG_DISABLE_ENVIRON)
-FAR char *nsh_getfullpath(FAR struct nsh_vtbl_s *vtbl,
-                          FAR const char *relpath)
+char *nsh_getfullpath(FAR struct nsh_vtbl_s *vtbl, const char *relpath)
 {
   const char *wd;
 
@@ -178,7 +175,7 @@ FAR char *nsh_getfullpath(FAR struct nsh_vtbl_s *vtbl,
     }
 
   /* Get the path to the current working directory */
-
+   
   wd = nsh_getcwd();
 
   /* Fake the '.' directory */
@@ -199,11 +196,11 @@ FAR char *nsh_getfullpath(FAR struct nsh_vtbl_s *vtbl,
  ****************************************************************************/
 
 #if CONFIG_NFILE_DESCRIPTORS > 0 && !defined(CONFIG_DISABLE_ENVIRON)
-void nsh_freefullpath(FAR char *fullpath)
+void nsh_freefullpath(char *relpath)
 {
-  if (fullpath)
+  if (relpath)
     {
-      free(fullpath);
+      free(relpath);
     }
 }
 #endif
@@ -263,7 +260,6 @@ int cmd_cd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       nsh_freefullpath(fullpath);
     }
-
   return ret;
 }
 #endif
@@ -286,7 +282,6 @@ int cmd_echo(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       nsh_output(vtbl, "%s ", argv[i]);
     }
-
   nsh_output(vtbl, "\n");
   return OK;
 }
@@ -319,7 +314,6 @@ int cmd_set(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       nsh_output(vtbl, g_fmtcmdfailed, argv[0], "setenv", NSH_ERRNO);
     }
-
   return ret;
 }
 #endif
@@ -338,7 +332,6 @@ int cmd_unset(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       nsh_output(vtbl, g_fmtcmdfailed, argv[0], "unsetenv", NSH_ERRNO);
     }
-
   return ret;
 }
 #endif

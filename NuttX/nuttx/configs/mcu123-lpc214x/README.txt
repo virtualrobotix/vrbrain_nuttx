@@ -240,7 +240,7 @@ ARM/LPC214X-specific Configuration Options
 
 	CONFIG_ARCH_BOARD_name - For use in C code
 
-	   CONFIG_ARCH_BOARD_MCU123_LPC214X (for theMCU123 LPC214x board)
+	   CONFIG_ARCH_BOARD_MCU123 (for the Spectrum Digital C5471 EVM)
 
 	CONFIG_ARCH_LOOPSPERMSEC - Must be calibrated for correct operation
 	   of delay loops
@@ -248,9 +248,9 @@ ARM/LPC214X-specific Configuration Options
 	CONFIG_ENDIAN_BIG - define if big endian (default is little
 	   endian)
 
-	CONFIG_RAM_SIZE - Describes the installed RAM.
+	CONFIG_DRAM_SIZE - Describes the installed RAM.
 
-	CONFIG_RAM_START - The start address of installed RAM
+	CONFIG_DRAM_START - The start address of installed RAM
 
 	CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
 	   have LEDs
@@ -320,48 +320,60 @@ ARM/LPC214X-specific Configuration Options
 Configurations
 ^^^^^^^^^^^^^^
 
-  1. Each NXP LPC214x configuration is maintained in a sub-directory and
-     can be selected as follow:
+Each NXP LPC214x configuration is maintained in a sub-directory and
+can be selected as follow:
 
-       cd tools
-       ./configure.sh mcu123-lpc214x/<subdir>
-       cd -
-       . ./setenv.sh
+	cd tools
+	./configure.sh mcu123-lpc214x/<subdir>
+	cd -
+	. ./setenv.sh
 
-     Where <subdir> is one of the configuration sub-directories described in
-     the following paragraph.
-
-  2. These configurations use the mconf-based configuration tool.  To
-     change a configurations using that tool, you should:
-
-     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-        and misc/tools/
-
-     b. Execute 'make menuconfig' in nuttx/ in order to start the
-        reconfiguration process.
-
-  3. By default, all configurations assume the NuttX Buildroot toolchain
-     under Linux (should work under Windows with Cygwin as well).  This
-     is easily reconfigured:
-
-        CONFIG_HOST_LINUX=y
-        CONFIG_ARM_TOOLCHAIN_BUILDROOT=y
+Where <subdir> is one of the following:
 
 composite:
 ----------
 
   A simple test of the USB Composite Device (see
-  apps/examples/README.txt and apps/system/composite)
+  apps/examples/README.txt and apps/examples/composite)
 
-  NOTE:  I could not get this to work!  Perhaps this is a consequence of the
-  last USB driver checking (r4359). But backing this change out did not fix
-  the configuration.
+  Default toolchain:  CodeSourcery for Windows
+  Output format:  ELF and Intel HEX
+
+  NOTE:  I could not get this to work!  Perhaps this is a
+  consequence of the last USB driver checking (r4359). But
+  backing this change out did not fix the configuration.
 
 nsh:
 ----
 
   Configures the NuttShell (nsh) located at examples/nsh.  The
   Configuration enables only the serial NSH interfaces.
+
+    NOTES:
+ 
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configuration using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. Default platform/toolchain:
+
+       CONFIG_HOST_LINUX=y             : Windows
+       CONFIG_ARM_TOOLCHAIN_GNU_EABI=y : Buildroot (arm-nuttx-elf-gcc)
+       CONFIG_RAW_BINARY=y             : Output formats: ELF and raw binary
+
+ostest:
+-------
+
+  This configuration directory, performs a simple OS test using
+  examples/ostest.
+
+  Default toolchain:  Buildroot
+  Output format:  ELF and binary
 
 usbserial:
 ----------
@@ -370,15 +382,21 @@ usbserial:
   driver at examples/usbserial.  See examples/README.txt for
   more information.
 
-  NOTE: If you have problems with this configuration, perhaps it is a
+  Default toolchain:  Buildroot
+  Output format:  ELF and binary
+
+  NOTE:  If you have problems with this configurationt, perhaps it is a
   consequence of the last USB driver checking (r4359)
 
-usbmsc:
--------
+usbstorage:
+-----------
 
   This configuration directory exercises the USB mass storage
-  class driver at system/usbmsc.  See examples/README.txt for
+  class driver at examples/usbstorage.  See examples/README.txt for
   more information.
 
-  NOTE: If you have problems with this configuration, perhaps it is a
+  Default toolchain:  Buildroot
+  Output format:  ELF and binary
+
+  NOTE:  If you have problems with this configurationt, perhaps it is a
   consequence of the last USB driver checking (r4359)

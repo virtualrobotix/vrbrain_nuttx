@@ -148,6 +148,5 @@ void nxcon_redraw(NXCONSOLE handle, FAR const struct nxgl_rect_s *rect, bool mor
     {
       nxcon_fillchar(priv, rect, &priv->bm[i]);
     }
-
-  (void)nxcon_sempost(priv);
+  ret = nxcon_sempost(priv);
 }

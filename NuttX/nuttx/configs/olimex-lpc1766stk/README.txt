@@ -14,7 +14,6 @@ Contents
   NuttX OABI "buildroot" Toolchain
   NXFLAT Toolchain
   LEDs
-  Serial Console
   Using OpenOCD and GDB with an FT2232 JTAG emulator
   Olimex LPC1766-STK Configuration Options
   USB Host Configuration
@@ -121,7 +120,10 @@ Olimex LPC1766-STK development board
   minicom, whatever) to UART0/RS232_0 and configure the serial port as
   shown above.
 
-  NOTE: These configurations have problems at 115200 baud.
+  NOTE: The ostest example works fine at 115200, but the other configurations
+  have problems at that rate (probably because they use the interrupt driven
+  serial driver).  Other LPC17xx boards with the same clocking will run at
+  115200.
 
   LCD
   ---
@@ -134,7 +136,7 @@ Olimex LPC1766-STK development board
   But, referring to a different Olimex board, "Nokia 6100 LCD Display
   Driver," Revision 1, James P. Lynch ("Nokia 6100 LCD Display Driver.pdf")
   says:
-
+  
   "The major irritant in using this display is identifying the graphics
    controller; there are two possibilities (Epson S1D15G00 or Philips
    PCF8833). The LCD display sold by the German Web Shop Jelu has a Leadis
@@ -155,11 +157,11 @@ Olimex LPC1766-STK development board
 
   The LCD connects to the LPC1766 via SPI and two GPIOs.  The two GPIOs are
   noted above:
-
+  
     P1.21 is the SPI chip select, and
     P3.25 is the LCD reset
     P3.26 is PWM1 output used to control the backlight intensity.
-
+  
   MISO0 and MOSI0 are join via a 1K ohm resistor so the LCD appears to be
   write only.
 
@@ -186,12 +188,12 @@ GNU Toolchain Options
   the CodeSourcery or devkitARM toolchain, you simply need add one of the
   following configuration options to your .config (or defconfig) file:
 
-    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y   : CodeSourcery under Windows
-    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYL=y   : CodeSourcery under Linux
-    CONFIG_ARMV7M_TOOLCHAIN_DEVKITARM=y       : devkitARM under Windows
-    CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y       : NuttX buildroot under Linux or Cygwin (default)
+    CONFIG_LPC17_CODESOURCERYW=y   : CodeSourcery under Windows
+    CONFIG_LPC17_CODESOURCERYL=y   : CodeSourcery under Linux
+    CONFIG_LPC17_DEVKITARM=y       : devkitARM under Windows
+    CONFIG_LPC17_BUILDROOT=y       : NuttX buildroot under Linux or Cygwin (default)
 
-  If you are not using CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT, then you may also have to modify
+  If you are not using CONFIG_LPC17_BUILDROOT, then you may also have to modify
   the PATH in the setenv.h file if your make cannot find the tools.
 
   NOTE: the CodeSourcery (for Windows)and devkitARM are Windows native toolchains.
@@ -236,7 +238,7 @@ IDEs
   NuttX is built using command-line make.  It can be used with an IDE, but some
   effort will be required to create the project (There is a simple RIDE project
   in the RIDE subdirectory).
-
+  
   Makefile Build
   --------------
   Under Eclipse, it is pretty easy to set up an "empty makefile project" and
@@ -331,7 +333,7 @@ NXFLAT Toolchain
   tools -- just the NXFLAT tools.  The buildroot with the NXFLAT tools can
   be downloaded from the NuttX SourceForge download site
   (https://sourceforge.net/projects/nuttx/files/).
-
+ 
   This GNU toolchain builds and executes in the Linux or Cygwin environment.
 
   1. You must have already configured Nuttx in <some-dir>/nuttx.
@@ -395,7 +397,7 @@ LEDs
 
   LED1    LED2      Meaning
   ------- --------  --------------------------------------------------------------------
-   OFF    OFF      Still initializing and there is no interrupt activity.
+   OFF    OFF      Still initializing and there is no interrupt activity. 
                     Initialization is very fast so if you see this, it probably means
                     that the system is hung up somewhere in the initialization phases.
    OFF     Glowing  Still initializing (see above) but taking interrupts.
@@ -405,7 +407,7 @@ LEDs
    OFF     Flashing Ooops!  We crashed before finishing initialization (or, perhaps
                     after initialization, during an interrupt while the LPC17xx was
                     sleeping -- see below).
-
+ 
    ON      OFF      The system has completed initialization, but is apparently not taking
                     any interrupts.
    ON      Glowing  The OS successfully initialized and is taking interrupts (but, for
@@ -423,7 +425,7 @@ LEDs
   NOTE: In glowing/glowing case, you get some good subjective information about the
   behavior of your system by looking at the level of the LED glow (or better, by
   connecting O-Scope and calculating the actual duty):
-
+  
   1. The intensity of the glow is determined by the duty of LED on/off toggle --
      as the ON period becomes larger with respect the OFF period, the LED will
      glow more brightly.
@@ -439,7 +441,7 @@ LEDs
 
   When my LPC1766 sits IDLE -- doing absolutely nothing but processing timer interrupts --
   I see the following:
-
+  
   1. LED1 glows dimly due to the timer interrupts.
   2. But LED2 is even more dim!  The LED ON time excludes the time processing the
      interrupt that re-awakens the processing.  So this tells me that the LPC1766 is
@@ -447,45 +449,28 @@ LEDs
      processing.  That, of course, makes sense if the system is truly idle and only
      processing timer interrupts.
 
-Serial Console
-^^^^^^^^^^^^^^
-
-  By default, all of these configurations use UART0 for the NuttX serial
-  console.  UART0 corresponds to the DB-9 connector labelled "RS232_0".  This
-  is a female connector and will require a normal male-to-female RS232 cable
-  to connect to a PC.
-
-  An alternate is UART1 which connects to the other DB-9 connector labeled
-  "RS232_1".  UART1 is not enabled by default unless specifically noted
-  otherwise in the configuration description.  A normal serial cable must be
-  used with the port as well.
-
-  By default serial console is configured for 57600 baud, 8-bit, 1 stop bit,
-  and no parity.  Higher rates will probably require minor modification of
-  the UART initialization logic to use the fractional dividers.
-
 Using OpenOCD and GDB with an FT2232 JTAG emulator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   Downloading OpenOCD
-
+  
     You can get information about OpenOCD here: http://openocd.berlios.de/web/
     and you can download it from here. http://sourceforge.net/projects/openocd/files/.
     To get the latest OpenOCD with more mature lpc17xx, you have to download
     from the GIT archive.
-
+    
       git clone git://openocd.git.sourceforge.net/gitroot/openocd/openocd
 
     At present, there is only the older, frozen 0.4.0 version.  These, of course,
     may have changed since I wrote this.
-
+ 
   Building OpenOCD under Cygwin:
 
     You can build OpenOCD for Windows using the Cygwin tools.  Below are a
     few notes that worked as of November 7, 2010.  Things may have changed
     by the time you read this, but perhaps the following will be helpful to
     you:
-
+    
     1. Install Cygwin (http://www.cygwin.com/).  My recommendation is to install
        everything.  There are many tools you will need and it is best just to
        waste a little disk space and have everthing you need.  Everything will
@@ -502,23 +487,23 @@ Using OpenOCD and GDB with an FT2232 JTAG emulator
        CDM20802 WHQL Certified.zip
        $ mkdir ftd2xx
        $ cd ftd2xx
-       $ unzip ..CDM20802\ WHQL\ Certified.zip
+       $ unzip ..CDM20802\ WHQL\ Certified.zip 
        Archive:  CDM20802 WHQL Certified.zip
        ...
 
     3. Get the latest OpenOCD source
-
+    
        $ pwd
        /home/OpenOCD
        $ git clone git://openocd.git.sourceforge.net/gitroot/openocd/openocd
-
+ 
        You will then have the source code in /home/OpenOCD/openocd
 
     4. Build OpenOCD for the FT22322 interface
 
        $ pwd
        /home/OpenOCD/openocd
-       $ ./bootstrap
+       $ ./bootstrap 
 
        Jim is a tiny version of the Tcl scripting language.  It is needed
        by more recent versions of OpenOCD.  Build libjim.a using the following
@@ -554,7 +539,7 @@ Using OpenOCD and GDB with an FT2232 JTAG emulator
     I have been using the Olimex ARM-USB-OCD JTAG debugger with the
     LPC1766-STK (http://www.olimex.com).  OpenOCD requires a configuration
     file.  I keep the one I used last here:
-
+    
       configs/olimex-lpc1766stk/tools/olimex.cfg
 
     However, the "correct" configuration script to use with OpenOCD may
@@ -568,13 +553,13 @@ Using OpenOCD and GDB with an FT2232 JTAG emulator
       flash bank $_FLASHNAME lpc2000 0x0 0x80000 0 0 $_TARGETNAME ...
 
     To:
-
+ 
       flash bank $_FLASHNAME lpc2000 0x0 0x40000 0 0 $_TARGETNAME ...
-
+    
     There is also a script on the tools/ directory that I use to start
     the OpenOCD daemon on my system called oocd.sh.  That script will
     probably require some modifications to work in another environment:
-
+  
     - Possibly the value of OPENOCD_PATH and TARGET_PATH
     - It assumes that the correct script to use is the one at
       configs/olimex-lpc1766stk/tools/olimex.cfg
@@ -620,11 +605,11 @@ Using OpenOCD and GDB with an FT2232 JTAG emulator
        FLASH.
     3. The MCU must be halted prior to loading code using 'mon reset'
        as described below.
-
+ 
     OpenOCD will support several special 'monitor' commands.  These
     GDB commands will send comments to the OpenOCD monitor.  Here
     are a couple that you will need to use:
-
+  
      (gdb) monitor reset
      (gdb) monitor halt
 
@@ -673,15 +658,15 @@ Olimex LPC1766-STK Configuration Options
     CONFIG_ENDIAN_BIG - define if big endian (default is little
        endian)
 
-    CONFIG_RAM_SIZE - Describes the installed DRAM (CPU SRAM in this case):
+    CONFIG_DRAM_SIZE - Describes the installed DRAM (CPU SRAM in this case):
 
-       CONFIG_RAM_SIZE=(32*1024) (32Kb)
+       CONFIG_DRAM_SIZE=(32*1024) (32Kb)
 
        There is an additional 32Kb of SRAM in AHB SRAM banks 0 and 1.
 
-    CONFIG_RAM_START - The start address of installed DRAM
+    CONFIG_DRAM_START - The start address of installed DRAM
 
-       CONFIG_RAM_START=0x10000000
+       CONFIG_DRAM_START=0x10000000
 
     CONFIG_ARCH_IRQPRIO - The LPC17xx supports interrupt prioritization
 
@@ -707,7 +692,7 @@ Olimex LPC1766-STK Configuration Options
        the delay actually is 100 seconds.
 
     Individual subsystems can be enabled:
-
+    
       CONFIG_LPC17_MAINOSC=y
       CONFIG_LPC17_PLL0=y
       CONFIG_LPC17_PLL1=n
@@ -774,7 +759,7 @@ Olimex LPC1766-STK Configuration Options
   LPC17xx specific PHY/Ethernet device driver settings.  These setting
   also require CONFIG_NET and CONFIG_LPC17_ETHERNET.
 
-    CONFIG_ETH0_PHY_KS8721 - Selects Micrel KS8721 PHY
+    CONFIG_PHY_KS8721 - Selects Micrel KS8721 PHY
     CONFIG_PHY_AUTONEG - Enable auto-negotion
     CONFIG_PHY_SPEED100 - Select 100Mbit vs. 10Mbit speed.
     CONFIG_PHY_FDUPLEX - Select full (vs. half) duplex
@@ -796,7 +781,7 @@ Olimex LPC1766-STK Configuration Options
   LPC17xx USB Device Configuration
 
     CONFIG_LPC17_USBDEV_FRAME_INTERRUPT
-      Handle USB Start-Of-Frame events.
+      Handle USB Start-Of-Frame events. 
       Enable reading SOF from interrupt handler vs. simply reading on demand.
       Probably a bad idea... Unless there is some issue with sampling the SOF
       from hardware asynchronously.
@@ -831,7 +816,7 @@ Olimex LPC1766-STK Configuration Options
 USB Host Configuration
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The NuttShell (NSH) configuration can be modified in order to support
+The NuttShell (NSH) Nucleus 2G can be modified in order to support
 USB host operations.  To make these modifications, do the following:
 
 1. First configure to build the NSH configuration from the top-level
@@ -863,34 +848,15 @@ the mountpoint /mnt/flash.
 Configurations
 ^^^^^^^^^^^^^^
 
-Common Configuration Notes
---------------------------
+Each Olimex LPC1766-STK configuration is maintained in a
+sub-directory and can be selected as follow:
 
-  1. Each Olimex LPC1766-STK configuration is maintained in a
-     sub-directory and can be selected as follow:
+    cd tools
+    ./configure.sh olimex-lpc1766stk/<subdir>
+    cd -
+    . ./setenv.sh
 
-       cd tools
-       ./configure.sh olimex-lpc1766stk/<subdir>
-       cd -
-       . ./setenv.sh
-
-     Where <subdir> is one of the sub-directories identified in the following
-     paragraphs.
-
-     Use configure.bat instead of configure.sh if you are building in a
-     Windows native environment.
-
-  2. These configurations use the mconf-based configuration tool.  To
-     change a configuration using that tool, you should:
-
-     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-        and misc/tools/
-
-     b. Execute 'make menuconfig' in nuttx/ in order to start the
-        reconfiguration process.
-
-Configuration Sub-Directories
------------------------------
+Where <subdir> is one of the following:
 
   ftpc:
     This is a simple FTP client shell used to exercise the capabilities
@@ -914,7 +880,7 @@ Configuration Sub-Directories
     1. Support for FAT long file names is built-in but can easily be
        removed if you are concerned about Microsoft patent issues (see the
        section "FAT Long File Names" in the top-level COPYING file).
-
+       
        CONFIG_FS_FAT=y
        CONFIG_FAT_LCNAMES=y <-- Long file name support
        CONFIG_FAT_LFN=y
@@ -922,16 +888,9 @@ Configuration Sub-Directories
        CONFIG_FS_NXFFS=n
        CONFIG_FS_ROMFS=n
 
-    2. This configuration targets Linux using a generic ARM EABI toolchain:
-
-       CONFIG_LINUX=y
-       CONFIG_ARMV7M_TOOLCHAIN_GNU_EABIL=y
-
-       But that can easily be re-configured.
-
     2. You may also want to define the following in your configuration file.
        Otherwise, you will have not feedback about what is going on:
-
+ 
        CONFIG_DEBUG=y
        CONFIG_DEBUG_VERBOSE=y
        CONFIG_DEBUG_FTPC=y
@@ -941,39 +900,24 @@ Configuration Sub-Directories
     HID keyboard class driver using the test logic in apps/examples/hidkbd.
 
     NOTES:
+ 
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configuration using that tool, you should:
 
-    1. Default platform/toolchain: This is how the build is configured by
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. Default platform/toolchain: This is how the build is configured by
        be default.  These options can easily be re-confured, however.
 
        CONFIG_HOST_WINDOWS=y                   : Windows
        CONFIG_WINDOWS_CYGWIN=y                 : Cygwin environment on Windows
        CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y : CodeSourcery under Windows
 
-  hidmouse:
-    This configuration directory supports a variant of an NSH configution.
-    It is set up to perform the touchscreen test at apps/examples/touchscreen
-    using a USB HIB mouse instead a touchsceen device.
-
-    NOTES:
-
-    1. Default platform/toolchain: This is how the build is configured by
-       be default.  These options can easily be re-confured, however.
-
-       CONFIG_HOST_WINDOWS=y                   : Windows
-       CONFIG_WINDOWS_CYGWIN=y                 : Cygwin environment on Windows
-       CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y : CodeSourcery under Windows
-
-    2. The mouse is really useless with no display and no cursor.  So this
-       configuration is only suited for low-level testing.  It is also awkward
-       to use.  Here are the steps:
-
-       - Remove the USB HID mouse and reset the board.
-       - When the NSH prompt comes up type 'tc'.  That will fail, but it
-         will register the USB HID mouse class driver.
-       - Now, insert the USB HID mouse.  The next time that you enter the
-         'tc' command, the mouse device at /dev/mouse0 should be found.
-
-  nettest:
+   nettest:
     This configuration directory may be used to enable networking using the
     LPC17xx's Ethernet controller. It uses apps/examples/nettest to excercise the
     TCP/IP network.
@@ -989,22 +933,33 @@ Configuration Sub-Directories
     go through many retries and timeouts before it finally decides that there
     is not SD card in the slot.
 
-    NOTES:
+    Configuration Notes:
 
-    1. Uses the older, OABI, buildroot toolchain.  But that is easily
+    NOTES:
+ 
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configuration using that tool, you should:
+
+       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
+          and misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. Uses the older, OABI, buildroot toolchain.  But that is easily
        reconfigured:
 
        CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y : Buildroot toolchain
        CONFIG_ARMV7M_OABI_TOOLCHAIN=y      : Older, OABI toolchain
 
-    2. This configuration supports a network.  You may have to change
+    3. This configuration supports a network.  You may have to change
        these settings for your network:
 
        CONFIG_NSH_IPADDR=0x0a000002        : IP address: 10.0.0.2
        CONFIG_NSH_DRIPADDR=0x0a000001      : Gateway:    10.0.0.1
        CONFIG_NSH_NETMASK=0xffffff00       : Netmask:    255.255.255.0
 
-    3. This configuration supports the SPI-based MMC/SD card slot.
+    4. This configuration supports the SPI-based MMC/SD card slot.
        FAT file system support for FAT long file names is built-in but
        can easily be removed if you are concerned about Microsoft patent
        issues (see the section "FAT Long File Names" in the top-level
@@ -1014,11 +969,12 @@ Configuration Sub-Directories
 
   nx:
     An example using the NuttX graphics system (NX).  This example uses
-    the Nokia 6100 LCD driver.
+    the Nokia 6100 LCD driver. NOTE:  The Nokia 6100 driver does not
+    work on this board as of this writing.
 
-    NOTES:
-
-    1. The Nokia 6100 driver does not work on this board as of this writing.
+  ostest:
+    This configuration directory, performs a simple OS test using
+    apps/examples/ostest.
 
   slip-httpd:
     This configuration is identical to the thttpd configuration except that
@@ -1029,15 +985,15 @@ Configuration Sub-Directories
     1. Configure and build the slip-httpd configuration.
     2. Connect to a Linux box (assuming /dev/ttyS0)
     3. Reset on the target side and attach SLIP on the Linux side:
-
+    
        $ modprobe slip
        $ slattach -L -p slip -s 57600 /dev/ttyS0 &
-
+ 
        This should create an interface with a name like sl0, or sl1, etc.
        Add -d to get debug output.  This will show the interface name.
 
        NOTE: The -L option is included to suppress use of hardware flow
-       control.  This is necessary because I haven't figured out how to
+       control.  This is necessary because I haven't figured out how to 
        use the UART1 hardware flow control yet.
 
        NOTE: The Linux slip module hard-codes its MTU size to 296.  So you
@@ -1064,7 +1020,7 @@ Configuration Sub-Directories
 
     NOTE: This configurat only works with VERBOSE debug disabled.  For some
     reason, certain debug statements hang(?).
-
+    
     NOTE: This example does not use UART1's hardware flow control.  UART1
     hardware flow control is partially implemented but does not behave as
     expected.  It needs a little more work.
@@ -1073,245 +1029,17 @@ Configuration Sub-Directories
     This builds the THTTPD web server example using the THTTPD and
     the apps/examples/thttpd application.
 
-    NOTES:
-
-    1. Uses the newer, EABI, buildroot toolchain.  But that is easily
-       reconfigured:
-
-       CONFIG_HOST_LINUX=y                 : Linux
-       CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y : Buildroot toolchain
-       CONFIG_ARMV7M_OABI_TOOLCHAIN=n      : Newer, EABI toolchain
+    NOTE: See note above with regard to the EABI/OABI buildroot
+    toolchains.  This example can only be built using the older
+    OABI toolchain.
 
   usbserial:
     This configuration directory exercises the USB serial class
     driver at apps/examples/usbserial.  See apps/examples/README.txt for
     more information.
 
-  usbmsc:
+  usbstorage:
     This configuration directory exercises the USB mass storage
-    class driver at apps/system/usbmsc.  See apps/examples/README.txt
+    class driver at apps/examples/usbstorage.  See apps/examples/README.txt
     for more information.
 
-  zmodem:
-    This is an alternative NSH configuration that was used to test Zmodem
-    file transfers.  It is similar to the standard NSH configuration but has
-    the following differences:
-
-    1. UART0 is still the NuttX serial console as with most of the other
-       configurations here.  However, UART1 is also enabled for performing
-       the Zmodem transfers.
-
-         CONFIG_LPC17XX_UART1=y
-         CONFIG_UART1_ISUART=y
-         CONFIG_UART1_RXBUFSIZE=1024
-         CONFIG_UART1_TXBUFSIZE=256
-         CONFIG_UART1_BAUD=2400
-         CONFIG_UART1_BITS=8
-         CONFIG_UART1_PARITY=0
-         CONFIG_UART1_2STOP=0
-
-    2. Hardware Flow Control
-
-       In principle, Zmodem transfers could be performed on the any serial
-       device, including the console device.  However, only the LPC17xx
-       UART1 supports hardware flow control which is required for Zmodem
-       trasnfers.  Also, this configuration permits debug output on the
-       serial console while the transfer is in progress without interfering
-       with the file transfer.
-
-       In additional, a very low BAUD is selected to avoid other sources
-       of data overrun.  This should be unnecessary if buffering and hardware
-       flow control are set up correctly.
-
-       However, in the LPC17xx serial driver, hardware flow control only
-       protects the hardware RX FIFO:  Data will not be lost in the hardware
-       FIFO but can still be lost when it is taken from the FIFO.  We can
-       still overflow the serial driver's RX buffer even with hardware flow
-       control enabled! That is probably a bug.  But the workaround solution
-       that I have used is to use lower data rates and a large serial driver
-       RX buffer.
-
-       Those measures should be unnecessary if buffering and hardware flow
-       control are set up and working correctly.
-
-    3. Buffering Notes:
-
-       RX Buffer Size
-       --------------
-       The Zmodem protocol supports a message that informs the file sender
-       of the maximum size of dat that you can buffer (ZRINIT).  However, my
-       experience is that the Linux sz ignores this setting and always sends
-       file data at the maximum size (1024) no matter what size of buffer you
-       report.  That is unfortunate because that, combined with the
-       possibilities of data overrun mean that you must use quite large
-       buffering for Zmodem file receipt to be reliable (none of these issues
-       effect sending of files).
-
-       Buffer Recommendations
-       ----------------------
-       Based on the limitations of NuttX hardware flow control and of the
-       Linux sz behavior, I have been testing with the following configuration
-      (assuming UART1 is the Zmodem device):
-
-       a) This setting determines that maximum size of a data packet frame:
-
-          CONFIG_SYSTEM_ZMODEM_PKTBUFSIZE=1024
-
-       b) Input Buffering.  If the input buffering is set to a full frame,
-          then  data overflow is less likely.
-
-          CONFIG_UART1_RXBUFSIZE=1024
-
-       c) With a larger driver input buffer, the Zmodem receive I/O buffer
-          can be smaller:
-
-          CONFIG_SYSTEM_ZMODEM_RCVBUFSIZE=256
-
-       d) Output buffering.  Overrun cannot occur on output (on the NuttX side)
-          so there is no need to be so careful:
-
-          CONFIG_SYSTEM_ZMODEM_SNDBUFSIZE=512
-          CONFIG_UART1_TXBUFSIZE=256
-
-    4. Support is included for the NuttX sz and rz commands.  In order to
-       use these commands, you will need to mount the SD card so that you
-       will have a file system to transfer files in and out of:
-
-         nsh> mount -t vfat /dev/mmcds0 /mnt/sdcard
-
-       NOTE:  You must use the mountpoint /mnt/sdcard because that is the
-       Zmodem sandbox specified in the configuration:  All files received
-       from the remote host will be stored at /mnt/sdcard because of:
-
-         CONFIG_SYSTEM_ZMODEM_MOUNTPOINT="/mnt/sdcard"
-
-       Hmmm.. I probably should set up an NSH script to just mount /dev/mmcsd0
-       at /mnt/sdcard each time the board boots.
-
-    4. Sending Files from the Target to the Linux Host PC
-
-       This program has been verified against the rzsz programs running on a
-       Linux PC.  To send a file to the PC, first make sure that the serial
-       port is configured to work with the board:
-
-         $ sudo stty -F /dev/ttyS0 2400     # Select 2400 BAUD
-         $ sudo stty -F /dev/ttyS0 crtscts  # Enables CTS/RTS handshaking *
-         $ sudo stty -F /dev/ttyS0          # Show the TTY configuration
-
-         * Only is hardware flow control is enabled.  It is *not* in this
-           default configuration.
-
-       Start rz on the Linux host:
-
-         $ sudo rz </dev/ttyS0 >/dev/ttyS0
-
-       You can add the rz -v option multiple times, each increases the level
-       of debug output.
-
-       NOTE: The NuttX Zmodem does sends rz\n when it starts in compliance with
-       the Zmodem specification.  On Linux this, however, seems to start some
-       other, incompatible version of rz.  You need to start rz manually to
-       make sure that the correct version is selected.  You can tell when this
-       evil rz/sz has inserted itself because you will see the '^' (0x5e)
-       character replacing the standard Zmodem ZDLE character (0x19) in the
-       binary data stream.
-
-       If you don't have the rz command on your Linux box, the package to
-       install rzsz (or possibily lrzsz).
-
-       Then on the target:
-
-         > sz -d /dev/ttyS1 <filename>
-
-       Where filename is the full path to the file to send (i.e., it begins
-       with the '/' character).
-
-       /dev/ttyS1 is configured to support Hardware flow control in order to
-       throttle therates of data transfer to fit within the allocated buffers.
-       Other devices may be used but if they do not support hardware flow
-       control, the transfers will fail
-
-    5. Receiving Files on the Target from the Linux Host PC
-
-       NOTE:  There are issues with using the Linux sz command with the NuttX
-       rz command. See "STATUS" below.  It is recommended that you use the
-       NuttX sz command on Linux as described in the next paragraph.
-
-       To send a file to the target, first make sure that the serial port on
-       the host is configured to work with the board:
-
-         $ sudo stty -F /dev/ttyS0 2400     # Select 2400 BAUD
-         $ sudo stty -F /dev/ttyS0 crtscts  # Enables CTS/RTS handshaking *
-         $ sudo stty -F /dev/ttyS0          # Show the TTY configuration
-
-         * Only is hardware flow control is enabled.  It is *not* in this
-           default configuration.
-
-       Start rz on the on the target:
-
-         nsh> rz -d /dev/ttyS1
-
-       /dev/ttyS1 is configured to support Hardware flow control in order to
-       throttle therates of data transfer to fit within the allocated buffers.
-       Other devices may be used but if they do not support hardware flow
-       control, the transfers will fail
-
-       Then use the sz command on Linux to send the file to the target:
-
-         $ sudo sz <filename> t </dev/ttyS0 >/dev/ttyS0
-
-       Where <filename> is the file that you want to send.
-
-       The resulting file will be found where you have configured the Zmodem
-       "sandbox" via CONFIG_SYSTEM_ZMODEM_MOUNTPOINT, in this case at
-       /mnt/sdcard.
-
-       You can add the az -v option multiple times, each increases the level
-       of debug output.  If you want to capture the Linux rz output, then
-       re-direct stderr to a log file by adding 2>az.log to the end of the
-       rz command.
-
-       If you don't have the az command on your Linux box, the package to
-       install rzsz (or possibily lrzsz).
-
-    STATUS
-      2013-7-15:  Testing against the Linux rz/sz commands.
-
-        I have been able to send large and small files with the target sz
-        command. I have been able to receive small files, but there are
-        problems receiving large files using the Linux sz command:  The
-        Linux SZ does not obey the buffering limits and continues to send
-        data while rz is writing the previously received data to the file
-        and the serial driver's RX buffer is overrun by a few bytes while
-        the write is in progress. As a result, when it reads the next
-        buffer of data, a few bytes may be missing.  The symptom of this
-        missing data is a CRC check failure.
-
-        Either (1) we need a more courteous host application, or (2) we
-        need to greatly improve the target side buffering capability!
-
-        We might get better behavior if we use the NuttX rz/sz commands
-        on the host side (see apps/system/zmodem/README.txt).
-
-      2013-7-16:  More Testing against the Linux rz/sz commands.
-
-        I have verified that with debug off and at lower serial
-        BAUD (2400), the transfers of large files succeed without errors.  I
-        do not consider this a "solution" to the problem.  I also found that
-        the LPC17xx hardware flow control causes strange hangs; Zmodem works
-        much better with hardware flow control disabled.
-
-        At this lower BAUD, RX buffer sizes could probably be reduced; Or
-        perhaps the BAUD coud be increased.  My thought, however, is that
-        tuning in such an unhealthy situation is not the approach:  The
-        best thing to do would be to use the matching NuttX sz on the Linux
-        host side.
-
-    2013-7-16. More Testing against the NuttX rz/sz on Both Ends.
-
-      The NuttX sz/rz commands have been modified so that they can be
-      built and executed under Linux.  In this case, there are no
-      transfer problems at all in either direction and with large or
-      small files.  This configuration could probably run at much higher
-      serial speeds and with much smaller buffers (although that has not
-      been verified as of this writing).

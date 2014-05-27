@@ -158,7 +158,6 @@ static int adc_open(FAR struct file *filep)
 
       sem_post(&dev->ad_closesem);
     }
-
   return ret;
 }
 
@@ -208,7 +207,6 @@ static int adc_close(FAR struct file *filep)
           sem_post(&dev->ad_closesem);
         }
     }
-
   return ret;
 }
 
@@ -362,9 +360,9 @@ static ssize_t adc_write(FAR struct file *filep, FAR const char *buffer, size_t 
 
 static int adc_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 {
-  FAR struct inode *inode = filep->f_inode;
-  FAR struct adc_dev_s *dev = inode->i_private;
-  int ret;
+  FAR struct inode     *inode = filep->f_inode;
+  FAR struct adc_dev_s *dev   = inode->i_private;
+  int               ret   = OK;
 
   ret = dev->ad_ops->ao_ioctl(dev, cmd, arg);
   return ret;

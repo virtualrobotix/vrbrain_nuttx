@@ -1,7 +1,7 @@
 /************************************************************
- * arch/8051/src/up_head.S
+ * up_head.S
  *
- *   Copyright (C) 2007, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
 	.area REG_BANK_0	(REL,OVR,DATA)
 	.ds 8
 
-#ifndef CONFIG_ARCH_8051_NOSYSTIMER
+#ifndef CONFIG_8052_TIMER2
 	.area	XSEG
 _g_timer0tick:
 	.ds 1
@@ -99,7 +99,7 @@ _g_timer0tick:
 
 	.org	PM2_VECTOR_TIMER0
 	push	acc
-#ifdef CONFIG_ARCH_8051_NOSYSTIMER
+#ifdef CONFIG_8052_TIMER2
 	mov	a, #TIMER0_IRQ
 	ljmp	_up_interrupt
 #else
@@ -137,7 +137,7 @@ start:
 	mov	sp, #(STACK_BASE-1)
 
 #ifdef CONFIG_ARCH_LEDS
-	lcall	_board_led_initialize
+	lcall	_up_ledinit
 #endif
 
 	ljmp	_os_start
@@ -162,7 +162,7 @@ start:
  *
  ************************************************************/
 
-#ifndef CONFIG_ARCH_8051_NOSYSTIMER
+#ifndef CONFIG_8052_TIMER2
 _up_timer0:
 	ar2 = 0x02
 	ar3 = 0x03
@@ -251,7 +251,7 @@ _up_timer0join:
 
 #ifdef CONFIG_ARCH_LEDS
 	mov	dpl, #LED_INIRQ
-	lcall	_board_led_on
+	lcall	_up_ledon
 #endif
 
 	/* Save the IRQ number in r2 */
@@ -443,7 +443,7 @@ _up_timer0join:
 	push	dpl
 	push	dph
 	mov	dpl, #LED_INIRQ
-	lcall	_board_led_off
+	lcall	_up_ledoff
 	pop	dph
 	pop	dpl
 #endif

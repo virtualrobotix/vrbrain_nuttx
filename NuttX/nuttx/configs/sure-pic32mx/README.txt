@@ -478,15 +478,15 @@ PIC32MX Configuration Options
     CONFIG_ENDIAN_BIG - define if big endian (default is little
        endian)
 
-    CONFIG_RAM_SIZE - Describes the installed DRAM (CPU SRAM in this case):
+    CONFIG_DRAM_SIZE - Describes the installed DRAM (CPU SRAM in this case):
 
-       CONFIG_RAM_SIZE=(32*1024) (32Kb)
+       CONFIG_DRAM_SIZE=(32*1024) (32Kb)
 
        There is an additional 32Kb of SRAM in AHB SRAM banks 0 and 1.
 
-    CONFIG_RAM_START - The start address of installed DRAM
+    CONFIG_DRAM_START - The start address of installed DRAM
 
-       CONFIG_RAM_START=0xa0000000
+       CONFIG_DRAM_START=0xa0000000
 
     CONFIG_ARCH_IRQPRIO - The PIC32MXx supports interrupt prioritization
 
@@ -659,6 +659,27 @@ Configuration sub-directories
 
 Where <subdir> is one of the following:
 
+  ostest:
+  =======
+    Description.
+    ------------
+    This configuration directory, performs a simple OS test using
+    apps/examples/ostest.
+
+    Notes.
+    -----
+    1. By default, this configuration uses an older Microchip C32 toolchain
+       for Windows (the newer ones seem to be incompatible) and builds under
+       Cygwin (or probably MSYS).  That
+       can easily be reconfigured, of course.
+
+       Build Setup:
+         CONFIG_HOST_WINDOWS=y                     : Builds under Windows
+         CONFIG_WINDOWS_CYGWIN=y                   : Using Cygwin
+
+       System Type:
+         CONFIG_MIPS32_TOOLCHAIN_MICROCHIPW_LITE=y : Older C32 toolchain
+
   nsh:
   ====
     Description.
@@ -691,8 +712,8 @@ Where <subdir> is one of the following:
        System Type -> PIC32MX Peripheral Support:
           CONFIG_PIC32MX_USBDEV=y   : Enable PIC32 USB device support
 
-      examples/usbterm - This option can be enabled by adding the following
-      to the NuttX configuration file:
+      examples/usbterm - This option can be enabled by uncommenting
+      the following line in the appconfig file:
 
         Application Configuration->Examples:
           CONFIG_EXAMPLES_USBTERM=y : Selects /apps/examples/usbterm
@@ -703,27 +724,26 @@ Where <subdir> is one of the following:
           CONFIG_PL2303=y           : Enable the Prolifics PL2303 emulation
           CONFIG_CDCACM=y           : or the CDC/ACM serial driver (not both)
 
-      system/cdcacm -  The system/cdcacm program can be included as an
-      function by dding the following to the NuttX configuration file:
+      examples/cdcacm -  The examples/cdcacm program can be included as an
+      function by uncommenting the following line in the appconfig file:
 
         Application Configuration->Examples:
-          CONFIG_SYSTEM_CDCACM=y  : Select apps/system/cdcacm
+          CONFIG_EXAMPLES_CDCACM=y  : Select apps/examples/cdcacm
 
       and defining the following in your .config file:
 
         Drivers->USB Device Driver Support
           CONFIG_CDCACM=y           : Enable the CDCACM device
 
-      system/usbmsc - To enable the USB mass storage class (MSC)device,
-      you would need to add the following to the NuttX configuration file.
-      However, this device cannot work until support for the SD card is
-      also incorporated.
+      examples/usbstorage - There are some hooks in the appconfig file
+      to enable the USB mass storage class (MSC)device.  However, this device
+      cannot work until support for the SD card is also incorporated.
 
         Drivers->USB Device Driver Support
           CONFIG_USBMSC=y           : Enables the USB MSC class
 
         Application Configuration->Examples:
-          CONFIG_SYSTEM_USBMSC=y  : Enhables apps/system/usbmsc
+          CONFIG_EXAMPLES_USBSTORAGE=y  : Enhables apps/examples/usbstorage
 
     3. SD Card Support.
 
@@ -783,14 +803,12 @@ Where <subdir> is one of the following:
          CONFIG_DEBUG_LCD=y         : Enable LCD debug output
 
        NOTES:
-       2013-05-27: The LCD1602 has been verified on the DB-DP11212 using
-         this configuration.  It has not been used with the usbnsh configuration
-         or with the DB-11112 board.  It looks to me like the connection to the
-         LCD1602 is identical on the DB-11112 and so I would expect that to work.
-
-         At this point in time, testing of the SLCD is very limited because
-         there is not much in apps/examples/slcd.  Basically  driver with a working
-         test setup and ready to be tested and debugged.
+       a. I do not have the LCD1602 working.  I may just be getting lost in the
+          tangle of wires or perhaps there is something fundamentally wrong with
+          the code.
+       b. At this point in time, testing of the SLCD is very limited because
+          there is not much in apps/examples/slcd.  Basically  driver with a working
+          test setup and ready to be tested and debugged.
 
   usbnsh:
   =======
@@ -878,11 +896,11 @@ Where <subdir> is one of the following:
        device will save encoded trace output in in-memory buffer; if the
        USB monitor is enabled, that trace buffer will be periodically
        emptied and dumped to the system logging device (UART2 in this
-       configuration):
+       configuraion):
 
         Device Drivers -> "USB Device Driver Support:
           CONFIG_USBDEV_TRACE=y                   : Enable USB trace feature
-          CONFIG_USBDEV_TRACE_NRECORDS=256        : Buffer 256 records in memory
+          CONFIG_USBDEV_TRACE_NRECORDS=256        : Buffer 128 records in memory
 
         Application Configuration -> NSH LIbrary:
           CONFIG_NSH_USBDEV_TRACE=n               : No builtin tracing from NSH
@@ -909,37 +927,9 @@ Where <subdir> is one of the following:
         Board Configuration:
            CONFIG_ARCH_DBDP11215=n    : Disable the DB-DP11215
            CONFIG_ARCH_DBDP11212=y    : Enable the DB-DP11212
-           CONFIG_ARCH_LEDS=n         : The DB-DP11212 has no LEDs
 
         System Type -> PIC32MX Peripheral Support:
            CONFIG_PIC32MX_UART2=n     : Disable UART2
 
-        The SYSLOG output on UART2 cannot by used.  You have two choices,
-        first, you can simply disable the SYSLOG device.  Then 1) debug
-        output will come the USB console, and 2) all debug output prior
-        to connecting the USB console will be lost:
-
         Device Drivers -> System Logging Device Options:
            CONFIG_SYSLOG=n            : Disable SYSLOG output
-
-        The second options is to configure a RAM SYLOG device.  This is
-        a circular buffer that accumulated debug output in memory.  The
-        contents of the circular buffer can be dumped from the NSH command
-        line using the 'dmesg' command.
-
-        Device Drivers -> System Logging Device Options:
-          CONFIG_SYSLOG=y             : Enables the System Logging feature.
-          CONFIG_RAMLOG=y             : Enable the RAM-based logging feature.
-          CONFIG_RAMLOG_CONSOLE=n     : (there is no default console device)
-          CONFIG_RAMLOG_SYSLOG=y      : This enables the RAM-based logger as the
-                                        system logger.
-
-        Logging is currently can be set up to use any amount of memory (here 8KB):
-
-          CONFIG_RAMLOG_CONSOLE_BUFSIZE=8192
-
-        STATUS:
-          2013-7-4:  This configuration was last verified.
-
-     7. See the notes for the nsh configuration.  Most also apply to the usbnsh
-        configuration as well.

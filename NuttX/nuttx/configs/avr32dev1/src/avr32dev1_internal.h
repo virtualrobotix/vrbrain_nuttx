@@ -112,14 +112,14 @@
  ************************************************************************************/
 
 /************************************************************************************
- * Name: board_led_initializeialize
+ * Name: up_ledinitialize
  *
  * Description:
  *   Configure on-board LEDs if LED support has been selected.
  ************************************************************************************/
 
 #ifdef CONFIG_ARCH_LEDS
-extern void board_led_initializeialize(void);
+extern void up_ledinitialize(void);
 #endif
 
 #endif /* __ASSEMBLY__ */

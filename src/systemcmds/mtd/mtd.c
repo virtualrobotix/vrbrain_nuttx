@@ -51,8 +51,8 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 
-#include <nuttx/spi/spi.h>
-#include <nuttx/mtd/mtd.h>
+#include <nuttx/spi.h>
+#include <nuttx/mtd.h>
 #include <nuttx/fs/nxffs.h>
 #include <nuttx/fs/ioctl.h>
 
@@ -76,8 +76,10 @@ int mtd_main(int argc, char *argv[])
 
 #else
 
-#ifdef CONFIG_MTD_RAMTRON
+#if defined(CONFIG_MTD_RAMTRON)
 static void	ramtron_attach(void);
+#elif defined(CONFIG_MTD_AT45DB)
+static void	at45db_attach(void);
 #else
 
 #ifndef I2C_BUS_EEPROM
@@ -86,6 +88,7 @@ static void	ramtron_attach(void);
 
 static void	at24xxx_attach(void);
 #endif
+
 static void	mtd_start(char *partition_names[], unsigned n_partitions);
 static void	mtd_test(void);
 static void	mtd_erase(char *partition_names[], unsigned n_partitions);
@@ -155,12 +158,12 @@ struct mtd_dev_s *ramtron_initialize(FAR struct spi_dev_s *dev);
 struct mtd_dev_s *mtd_partition(FAR struct mtd_dev_s *mtd,
                                     off_t firstblock, off_t nblocks);
 
-#ifdef CONFIG_MTD_RAMTRON
+#if defined(CONFIG_MTD_RAMTRON)
 static void
 ramtron_attach(void)
 {
 	/* find the right spi */
-	struct spi_dev_s *spi = up_spiinitialize(2);
+	struct spi_dev_s *spi = up_spiinitialize(SPI_BUS_RAMTRON);
 	/* this resets the spi bus, set correct bus speed again */
 	SPI_SETFREQUENCY(spi, 10 * 1000 * 1000);
 	SPI_SETBITS(spi, 8);
@@ -173,6 +176,45 @@ ramtron_attach(void)
 	/* start the RAMTRON driver, attempt 5 times */
 	for (int i = 0; i < 5; i++) {
 		mtd_dev = ramtron_initialize(spi);
+
+		if (mtd_dev) {
+			/* abort on first valid result */
+			if (i > 0) {
+				warnx("warning: mtd needed %d attempts to attach", i + 1);
+			}
+
+			break;
+		}
+	}
+
+	/* if last attempt is still unsuccessful, abort */
+	if (mtd_dev == NULL)
+		errx(1, "failed to initialize mtd driver");
+
+	int ret = mtd_dev->ioctl(mtd_dev, MTDIOC_SETSPEED, (unsigned long)10*1000*1000);
+        if (ret != OK)
+            warnx(1, "failed to set bus speed");
+
+	attached = true;
+}
+#elif defined(CONFIG_MTD_AT45DB)
+static void
+at45db_attach(void)
+{
+	/* find the right spi */
+	struct spi_dev_s *spi = up_spiinitialize(SPI_BUS_AT45BD);
+	/* this resets the spi bus, set correct bus speed again */
+	SPI_SETFREQUENCY(spi, 10 * 1000 * 1000);
+	SPI_SETBITS(spi, 8);
+	SPI_SETMODE(spi, SPIDEV_MODE0);
+	SPI_SELECT(spi, SPIDEV_FLASH, false);
+
+	if (spi == NULL)
+		errx(1, "failed to locate spi bus");
+
+	/* start the AT45DB driver, attempt 5 times */
+	for (int i = 0; i < 5; i++) {
+		mtd_dev = at45db_initialize(spi);
 
 		if (mtd_dev) {
 			/* abort on first valid result */
@@ -247,6 +289,14 @@ mtd_start(char *partition_names[], unsigned n_partitions)
 		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
 			at24xxx_attach();
 		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
+#if defined(CONFIG_MTD_RAMTRON)
+			ramtron_attach();
+#elif defined(CONFIG_MTD_AT45DB)
+			at45db_attach();
+#else
+			at24xxx_attach();
+#endif
+		#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
 			at24xxx_attach();
 		#elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
 			at24xxx_attach();

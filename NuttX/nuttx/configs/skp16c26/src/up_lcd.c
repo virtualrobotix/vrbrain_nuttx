@@ -47,7 +47,7 @@
 #include "up_internal.h"
 #include "chip.h"
 
-#ifdef CONFIG_LCD
+#ifdef CONFIG_ARCH_LCD
 
 /************************************************************************************
  * Definitions
@@ -116,7 +116,6 @@ static inline void up_setrs(bool data)
     {
       regval &= ~(1 << 0); /* Low = control */
     }
-
   putreg8(regval, M16C_P6);
 }
 
@@ -129,7 +128,7 @@ static inline void up_seten(void)
   /* Set bit 1 of port 6 */
 
   register uint8_t regval = getreg8(M16C_P6);
-  regval |= (1 << 1);
+  regval = (1 << 1);
   putreg8(regval, M16C_P6);
 }
 
@@ -280,4 +279,4 @@ void up_lcdputc(char ch)
     }
 }
 
-#endif /* CONFIG_LCD */
+#endif /* CONFIG_ARCH_LCD */

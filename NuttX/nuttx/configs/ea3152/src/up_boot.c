@@ -75,7 +75,7 @@ void lpc31_boardinitialize(void)
 {
   /* Initialize configured, external memory resources */
 
-#ifdef CONFIG_LPC31_EXTDRAM
+#ifdef CONFIG_ARCH_EXTDRAM
   lpc31_meminitialize();
 #endif
 
@@ -95,7 +95,7 @@ void lpc31_boardinitialize(void)
     * into the build.
     */
 
-#if defined(CONFIG_USBDEV) && defined(CONFIG_LPC31_USBOTG)
+#if defined(CONFIG_USBDEV) && defined(CONFIG_LPC31_USB)
   if (lpc31_usbinitialize)
     {
       lpc31_usbinitialize();
@@ -105,7 +105,7 @@ void lpc31_boardinitialize(void)
   /* Configure on-board LEDs if LED support has been selected. */
 
 #ifdef CONFIG_ARCH_LEDS
-  board_led_initialize();
+  up_ledinit();
 #endif
 
   /* Set up mass storage device to support on demand paging */

@@ -52,7 +52,7 @@
 #ifdef CONFIG_NX_LCDDRIVER
 #  include <nuttx/lcd/lcd.h>
 #else
-#  include <nuttx/video/fb.h>
+#  include <nuttx/fb.h>
 #endif
 
 #include "nxcon_internal.h"

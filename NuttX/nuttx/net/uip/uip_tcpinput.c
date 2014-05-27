@@ -2,7 +2,7 @@
  * net/uip/uip_tcpinput.c
  * Handling incoming TCP input
  *
- *   Copyright (C) 2007-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Adapted for NuttX from logic in uIP which also has a BSD-like license:
@@ -190,6 +190,15 @@ void uip_tcpinput(struct uip_driver_s *dev)
                   uip_tcpfree(conn);
                   conn = NULL;
                 }
+              else
+                {
+                  /* TCP state machine should move to the ESTABLISHED state only after
+                   * it has received ACK from the host.  This needs to be investigated
+                   * further.
+                   */
+
+                  conn->tcpstateflags = UIP_ESTABLISHED;
+                }
             }
 
           if (!conn)
@@ -235,7 +244,8 @@ void uip_tcpinput(struct uip_driver_s *dev)
 
                       tmp16 = ((uint16_t)dev->d_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 2 + i] << 8) |
                                (uint16_t)dev->d_buf[UIP_IPTCPH_LEN + UIP_LLH_LEN + 3 + i];
-                      conn->mss = tmp16 > UIP_TCP_MSS ? UIP_TCP_MSS : tmp16;
+                      conn->initialmss = conn->mss =
+                              tmp16 > UIP_TCP_MSS? UIP_TCP_MSS: tmp16;
 
                       /* And we are done processing options. */
 
@@ -287,10 +297,6 @@ reset:
   return;
 
 found:
-
-  /* Update the connection's window size */
-
-  conn->winsize = ((uint16_t)pbuf->wnd[0] << 8) + (uint16_t)pbuf->wnd[1];
 
   flags = 0;
 
@@ -358,11 +364,7 @@ found:
        * data (unacked).
        */
 
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-      unackseq = conn->isn + conn->sent;
-#else
       unackseq = uip_tcpaddsequence(conn->sndseq, conn->unacked);
-#endif
 
       /* Get the sequence number of that has just been acknowledged by this
        * incoming packet.
@@ -387,16 +389,12 @@ found:
         {
           /* What would it mean if ackseq > unackseq?  The peer has ACKed
            * more bytes than we think we have sent?  Someone has lost it.
-           * Complain and reset the number of outstanding, unacknowledged
+           * Complain and reset the number of outstanding, unackowledged
            * bytes
            */
 
-          if ((conn->tcpstateflags & UIP_TS_MASK) == UIP_ESTABLISHED)
-            {
-              nlldbg("ERROR: conn->sndseq %d, conn->unacked %d\n",
-                     uip_tcpgetsequence(conn->sndseq), conn->unacked);
-              goto reset;
-            }
+          nlldbg("ERROR: ackseq[%08x] > unackseq[%08x]\n", ackseq, unackseq);
+          conn->unacked = 0;
         }
 
       /* Update sequence number to the unacknowledge sequence number.  If
@@ -458,15 +456,10 @@ found:
         if ((flags & UIP_ACKDATA) != 0)
           {
             conn->tcpstateflags = UIP_ESTABLISHED;
-
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-            conn->isn           = uip_tcpgetsequence(pbuf->ackno);
-            uip_tcpsetsequence(conn->sndseq, conn->isn);
-            conn->sent          = 0;
-#endif
             conn->unacked       = 0;
-            flags               = UIP_CONNECTED;
             nllvdbg("TCP state: UIP_ESTABLISHED\n");
+
+            flags               = UIP_CONNECTED;
 
             if (dev->d_len > 0)
               {
@@ -525,7 +518,9 @@ found:
                         tmp16 =
                           (dev->d_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 2 + i] << 8) |
                           dev->d_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 3 + i];
-                        conn->mss = tmp16 > UIP_TCP_MSS ? UIP_TCP_MSS : tmp16;
+                        conn->initialmss =
+                          conn->mss =
+                          tmp16 > UIP_TCP_MSS? UIP_TCP_MSS: tmp16;
 
                         /* And we are done processing options. */
 
@@ -552,18 +547,12 @@ found:
 
             conn->tcpstateflags = UIP_ESTABLISHED;
             memcpy(conn->rcvseq, pbuf->seqno, 4);
+            nllvdbg("TCP state: UIP_ESTABLISHED\n");
 
             uip_incr32(conn->rcvseq, 1);
             conn->unacked       = 0;
-
-#ifdef CONFIG_NET_TCP_WRITE_BUFFERS
-            conn->isn           = uip_tcpgetsequence(pbuf->ackno);
-            uip_tcpsetsequence(conn->sndseq, conn->isn);
-#endif
             dev->d_len          = 0;
             dev->d_sndlen       = 0;
-
-            nllvdbg("TCP state: UIP_ESTABLISHED\n");
             result = uip_tcpcallback(dev, conn, UIP_CONNECTED | UIP_NEWDATA);
             uip_tcpappsend(dev, conn, result);
             return;
@@ -602,17 +591,10 @@ found:
 
         if ((pbuf->flags & TCP_FIN) != 0 && (conn->tcpstateflags & UIP_STOPPED) == 0)
           {
-            /* Needs to be investigated further.
-             * Windows often sends FIN packets together with the last ACK for
-             * the received data. So the socket layer has to get this ACK even
-             * if the connection is going to be closed.
-             */
-#if 0
             if (conn->unacked > 0)
               {
                 goto drop;
               }
-#endif
 
             /* Update the sequence number and indicate that the connection has
              * been closed.
@@ -676,6 +658,26 @@ found:
           {
             flags |= UIP_NEWDATA;
           }
+
+        /* Check if the available buffer space advertised by the other end
+         * is smaller than the initial MSS for this connection. If so, we
+         * set the current MSS to the window size to ensure that the
+         * application does not send more data than the other end can
+         * handle.
+         *
+         * If the remote host advertises a zero window, we set the MSS to
+         * the initial MSS so that the application will send an entire MSS
+         * of data. This data will not be acknowledged by the receiver,
+         * and the application will retransmit it. This is called the
+         * "persistent timer" and uses the retransmission mechanim.
+         */
+
+        tmp16 = ((uint16_t)pbuf->wnd[0] << 8) + (uint16_t)pbuf->wnd[1];
+        if (tmp16 > conn->initialmss || tmp16 == 0)
+          {
+            tmp16 = conn->initialmss;
+          }
+        conn->mss = tmp16;
 
         /* If this packet constitutes an ACK for outstanding data (flagged
          * by the UIP_ACKDATA flag), we should call the application since it
@@ -745,8 +747,8 @@ found:
 
       case UIP_FIN_WAIT_1:
         /* The application has closed the connection, but the remote host
-         * hasn't closed its end yet.  Thus we stay in the FIN_WAIT_1 state
-         * until we receive a FIN from the remote.
+         * hasn't closed its end yet. Thus we do nothing but wait for a
+         * FIN from the other side.
          */
 
         if (dev->d_len > 0)
@@ -787,7 +789,6 @@ found:
             uip_tcpsend(dev, conn, TCP_ACK, UIP_IPTCPH_LEN);
             return;
           }
-
         goto drop;
 
       case UIP_FIN_WAIT_2:
@@ -813,7 +814,6 @@ found:
             uip_tcpsend(dev, conn, TCP_ACK, UIP_IPTCPH_LEN);
             return;
           }
-
         goto drop;
 
       case UIP_TIME_WAIT:

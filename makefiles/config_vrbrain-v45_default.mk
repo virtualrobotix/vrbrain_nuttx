@@ -5,7 +5,7 @@
 #
 # Use the configuration's ROMFS.
 #
-ROMFS_ROOT	 = $(VRBRAIN_BASE)/ROMFS/vrbrain_common
+ROMFS_ROOT	 = $(VRX_BASE)/ROMFS/vrbrain_common
 
 
 #
@@ -57,6 +57,7 @@ MODULES		+= systemcmds/mtd
 
 MODULES		+= systemcmds/pwm
 
+MODULES		+= systemcmds/top
 MODULES		+= systemcmds/reboot
 
 

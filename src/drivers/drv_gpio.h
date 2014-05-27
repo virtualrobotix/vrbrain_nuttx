@@ -122,6 +122,14 @@
 # define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
 # define VRINPUT_DEVICE_PATH	"/dev/vrinput"
 
+#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+
+/**
+ * Device paths for things that support the GPIO ioctl protocol.
+ */
+# define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
+# define VRINPUT_DEVICE_PATH	"/dev/vrinput"
+
 #elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
 
 # define GPIO_EXT_SHUTDOWN_INT		(1<<0)		/**< shutdown interrupt signal */

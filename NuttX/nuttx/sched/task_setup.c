@@ -132,15 +132,9 @@ static int task_assignpid(FAR struct tcb_s *tcb)
 
       if (!g_pidhash[hash_ndx].tcb)
         {
-          /* Assign this PID to the task */
-
-          g_pidhash[hash_ndx].tcb   = tcb;
-          g_pidhash[hash_ndx].pid   = next_pid;
-#ifdef CONFIG_SCHED_CPULOAD
-          g_pidhash[hash_ndx].ticks = 0;
-#endif
+          g_pidhash[hash_ndx].tcb = tcb;
+          g_pidhash[hash_ndx].pid = next_pid;
           tcb->pid = next_pid;
-
           (void)sched_unlock();
           return OK;
         }
@@ -197,7 +191,7 @@ static inline void task_saveparent(FAR struct tcb_s *tcb, uint8_t ttype)
       /* This is a new task in a new task group, we have to copy the ID from
        * the parent's task group structure to child's task group.
        */
-
+ 
       tcb->group->tg_pgid = rtcb->group->tg_gid;
     }
 
@@ -311,8 +305,8 @@ static inline void task_dupdspace(FAR struct tcb_s *tcb)
  * Input Parameters:
  *   tcb        - Address of the new task's TCB
  *   priority   - Priority of the new task
- *   start      - Thread startup routine
- *   entry      - Thread user entry point
+ *   start      - Thread startup rotuine
+ *   entry       - Thred user entry point
  *   ttype      - Type of the new thread: task, pthread, or kernel thread
  *
  * Return Value:
@@ -324,7 +318,7 @@ static inline void task_dupdspace(FAR struct tcb_s *tcb)
  ****************************************************************************/
 
 static int thread_schedsetup(FAR struct tcb_s *tcb, int priority,
-                             start_t start, CODE void *entry, uint8_t ttype)
+                             start_t start, FAR void *entry, uint8_t ttype)
 {
   int ret;
 
@@ -342,7 +336,7 @@ static int thread_schedsetup(FAR struct tcb_s *tcb, int priority,
       tcb->start          = start;
       tcb->entry.main     = (main_t)entry;
 
-      /* Save the thread type.  This setting will be needed in
+      /* Save the thrad type.  This setting will be needed in
        * up_initial_state() is called.
        */
 
@@ -462,8 +456,8 @@ static int task_tcbargsetup(FAR struct task_tcb_s *tcb,
 #endif /* CONFIG_TASK_NAME_SIZE */
 
   /* For tasks, the life of the argument must be as long as the life of the
-   * task and the arguments must be strings. So for tasks, we have to dup
-   * the strings.
+   * task and the arguments must be strings. So for tasks, we have to to
+   * dup the strings.
    *
    * The first NULL argument terminates the list of arguments.  The argv
    * pointer may be NULL if no parameters are passed.
@@ -515,7 +509,7 @@ static int task_tcbargsetup(FAR struct task_tcb_s *tcb,
  ****************************************************************************/
 
 #if !defined(CONFIG_CUSTOM_STACK) && defined(CONFIG_NUTTX_KERNEL)
-static int task_stackargsetup(FAR struct task_tcb_s *tcb,
+static int task_stackargsetup(FAR struct task_tcb_s *tcb, 
                               FAR char * const argv[])
 {
   FAR char **stackargv;
@@ -581,7 +575,7 @@ static int task_stackargsetup(FAR struct task_tcb_s *tcb,
    */
 
   str          = (FAR char *)stackargv + argvlen;
-
+  
   /* Copy the task name.  Increment str to skip over the task name and its
    * NUL terminator in the string buffer.
    */
@@ -634,7 +628,7 @@ static int task_stackargsetup(FAR struct task_tcb_s *tcb,
  * Input Parameters:
  *   tcb        - Address of the new task's TCB
  *   priority   - Priority of the new task
- *   start      - Start-up function (probably task_start())
+ *   start      - Startup function (probably task_start())
  *   main       - Application start point of the new task
  *   ttype      - Type of the new thread: task or kernel thread
  *
@@ -654,7 +648,7 @@ int task_schedsetup(FAR struct task_tcb_s *tcb, int priority, start_t start,
   /* Perform common thread setup */
 
   ret = thread_schedsetup((FAR struct tcb_s *)tcb, priority, start,
-                          (CODE void *)main, ttype);
+                          (FAR void *)main, ttype);
   if (ret == OK)
     {
       /* Save task restart priority */
@@ -677,7 +671,7 @@ int task_schedsetup(FAR struct task_tcb_s *tcb, int priority, start_t start,
  * Input Parameters:
  *   tcb        - Address of the new task's TCB
  *   priority   - Priority of the new task
- *   start      - Start-up function (probably pthread_start())
+ *   start      - Startup function (probably pthread_start())
  *   entry      - Entry point of the new pthread
  *   ttype      - Type of the new thread: task, pthread, or kernel thread
  *
@@ -696,7 +690,7 @@ int pthread_schedsetup(FAR struct pthread_tcb_s *tcb, int priority, start_t star
   /* Perform common thread setup */
 
   return thread_schedsetup((FAR struct tcb_s *)tcb, priority, start,
-                           (CODE void *)entry, TCB_FLAG_TTYPE_PTHREAD);
+                           (FAR void *)entry, TCB_FLAG_TTYPE_PTHREAD);
 }
 #endif
 
@@ -712,7 +706,7 @@ int pthread_schedsetup(FAR struct pthread_tcb_s *tcb, int priority, start_t star
  *   structure in the TCB, the arguments are cloned via strdup.
  *
  *   In the kernel build case, the argv[] array and all strings are copied
- *   to the task's stack.  This is done because the TCB (and kernel allocated
+ *   to the task's stack.  This is done because the TCB (and kernal allocated
  *   strings) are only accessible in kernel-mode.  Data on the stack, on the
  *   other hand, is guaranteed to be accessible no matter what mode the
  *   task runs in.
@@ -743,7 +737,7 @@ int task_argsetup(FAR struct task_tcb_s *tcb, FAR const char *name,
 
 #if !defined(CONFIG_CUSTOM_STACK) && defined(CONFIG_NUTTX_KERNEL)
   /*   In the kernel build case, the argv[] array and all strings are copied
-   *   to the task's stack.  This is done because the TCB (and kernel allocated
+   *   to the task's stack.  This is done because the TCB (and kernal allocated
    *   strings) are only accessible in kernel-mode.  Data on the stack, on the
    *   other hand, is guaranteed to be accessible no matter what mode the
    *   task runs in.

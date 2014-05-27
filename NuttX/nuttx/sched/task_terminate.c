@@ -1,7 +1,7 @@
 /****************************************************************************
  * sched/task_terminate.c
  *
- *   Copyright (C) 2007-2009, 2011-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2009, 2011-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,6 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <queue.h>
-#include <errno.h>
 
 #include <nuttx/sched.h>
 #include <arch/irq.h>
@@ -124,6 +123,7 @@ int task_terminate(pid_t pid, bool nonblocking)
 {
   FAR struct tcb_s *dtcb;
   irqstate_t saved_state;
+  int ret = ERROR;
 
   /* Make sure the task does not become ready-to-run while we are futzing with
    * its TCB by locking ourselves as the executing task.
@@ -131,15 +131,15 @@ int task_terminate(pid_t pid, bool nonblocking)
 
   sched_lock();
 
-  /* Find for the TCB associated with matching PID */
+  /* Find for the TCB associated with matching pid */
 
   dtcb = sched_gettcb(pid);
   if (!dtcb)
     {
-      /* This PID does not correspond to any known task */
+      /* This pid does not correspond to any known task */
 
       sched_unlock();
-      return -ESRCH;
+      return ERROR;
     }
 
   /* Verify our internal sanity */
@@ -184,5 +184,6 @@ int task_terminate(pid_t pid, bool nonblocking)
 
   /* Deallocate its TCB */
 
-  return sched_releasetcb(dtcb, dtcb->flags & TCB_FLAG_TTYPE_MASK);
+  sched_releasetcb(dtcb, dtcb->flags & TCB_FLAG_TTYPE_MASK);
+  return ret;
 }

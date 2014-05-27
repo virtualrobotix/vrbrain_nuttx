@@ -2,7 +2,7 @@ bin_PROGRAMS = mconf
 
 mconf_SOURCES = mconf.c
 mconf_CPPFLAGS = $(AM_CPPFLAGS)                 \
-                 ${ncurses_mconf_CPPFLAGS}      \
+                 -DCURSES_LOC='"$(CURSES_LOC)"' \
                  $(intl_CPPFLAGS)               \
                  -I$(top_srcdir)/libs           \
                  -I$(top_srcdir)/libs/parser

@@ -2,7 +2,7 @@
  * include/nuttx/net/uip/uip-arch.h
  * Defines architecture-specific device driver interfaces to uIP
  *
- *   Copyright (C) 2007, 2009, 2011-2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007, 2009, 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Derived largely from portions of uIP with has a similar BSD-styple license:
@@ -180,9 +180,6 @@ struct uip_driver_s
   int (*d_ifup)(struct uip_driver_s *dev);
   int (*d_ifdown)(struct uip_driver_s *dev);
   int (*d_txavail)(struct uip_driver_s *dev);
-#ifdef CONFIG_NET_RXAVAIL
-  int (*d_rxavail)(struct uip_driver_s *dev);
-#endif
 #ifdef CONFIG_NET_IGMP
   int (*d_addmac)(struct uip_driver_s *dev, FAR const uint8_t *mac);
   int (*d_rmmac)(struct uip_driver_s *dev, FAR const uint8_t *mac);
@@ -252,7 +249,7 @@ struct uip_driver_s
  *       }
  */
 
-int uip_input(struct uip_driver_s *dev);
+extern void uip_input(struct uip_driver_s *dev);
 
 /* Polling of connections
  *
@@ -305,19 +302,8 @@ int uip_input(struct uip_driver_s *dev);
  */
 
 typedef int (*uip_poll_callback_t)(struct uip_driver_s *dev);
-int uip_poll(struct uip_driver_s *dev, uip_poll_callback_t callback);
-int uip_timer(struct uip_driver_s *dev, uip_poll_callback_t callback, int hsec);
-
-/* Carrier detection
- * Call netdev_carrier_on when the carrier has become available and the device
- * is ready to receive/transmit packets.
- *
- * Call detdev_carrier_off when the carrier disappeared and the device has moved
- * into non operational state.
- */
-
-int netdev_carrier_on(FAR struct uip_driver_s *dev);
-int netdev_carrier_off(FAR struct uip_driver_s *dev);
+extern int uip_poll(struct uip_driver_s *dev, uip_poll_callback_t callback);
+extern int uip_timer(struct uip_driver_s *dev, uip_poll_callback_t callback, int hsec);
 
 /* By defining UIP_ARCH_CHKSUM, the architecture can replace up_incr32
  * with hardware assisted solutions.
@@ -332,7 +318,7 @@ int netdev_carrier_off(FAR struct uip_driver_s *dev);
  * op16 - A 16-bit integer in host byte order.
  */
 
-void uip_incr32(uint8_t *op32, uint16_t op16);
+extern void uip_incr32(uint8_t *op32, uint16_t op16);
 
 /* Calculate the Internet checksum over a buffer.
  *
@@ -353,7 +339,7 @@ void uip_incr32(uint8_t *op32, uint16_t op16);
  * Return:  The Internet checksum of the buffer.
  */
 
-uint16_t uip_chksum(uint16_t *buf, uint16_t len);
+extern uint16_t uip_chksum(uint16_t *buf, uint16_t len);
 
 /* Calculate the IP header checksum of the packet header in d_buf.
  *
@@ -364,7 +350,7 @@ uint16_t uip_chksum(uint16_t *buf, uint16_t len);
  * buffer.
  */
 
-uint16_t uip_ipchksum(struct uip_driver_s *dev);
+extern uint16_t uip_ipchksum(struct uip_driver_s *dev);
 
 /* Calculate the TCP checksum of the packet in d_buf and d_appdata.
  *
@@ -379,10 +365,10 @@ uint16_t uip_ipchksum(struct uip_driver_s *dev);
  * to by d_appdata.
  */
 
-uint16_t uip_tcpchksum(struct uip_driver_s *dev);
+extern uint16_t uip_tcpchksum(struct uip_driver_s *dev);
 
-uint16_t uip_udpchksum(struct uip_driver_s *dev);
-uint16_t uip_icmpchksum(struct uip_driver_s *dev, int len);
+extern uint16_t uip_udpchksum(struct uip_driver_s *dev);
+extern uint16_t uip_icmpchksum(struct uip_driver_s *dev, int len);
 
 #endif /* __INCLUDE_NUTTX_NET_UIP_UIP_ARCH_H */
 

@@ -46,8 +46,7 @@
 
 #include <nuttx/wqueue.h>
 
-#if defined(CONFIG_NUTTX_KERNEL) && !defined(__KERNEL__) && \
-    defined(CONFIG_SCHED_WORKQUEUE) && defined(CONFIG_SCHED_USRWORK)
+#if defined(CONFIG_SCHED_WORKQUEUE) && defined(CONFIG_SCHED_USRWORK)
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -89,6 +88,10 @@
 
 int work_usrstart(void)
 {
+  int errcode;
+
+  DEBUGASSERT(g_usrwork[USRWORK] == NULL);
+
   /* Start a user-mode worker thread for use by applications. */
 
   svdbg("Starting user-mode worker thread\n");
@@ -99,12 +102,10 @@ int work_usrstart(void)
                                        (main_t)work_usrthread,
                                        (FAR char * const *)NULL);
 
-  DEBUGASSERT(g_usrwork[USRWORK].pid > 0);
+  errcode = errno;
+  ASSERT(g_usrwork[USRWORK].pid > 0);
   if (g_usrwork[USRWORK].pid < 0)
     {
-      int errcode = errno;
-      DEBUGASSERT(errcode > 0);
-
       sdbg("task_create failed: %d\n", errcode);
       return -errcode;
     }
@@ -112,4 +113,4 @@ int work_usrstart(void)
   return g_usrwork[USRWORK].pid;
 }
 
-#endif /* CONFIG_NUTTX_KERNEL && !__KERNEL__ CONFIG_SCHED_WORKQUEUE && CONFIG_SCHED_USRWORK */
+#endif /* CONFIG_SCHED_WORKQUEUE && CONFIG_SCHED_USRWORK */

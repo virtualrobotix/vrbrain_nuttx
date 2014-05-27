@@ -69,7 +69,7 @@
 #include <dirent.h>
 #include <errno.h>
 
-#include <nuttx/fs/ramdisk.h>
+#include <nuttx/ramdisk.h>
 
 #include "romfs_testdir.h"
 

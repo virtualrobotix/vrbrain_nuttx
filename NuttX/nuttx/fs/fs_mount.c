@@ -63,20 +63,18 @@
 /* Configuration ************************************************************/
 /* In the canonical case, a file system is bound to a block driver.  However,
  * some less typical cases a block driver is not required.  Examples are
- * pseudo file systems (like BINFS or PROCFS) and MTD file systems (like NXFFS).
+ * pseudo file systems (like BINFS) and MTD file systems (like NXFFS).
  *
  * These file systems all require block drivers:
  */
 
-#if defined(CONFIG_FS_FAT) || defined(CONFIG_FS_ROMFS) || \
-    defined(CONFIG_FS_SMARTFS)
+#if defined(CONFIG_FS_FAT) || defined(CONFIG_FS_ROMFS)
 #  define BDFS_SUPPORT 1
 #endif
 
 /* These file systems do not require block drivers */
 
-#if defined(CONFIG_FS_NXFFS) || defined(CONFIG_FS_BINFS) || \
-    defined(CONFIG_FS_PROCFS) || defined(CONFIG_NFS)
+#if defined(CONFIG_FS_NXFFS) || defined(CONFIG_FS_BINFS) || defined(CONFIG_NFS) 
 #  define NONBDFS_SUPPORT
 #endif
 
@@ -130,9 +128,6 @@ extern const struct mountpt_operations nfs_operations;
 #ifdef CONFIG_FS_BINFS
 extern const struct mountpt_operations binfs_operations;
 #endif
-#ifdef CONFIG_FS_PROCFS
-extern const struct mountpt_operations procfs_operations;
-#endif
 
 static const struct fsmap_t g_nonbdfsmap[] =
 {
@@ -145,10 +140,7 @@ static const struct fsmap_t g_nonbdfsmap[] =
 #ifdef CONFIG_FS_BINFS
     { "binfs", &binfs_operations },
 #endif
-#ifdef CONFIG_FS_PROCFS
-    { "procfs", &procfs_operations },
-#endif
-    { NULL, NULL },
+    { NULL,   NULL },
 };
 #endif /* NONBDFS_SUPPORT */
 
@@ -402,7 +394,7 @@ errout:
 #else
   fdbg("No filesystems enabled\n");
   set_errno(ENOSYS);
-  return ERROR;
+  return error;
 #endif /* BDFS_SUPPORT || NONBDFS_SUPPORT */
 }
 

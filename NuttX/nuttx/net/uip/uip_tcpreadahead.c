@@ -1,7 +1,7 @@
 /****************************************************************************
  * net/uip/uip_tcpreadahead.c
  *
- *   Copyright (C) 2007-2009, 2013-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2009, 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
  ****************************************************************************/
 
 #include <nuttx/net/uip/uipopt.h>
-#if defined(CONFIG_NET) && defined(CONFIG_NET_TCP) && defined(CONFIG_NET_TCP_READAHEAD)
+#if defined(CONFIG_NET) && defined(CONFIG_NET_TCP) && (CONFIG_NET_NTCP_READAHEAD_BUFFERS > 0)
 
 #include <queue.h>
 #include <debug.h>
@@ -48,29 +48,16 @@
 #include "uip_internal.h"
 
 /****************************************************************************
- * Private Types
- ****************************************************************************/
-
-/* Package all globals used by this logic into a structure */
-
-struct readahead_s
-{
-  /* This is the list of available write buffers */
-
-  sq_queue_t freebuffers;
-
-  /* These are the pre-allocated write buffers */
-
-  struct uip_readahead_s buffers[CONFIG_NET_NTCP_READAHEAD_BUFFERS];
-};
-
-/****************************************************************************
  * Private Data
  ****************************************************************************/
 
-/* This is the state of the global read-ahead resource */
+/* These are the pre-allocated read-ahead buffers */
 
-static struct readahead_s g_readahead;
+static struct uip_readahead_s g_buffers[CONFIG_NET_NTCP_READAHEAD_BUFFERS];
+
+/* This is the list of available read-ahead buffers */
+
+static sq_queue_t g_freebuffers;
 
 /****************************************************************************
  * Private Functions
@@ -81,7 +68,7 @@ static struct readahead_s g_readahead;
  ****************************************************************************/
 
 /****************************************************************************
- * Function: uip_tcpreadahead_init
+ * Function: uip_tcpreadaheadinit
  *
  * Description:
  *   Initialize the list of free read-ahead buffers
@@ -91,19 +78,19 @@ static struct readahead_s g_readahead;
  *
  ****************************************************************************/
 
-void uip_tcpreadahead_init(void)
+void uip_tcpreadaheadinit(void)
 {
   int i;
 
-  sq_init(&g_readahead.freebuffers);
+  sq_init(&g_freebuffers);
   for (i = 0; i < CONFIG_NET_NTCP_READAHEAD_BUFFERS; i++)
     {
-      sq_addfirst(&g_readahead.buffers[i].rh_node, &g_readahead.freebuffers);
+      sq_addfirst(&g_buffers[i].rh_node, &g_freebuffers);
     }
 }
 
 /****************************************************************************
- * Function: uip_tcpreadahead_alloc
+ * Function: uip_tcpreadaheadalloc
  *
  * Description:
  *   Allocate a TCP read-ahead buffer by taking a pre-allocated buffer from
@@ -117,13 +104,13 @@ void uip_tcpreadahead_init(void)
  *
  ****************************************************************************/
 
-FAR struct uip_readahead_s *uip_tcpreadahead_alloc(void)
+struct uip_readahead_s *uip_tcpreadaheadalloc(void)
 {
-  return (FAR struct uip_readahead_s*)sq_remfirst(&g_readahead.freebuffers);
+  return (struct uip_readahead_s*)sq_remfirst(&g_freebuffers);
 }
 
 /****************************************************************************
- * Function: uip_tcpreadahead_release
+ * Function: uip_tcpreadaheadrelease
  *
  * Description:
  *   Release a TCP read-ahead buffer by returning the buffer to the free list.
@@ -135,9 +122,9 @@ FAR struct uip_readahead_s *uip_tcpreadahead_alloc(void)
  *
  ****************************************************************************/
 
-void uip_tcpreadahead_release(FAR struct uip_readahead_s *readahead)
+void uip_tcpreadaheadrelease(struct uip_readahead_s *buf)
 {
-  sq_addfirst(&readahead->rh_node, &g_readahead.freebuffers);
+  sq_addfirst(&buf->rh_node, &g_freebuffers);
 }
 
-#endif /* CONFIG_NET && CONFIG_NET_TCP && CONFIG_NET_TCP_READAHEAD */
+#endif /* CONFIG_NET && CONFIG_NET_TCP && CONFIG_NET_NTCP_READAHEAD_BUFFERS*/

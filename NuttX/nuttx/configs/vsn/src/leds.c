@@ -89,13 +89,13 @@ static void led_setonoff(unsigned int bits)
  ****************************************************************************/
 
 
-void board_led_initialize(void)
+void up_ledinit(void)
 {
    stm32_configgpio(GPIO_LED);
 }
 
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
   if (led==LED_IDLE) {
 	irqidle_mask = irqsave();
@@ -104,7 +104,7 @@ void board_led_on(int led)
 }
 
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
   if (led==LED_IDLE) {
     stm32_gpiowrite(GPIO_LED, false);

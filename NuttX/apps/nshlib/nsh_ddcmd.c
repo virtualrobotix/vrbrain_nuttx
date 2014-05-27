@@ -109,7 +109,7 @@ struct dd_s
 #ifndef CONFIG_DISABLE_MOUNTPOINT
   union
   {
-    FAR void *handle;  /* BCH lib handle for block device */
+    FAR void *handle;  /* BCH lib handle for block device*/
     int fd;            /* File descriptor of the character device */
   } inf;
 #else
@@ -119,7 +119,7 @@ struct dd_s
 #ifndef CONFIG_DISABLE_MOUNTPOINT
   union
   {
-    FAR void *handle;  /* BCH lib handle for block device */
+    FAR void *handle;  /* BCH lib handle for block device*/
     int fd;            /* File descriptor of the character device */
   } outf;
 #else
@@ -172,6 +172,7 @@ static void dd_outfcloseblk(struct dd_s *dd)
   (void)bchlib_teardown(DD_OUTHANDLE);
 }
 #endif
+
 
 /****************************************************************************
  * Name: dd_outfclosech
@@ -324,7 +325,7 @@ static int dd_readch(struct dd_s *dd)
 }
 
 /****************************************************************************
- * Name: dd_filetype
+ * Name: dd_infopen
  ****************************************************************************/
 
 #ifndef CONFIG_DISABLE_MOUNTPOINT
@@ -390,7 +391,6 @@ static inline int dd_infopen(const char *name, struct dd_s *dd)
       dd->infread  = dd_readblk;
       dd->infclose = dd_infcloseblk;
     }
-
   return OK;
 }
 #else
@@ -403,7 +403,6 @@ static inline int dd_infopen(const char *name, struct dd_s *dd)
       nsh_output(vtbl, g_fmtcmdfailed, g_dd, "open", NSH_ERRNO);
       return ERROR;
     }
-
   return OK;
 }
 #endif
@@ -451,7 +450,6 @@ static inline int dd_outfopen(const char *name, struct dd_s *dd)
       dd->outfwrite = dd_writech;  /* Character oriented write */
       dd->outfclose = dd_outfclosech;
     }
-
   return OK;
 }
 #else
@@ -463,7 +461,6 @@ static inline int dd_outfopen(const char *name, struct dd_s *dd)
       nsh_output(dd->vtbl, g_fmtcmdfailed, g_dd, "open", NSH_ERRNO);
       return ERROR;
     }
-
   return OK;
 }
 #endif
@@ -617,27 +614,22 @@ int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
           dd.sector++;
         }
     }
-
   ret = OK;
 
 errout_with_outf:
   DD_INCLOSE(&dd);
-
 errout_with_inf:
   DD_OUTCLOSE(&dd);
   free(dd.buffer);
-
 errout_with_paths:
   if (infile)
     {
       free(infile);
     }
-
   if (outfile)
     {
       free(outfile);
     }
-
   return ret;
 }
 

@@ -1,7 +1,7 @@
 /****************************************************************************
  * configs/ea3152/src/up_leds.c
  *
- *   Copyright (C) 2011, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,9 +41,7 @@
 
 #include <stdint.h>
 
-#include <nuttx/arch.h>
 #include <arch/board/board.h>
-
 #include "ea3152_internal.h"
 
 #ifdef CONFIG_ARCH_BUTTONS
@@ -65,18 +63,18 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_button_initialize
+ * Name: up_buttoninit
  ****************************************************************************/
 
-void board_button_initialize(void)
+void up_buttoninit(void)
 {
 }
 
 /****************************************************************************
- * Name: board_buttons
+ * Name: up_buttons
  ****************************************************************************/
 
-uint8_t board_buttons(void)
+uint8_t up_buttons(void)
 {
   return 0;
 }

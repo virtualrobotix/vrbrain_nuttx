@@ -7,8 +7,8 @@ This port is based on patches contributed by Denis Carikli for both the
 compal e99 and e88. At the time of initial check-in, the following phones
 were tested:
 
-* Motorola c155 (compal e99) with the compalram and highram configuration
-* Motorola W220 (compal e88)
+* motorolla c155 (compal e99) with the compalram and highram configuration
+* motorolla W220 (compal e88)
 * The openmoko freerunner baseband(compal e88)
 
 The patches were made by Alan Carvalho de Assis and Denis Carikli using
@@ -50,32 +50,3 @@ o highram is for phones having the romloader(if the phone has a bootrom)
   by talking to the ramloader) when having a ramloader(which can only
   load 64k).
 
-Configurations
-==============
-
-  1. Each Compal E99 configuration is maintained in a sub-directory and
-     can be selected as follow:
-
-       cd tools
-       ./configure.sh compal_e99/<subdir>
-       cd -
-       . ./setenv.sh
-
-     Where <subdir> is one of the configuration sub-directories under
-     nuttx/configs/compal_e99.
-
-  2. These configurations use the mconf-based configuration tool.  To
-     change a configurations using that tool, you should:
-
-     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-        and misc/tools/
-
-     b. Execute 'make menuconfig' in nuttx/ in order to start the
-        reconfiguration process.
-
-  3. By default, all configurations assume the NuttX Buildroot toolchain
-     under Linux (should work under Windows with Cygwin as well).  This
-     is easily reconfigured:
-
-        CONFIG_HOST_LINUX=y
-        CONFIG_ARM_TOOLCHAIN_BUILDROOT=y

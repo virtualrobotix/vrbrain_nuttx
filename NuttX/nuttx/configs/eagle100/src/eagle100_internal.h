@@ -45,7 +45,7 @@
 #include <nuttx/compiler.h>
 
 #include "chip.h"
-#include "tiva_gpio.h"
+#include "lm_gpio.h"
 
 /************************************************************************************
  * Definitions
@@ -56,12 +56,12 @@
  * expanded).
  */
 
-#if TIVA_NSSI == 0
+#if LM_NSSI == 0
 #  undef CONFIG_SSI0_DISABLE
 #  define CONFIG_SSI0_DISABLE 1
 #  undef CONFIG_SSI1_DISABLE
 #  define CONFIG_SSI1_DISABLE 1
-#elif TIVA_NSSI == 1
+#elif LM_NSSI == 1
 #  undef CONFIG_SSI1_DISABLE
 #  define CONFIG_SSI1_DISABLE 1
 #endif
@@ -88,10 +88,10 @@
  *
  ************************************************************************************/
 
-void weak_function lm_ssiinitialize(void);
+extern void weak_function lm_ssiinitialize(void);
 
 /****************************************************************************
- * Name: board_led_initialize
+ * Name: up_ledinit
  *
  * Description:
  *   Initialize on-board LEDs.
@@ -99,7 +99,7 @@ void weak_function lm_ssiinitialize(void);
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_LEDS
-void board_led_initialize(void);
+extern void up_ledinit(void);
 #endif
 
 #endif /* __ASSEMBLY__ */

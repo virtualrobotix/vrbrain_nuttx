@@ -48,7 +48,7 @@
 
 #include <nuttx/nx/nxglib.h>
 #include <nuttx/nx/nx.h>
-#include <nuttx/video/rgbcolors.h>
+#include <nuttx/rgbcolors.h>
 
 /****************************************************************************
  * Definitions

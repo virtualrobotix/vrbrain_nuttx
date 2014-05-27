@@ -19,24 +19,12 @@ menu "I2C tool"
 source "$APPSDIR/system/i2c/Kconfig"
 endmenu
 
-menu "INI File Parser"
-source "$APPSDIR/system/inifile/Kconfig"
-endmenu
-
 menu "FLASH Program Installation"
 source "$APPSDIR/system/install/Kconfig"
 endmenu
 
 menu "FLASH Erase-all Command"
 source "$APPSDIR/system/flash_eraseall/Kconfig"
-endmenu
-
-menu "NxPlayer media player library / command Line"
-source "$APPSDIR/system/nxplayer/Kconfig"
-endmenu
-
-menu "RAM test"
-source "$APPSDIR/system/ramtest/Kconfig"
 endmenu
 
 menu "readline()"
@@ -63,22 +51,6 @@ menu "USB Monitor"
 source "$APPSDIR/system/usbmonitor/Kconfig"
 endmenu
 
-menu "EMACS-like Command Line Editor"
-source "$APPSDIR/system/cle/Kconfig"
-endmenu
-
-menu "VI Work-Alike Editor"
-source "$APPSDIR/system/vi/Kconfig"
-endmenu
-
-menu "Stack Monitor"
-source "$APPSDIR/system/stackmonitor/Kconfig"
-endmenu
-
 menu "USB Mass Storage Device Commands"
 source "$APPSDIR/system/usbmsc/Kconfig"
-endmenu
-
-menu "Zmodem Commands"
-source "$APPSDIR/system/zmodem/Kconfig"
 endmenu

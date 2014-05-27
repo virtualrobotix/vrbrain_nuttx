@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/ne64badge/src/board_buttons.c
+ * configs/ne64badge/src/up_buttons.c
  *
- *   Copyright (C) 2011, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,9 +41,7 @@
 
 #include <stdint.h>
 
-#include <nuttx/arch.h>
 #include <arch/board/board.h>
-
 #include "ne64badge_internal.h"
 
 #ifdef CONFIG_ARCH_BUTTONS
@@ -93,26 +91,26 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_button_initialize
+ * Name: up_buttoninit
  ****************************************************************************/
 
-void board_button_initialize(void)
+void up_buttoninit(void)
 {
   /* Configure all button GPIO lines */
 
-  btn_dumpgpio("board_button_initialize() Entry)");
+  btn_dumpgpio("up_buttoninit() Entry)");
 
   hcs12_configgpio(NE64BADGE_BUTTON1);
   hcs12_configgpio(NE64BADGE_BUTTON2);
 
-  btn_dumpgpio("board_button_initialize() Exit");
+  btn_dumpgpio("up_buttoninit() Exit");
 }
 
 /****************************************************************************
- * Name: board_buttons
+ * Name: up_buttons
  ****************************************************************************/
 
-uint8_t board_buttons(void)
+uint8_t up_buttons(void)
 {
   uint8_t ret    = 0;
 

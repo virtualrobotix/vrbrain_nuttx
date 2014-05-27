@@ -45,8 +45,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <nuttx/mtd/mtd.h>
-#include <nuttx/fs/smart.h>
+#include <nuttx/mtd.h>
+#include <nuttx/smart.h>
 #include <nuttx/fs/ioctl.h>
 
 /****************************************************************************
@@ -107,8 +107,8 @@ int flash_test_main(int argc, char *argv[])
     {
       /* Perform a low-level format */
 
-      (void)inode->u.i_bops->ioctl(inode, BIOC_LLFORMAT, 0);
-      (void)inode->u.i_bops->ioctl(inode, BIOC_GETFORMAT, (unsigned long) &fmt);
+      ret = inode->u.i_bops->ioctl(inode, BIOC_LLFORMAT, 0);
+      ret = inode->u.i_bops->ioctl(inode, BIOC_GETFORMAT, (unsigned long) &fmt);
     }
 
   if (!(fmt.flags & SMART_FMT_ISFORMATTED))
@@ -182,7 +182,7 @@ int flash_test_main(int argc, char *argv[])
       readwrite.offset = 0;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+      ret = inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
                                    &readwrite);
 
       /* Print the logical sector number */
@@ -241,7 +241,7 @@ int flash_test_main(int argc, char *argv[])
       readwrite.offset = 0;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+      ret = inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
                                    &readwrite);
 
       /* Print the logical sector number */
@@ -266,7 +266,7 @@ int flash_test_main(int argc, char *argv[])
       readwrite.offset = 64;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+      ret = inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
                                    &readwrite);
 
       /* Print the logical sector number */
@@ -284,7 +284,7 @@ int flash_test_main(int argc, char *argv[])
 
       if (sectors[x] != 0xFFFF)
         {
-          (void)inode->u.i_bops->ioctl(inode, BIOC_FREESECT, (unsigned long)
+          ret = inode->u.i_bops->ioctl(inode, BIOC_FREESECT, (unsigned long)
                                        sectors[x]);
         }
     }

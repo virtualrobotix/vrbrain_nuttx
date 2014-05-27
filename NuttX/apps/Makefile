@@ -1,8 +1,7 @@
 ############################################################################
 # apps/Makefile
 #
-#   Copyright (C) 2011 Uros Platise. All rights reserved.
-#   Copyright (C) 2011-2013 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2011-2012 Uros Platise. All rights reserved.
 #   Authors: Uros Platise <uros.platise@isotel.eu>
 #            Gregory Nutt <gnutt@nuttx.org>
 #
@@ -42,24 +41,33 @@ APPDIR = ${shell pwd}
 # Application Directories
 
 # CONFIGURED_APPS is the list of all configured built-in directories/built
-#   action.
+#   action. It is created by the configured appconfig file (a copy of which
+#   appears in this directory as .config)
 # SUBDIRS is the list of all directories containing Makefiles.  It is used
 #   only for cleaning. builtin must always be the first in the list.  This
 #   list can be extended by the .config file as well.
 
 CONFIGURED_APPS =
-SUBDIRS  = examples graphics interpreters modbus builtin nshlib netutils
-SUBDIRS += platform system
+SUBDIRS = examples graphics interpreters modbus builtin nshlib netutils system
 
-# The list of configured directories is derived from NuttX configuration
-# file:  The selected applications are enabled settings in the confuration
-# file.  For example,
+# There are two different mechanisms for obtaining the list of configured
+# directories:
 #
-#   CONFIG_EXAMPLES_HELLO=y
+# (1) In the legacy method, these paths are all provided in the appconfig
+#     file that is copied to the top-level apps/ directory as .config
+# (2) With the development of the NuttX configuration tool, however, the
+#     selected applications are now enabled by the configuration tool.
+#     The apps/.config file is no longer used.  Instead, the set of
+#     configured build directories can be found by including a Make.defs
+#     file contained in each of the apps/subdirectories.
 #
-# Will cause the "Hello, World!" example at apps/examples/hello to be
-# built and added int libapps.a.
+# When the NuttX configuration tools executes, it will always define the
+# configure CONFIG_NUTTX_NEWCONFIG to select between these two cases.  Then
+# legacy appconfig files will still work but newly configuration files will
+# also work.  Eventually the CONFIG_NUTTX_NEWCONFIG option will be phased
 # out.
+
+ifeq ($(CONFIG_NUTTX_NEWCONFIG),y)
 
 # builtin/Make.defs must be included first
 
@@ -70,9 +78,7 @@ include interpreters/Make.defs
 include modbus/Make.defs
 include netutils/Make.defs
 include nshlib/Make.defs
-include platform/Make.defs
 include system/Make.defs
--include external/Make.defs
 
 # INSTALLED_APPS is the list of currently available application directories.  It
 # is the same as CONFIGURED_APPS, but filtered to exclude any non-existent
@@ -80,6 +86,19 @@ include system/Make.defs
 # built.
 
 INSTALLED_APPS =
+
+# The legacy case:
+
+else
+-include .config
+
+# INSTALLED_APPS is the list of currently available application directories.  It
+# is the same as CONFIGURED_APPS, but filtered to exclude any non-existent
+# application directory. builtin is always in the list of applications to be
+# built.
+
+INSTALLED_APPS = builtin
+endif
 
 # Create the list of available applications (INSTALLED_APPS)
 
@@ -158,6 +177,7 @@ ifeq ($(CONFIG_WINDOWS_NATIVE),y)
 	$(Q) for %%G in ($(SUBDIRS)) do ( \
 		$(MAKE) -C %%G distclean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" \
 	)
+	$(call DELFILE, .config)
 	$(call DELFILE, .depend)
 	$(Q) ( if exist  external ( \
 		echo ********************************************************" \
@@ -168,6 +188,7 @@ else
 	$(Q) for dir in $(SUBDIRS) ; do \
 		$(MAKE) -C $$dir distclean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"; \
 	done
+	$(call DELFILE, .config)
 	$(call DELFILE, .depend)
 	$(Q) ( if [ -e external ]; then \
 		echo "********************************************************"; \

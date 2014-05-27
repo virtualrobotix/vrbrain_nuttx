@@ -1,7 +1,7 @@
 /****************************************************************************
  * arch/avr/src/avr/up_checkstack.c
  *
- *   Copyright (C) 2011, 2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,10 +82,7 @@ size_t up_check_tcbstack(FAR struct tcb_s *tcb)
 {
   FAR uint8_t *ptr;
   size_t mark;
-#if 0
-  int i;
-  int j;
-#endif
+  int i, j;
 
   /* The AVR uses a push-down stack:  the stack grows toward lower addresses
    * in memory.  We need to start at the lowest address in the stack memory
@@ -124,10 +121,8 @@ size_t up_check_tcbstack(FAR struct tcb_s *tcb)
                 {
                   ch = 'X';
                 }
-
               up_putc(ch);
              }
-
           up_putc('\n');
         }
      }
@@ -138,19 +133,9 @@ size_t up_check_tcbstack(FAR struct tcb_s *tcb)
   return mark;
 }
 
-ssize_t up_check_tcbstack_remain(FAR struct tcb_s *tcb)
-{
-  return (ssize_t)tcb->adj_stack_size - (ssize_t)up_check_tcbstack(tcb);
-}
-
 size_t up_check_stack(void)
 {
   return up_check_tcbstack((FAR struct tcb_s*)g_readytorun.head);
-}
-
-ssize_t up_check_stack_remain(void)
-{
-  return up_check_tcbstack_remain((FAR struct tcb_s*)g_readytorun.head);
 }
 
 #endif /* CONFIG_DEBUG && CONFIG_DEBUG_STACK */

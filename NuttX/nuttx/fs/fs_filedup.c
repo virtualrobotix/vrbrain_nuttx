@@ -1,7 +1,7 @@
 /****************************************************************************
  * fs/fs_filedup.c
  *
- *   Copyright (C) 2007-2009, 2011-2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2009, 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,6 @@
 
 #include <sched.h>
 #include <errno.h>
-#include <assert.h>
 
 #include <nuttx/fs/fs.h>
 
@@ -77,19 +76,23 @@
  *
  ****************************************************************************/
 
-int file_dup(int fd, int minfd)
+int file_dup(int fildes, int minfd)
 {
   FAR struct filelist *list;
-  int fd2;
+  int fildes2;
 
   /* Get the thread-specific file list */
 
   list = sched_getfiles();
-  DEBUGASSERT(list);
+  if (!list)
+    {
+      set_errno(EMFILE);
+      return ERROR;
+    }
 
-  /* Verify that fd is a valid, open file descriptor */
+  /* Verify that fildes is a valid, open file descriptor */
 
-  if (!DUP_ISOPEN(fd, list))
+  if (!DUP_ISOPEN(fildes, list))
     {
       set_errno(EBADF);
       return ERROR;
@@ -97,22 +100,22 @@ int file_dup(int fd, int minfd)
 
   /* Increment the reference count on the contained inode */
 
-  inode_addref(list->fl_files[fd].f_inode);
+  inode_addref(list->fl_files[fildes].f_inode);
 
   /* Then allocate a new file descriptor for the inode */
 
-  fd2 = files_allocate(list->fl_files[fd].f_inode,
-                       list->fl_files[fd].f_oflags,
-                       list->fl_files[fd].f_pos,
-                       minfd);
-  if (fd2 < 0)
+  fildes2 = files_allocate(list->fl_files[fildes].f_inode,
+                           list->fl_files[fildes].f_oflags,
+                           list->fl_files[fildes].f_pos,
+                           minfd);
+  if (fildes2 < 0)
     {
       set_errno(EMFILE);
-      inode_release(list->fl_files[fd].f_inode);
+      inode_release(list->fl_files[fildes].f_inode);
       return ERROR;
     }
 
-  return fd2;
+  return fildes2;
 }
 
 #endif /* CONFIG_NFILE_DESCRIPTORS > 0 */

@@ -46,7 +46,7 @@
 #  include <stdint.h>
 #endif
 
-#ifdef CONFIG_ARCH_FAMILY_AVR32
+#ifdef CONFIG_ARCH_AVR32
 # include "avr32_internal.h"
 #else
 # include "avr_internal.h"
@@ -126,17 +126,17 @@ extern uint32_t _ebss;            /* End+1 of .bss */
 
 /* Defined in files with the same name as the function */
 
-void up_boot(void);
-void up_irqinitialize(void);
+extern void up_boot(void);
+extern void up_irqinitialize(void);
 #ifdef CONFIG_ARCH_DMA
-void weak_function up_dmainitialize(void);
+extern void weak_function up_dmainitialize(void);
 #endif
-void up_sigdeliver(void);
-int  up_timerisr(int irq, uint32_t *regs);
-void up_lowputc(char ch);
-void up_puts(const char *str);
-void up_lowputs(const char *str);
-void up_dumpstate(void);
+extern void up_sigdeliver(void);
+extern int  up_timerisr(int irq, uint32_t *regs);
+extern void up_lowputc(char ch);
+extern void up_puts(const char *str);
+extern void up_lowputs(const char *str);
+extern void up_dumpstate(void);
 
 /* Defined in common/up_allocateheap.c or chip/xxx_allocateheap.c */
 
@@ -152,13 +152,13 @@ void up_addregion(void);
  * before the OS gets started (clocks, console, LEDs, etc.)
  */
 
-void up_lowinit(void);
+extern void up_lowinit(void);
 
 /* Defined in chip/xxx_serial.c */
 
 #if CONFIG_NFILE_DESCRIPTORS > 0
-void up_earlyserialinit(void);
-void up_serialinit(void);
+extern void up_earlyserialinit(void);
+extern void up_serialinit(void);
 #else
 # define up_earlyserialinit()
 # define up_serialinit()
@@ -167,7 +167,7 @@ void up_serialinit(void);
 /* Defined in drivers/lowconsole.c */
 
 #ifdef CONFIG_DEV_LOWCONSOLE
-void lowconsole_init(void);
+extern void lowconsole_init(void);
 #else
 # define lowconsole_init()
 #endif
@@ -179,17 +179,17 @@ extern void up_timerinit(void);
 /* Defined in configs/<board-name>/src/up_leds.c */
 
 #ifdef CONFIG_ARCH_LEDS
-void board_led_on(int led);
-void board_led_off(int led);
+extern void up_ledon(int led);
+extern void up_ledoff(int led);
 #else
-# define board_led_on(led)
-# define board_led_off(led)
+# define up_ledon(led)
+# define up_ledoff(led)
 #endif
 
 /* Defined in chip/xxx_ethernet.c */
 
 #ifdef CONFIG_NET
-void up_netinitialize(void);
+extern void up_netinitialize(void);
 #else
 # define up_netinitialize()
 #endif
@@ -197,12 +197,14 @@ void up_netinitialize(void);
 /* Defined in chip/xxx_usbdev.c */
 
 #ifdef CONFIG_USBDEV
-void up_usbinitialize(void);
-void up_usbuninitialize(void);
+extern void up_usbinitialize(void);
+extern void up_usbuninitialize(void);
 #else
 # define up_usbinitialize()
 # define up_usbuninitialize()
 #endif
 
 #endif /* __ASSEMBLY__ */
+
 #endif  /* __UP_INTERNAL_H */
+

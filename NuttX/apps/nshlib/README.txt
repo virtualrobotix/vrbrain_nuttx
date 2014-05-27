@@ -7,7 +7,6 @@ apps/nshlib
   - Console/NSH Front End
   - Command Overview
   - Conditional Command Execution
-  - Looping
   - Built-In Variables
   - Current Working Directory
     Environment Variables
@@ -49,8 +48,8 @@ Command Overview
   Where:
 
     <cmd>  is any one of the simple commands listed later.
-    <file> is the full or relative path to any writeable object
-           in the file system name space (file or character driver).
+    <file> is the full or relative path to any writable object
+           in the filesystem name space (file or character driver).
            Such objects will be referred to simply as files throughout
            this README.
 
@@ -63,40 +62,13 @@ Command Overview
   (more negative values) correspond to higher priorities.  The
   default niceness is 10.
 
-  Multiple commands per line.  NSH will accept multiple commands per
-  command line with each command separated with the semi-colon character (;).
-
-  If CONFIG_NSH_CMDPARMS is selected, then the output from commands, from
-  file applications, and from NSH built-in commands can be used as arguments
-  to other commands.  The entity to be executed is identified by enclosing
-  the command line in back quotes.  For example,
-
-    set FOO `myprogram $BAR`
-
-  Will execute the program named myprogram passing it the value of the
-  environment variable BAR.  The value of the environment variable FOO
-  is then set output of myprogram on stdout.  Because this feature commits
-  significant resources, it is disabled by default.
-
-  If CONFIG_NSH_ARGCAT is selected, the support concatenation of strings
-  with environment variables or command output.  For example:
-
-    set FOO XYZ
-    set BAR 123
-    set FOOBAR ABC_${FOO}_${BAR}
-
-  would set the environment variable FOO to XYZ, BAR to 123 and FOOBAR
-  to ABC_XYZ_123.  If NSH_ARGCAT is not selected, then a slightly small
-  FLASH footprint results but then also only simple environment
-  variables like $FOO can be used on the command line.
-
 Conditional Command Execution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   An if-then[-else]-fi construct is also supported in order to
   support conditional execution of commands.  This works from the
   command line but is primarily intended for use within NSH scripts
-  (see the sh command).  The syntax is as follows:
+  (see the sh commnd).  The syntax is as follows:
 
     if <cmd>
     then
@@ -104,29 +76,6 @@ Conditional Command Execution
     else
       [sequence of <cmd>]
     fi
-
-Looping
-^^^^^^^
-
-  while-do-done and until-do-done looping constructs are also supported.
-  These works from the command line but are primarily intended for use
-  within NSH scripts (see the sh command).  The syntax is as follows:
-
-    while <test-cmd>; do <cmd-sequence>; done
-
-        Execute <cmd-sequence> as long as <test-cmd> has an exit status of
-        zero.
-
-    until <test-cmd>; do <cmd-sequence>; done
-
-        Execute <cmd-sequence> as long as <test-cmd> has a non-zero exit
-        status.
-
-  A break command is also supported.  The break command is only meaningful
-  within the body of the a while or until loop, between the do and done
-  tokens. If the break command is executed within the body of a loop, the
-  loop will immediately terminate and execution will continue with the
-  next command immediately following the done token.
 
 Built-In Variables
 ^^^^^^^^^^^^^^^^^^
@@ -171,14 +120,14 @@ In this default case, enabling CONFIG_NSH_ROMFSETC will cause
 NSH to behave as follows at NSH startup time:
 
 - NSH will create a read-only RAM disk (a ROM disk), containing a tiny
-  ROMFS file system containing the following:
+  ROMFS filesystem containing the following:
 
     |--init.d/
          `-- rcS
 
    Where rcS is the NSH start-up script
 
-- NSH will then mount the ROMFS file system at /etc, resulting in:
+- NSH will then mount the ROMFS filesystem at /etc, resulting in:
 
    |--dev/
    |   `-- ram0
@@ -249,7 +198,7 @@ NOTE:
 All of the startup-behavior is contained in rcS.template.  The
 role of mkromfsimg.sh is to (1) apply the specific configuration
 settings to rcS.template to create the final rcS, and (2) to
-generate the header file nsh_romfsimg.h containing the ROMFS
+generate the header file nsh_romfsimg.h containg the ROMFS
 file system image.
 
 Simple Commands
@@ -286,32 +235,13 @@ o test <expression>
                       integer -gt integer | integer -le integer |
                       integer -lt integer | integer -ne integer
 
-o addroute <target> <netmask> <router>
-
-  This command adds an entry in the routing table.  The new entry
-  will map the IP address of a router on a local network(<router>)
-  to an external network characterized by the <target> IP address and
-  a network mask <netmask>
-
-  Example:
-
-    nsh> addroute 1.1.1.1 2.2.2.2 3.3.3.3
-
 o base64dec [-w] [-f] <string or filepath>
 
 o base64dec [-w] [-f] <string or filepath>
-
-o break
-
-  The break command is only meaningful within the body of the a while or
-  until loop, between the do and done tokens. Outside of a loop, break
-  command does nothing. If the break command is executed within the body
-  of a loop, the loop will immediately terminate and execution will
-  continue with the next command immediately following the done token.
 
 o cat <path> [<path> [<path> ...]]
 
-  This command copies and concatenates all of the files at <path>
+  This command copies and concatentates all of the files at <path>
   to the console (or to another file if the output is redirected).
 
 o cd [<dir-path>|-|~|..]
@@ -331,15 +261,10 @@ o cd [<dir-path>|-|~|..]
        'home' directory is '/'.
     'cd ..' sets the current working directory to the parent directory.
 
-o cmp <path1> <path2>
-
-  Compare of the contents of the file at <file1> with the contents of
-  the file at <path2>.  Returns an indication only if the files differ.
-
 o cp <source-path> <dest-path>
 
   Copy of the contents of the file at <source-path> to the location
-  in the file system indicated by <path-path>
+  in the filesystem indicated by <path-path>
 
 o date [-s "MMM DD HH:MM:SS YYYY"]
 
@@ -386,17 +311,6 @@ o dd if=<infile> of=<outfile> [bs=<sectsize>] [count=<sectors>] [skip=<sectors>]
      crw-rw-rw-       0 null
      brw-rw-rw-       0 ram0
     nsh> dd if=/dev/ram0 of=/dev/null
-
-o delroute <target> <netmask>
-
-  This command removes an entry from the routing table.  The entry
-  removed will be the first entry in the routing table that matches
-  the external network characterized by the <target> IP address and
-  the network mask <netmask>
-
-  Example:
-
-    nsh> delroute 1.1.1.1 2.2.2.2
 
 o df
 
@@ -458,7 +372,7 @@ o get [-b|-n] [-f <local-path>] -h <ip-address> <remote-path>
      The file will be saved relative to the current working directory
       unless <local-path> is provided.
   -b|-n
-      Selects either binary ("octet") or test ("netascii") transfer
+      Selects either binary ("octect") or test ("netascii") transfer
       mode.  Default: text.
 
 o help [-v] [<cmd>]
@@ -546,7 +460,7 @@ o losetup [-d <dev-path>] | [[-o <offset>] [-r] <ldev-path> <file-path>]
 o ls [-lRs] <dir-path>
 
   Show the contents of the directory at <dir-path>.  NOTE:
-  <dir-path> must refer to a directory and no other file system
+  <dir-path> must refer to a directory and no other filesystem
   object.
 
   Options:
@@ -598,10 +512,10 @@ o mkdir <path>
   except the final directory name must exist on a mounted file
   system; the final directory must not.
 
-  Recall that NuttX uses a pseudo file system for its root file system.
+  Recall that NuttX uses a pseudo filesystem for its root file system.
   The mkdir command can only be used to create directories in volumes
   set up with the mount command; it cannot be used to create directories
-  in the pseudo file system.
+  in the pseudo filesystem.
 
   Example:
   ^^^^^^^^
@@ -613,16 +527,11 @@ o mkdir <path>
      drw-rw-rw-       0 TMP/
     nsh>
 
-o mkfatfs [-F <fatsize>] <block-driver>
+o mkfatfs <path>
 
-  Format a fat file system on the block device specified by <block-driver>
-  path.  The FAT size may be provided as an option.  Without the <fatsize>
-  option, mkfatfs will select either the FAT12 or FAT16 format.  For
-  historical reasons, if you want the FAT32 format, it must be explicitly
-  specified on the command line.
-
+  Format a fat file system on the block device specified by path.
   NSH provides this command to access the mkfatfs() NuttX API.
-  This block device must reside in the NuttX pseudo file system and
+  This block device must reside in the NuttX pseudo filesystem and
   must have been created by some call to register_blockdriver() (see
   include/nuttx/fs/fs.h).
 
@@ -709,14 +618,14 @@ o mount [-t <fstype> <block-device> <dir-path>]
       of this writing, vfat is the only supported value for <fstype>
 
     Block Device.  The <block-device> argument is the full or relative
-      path to a block driver inode in the pseudo file system.  By convention,
+      path to a block driver inode in the pseudo filesystem.  By convention,
       this is a name under the /dev sub-directory.  This <block-device>
       must have been previously formatted with the same file system
       type as specified by <fstype>
 
     Mount Point.  The mount point is the location in the pseudo file
       system where the mounted volume will appear.  This mount point
-      can only reside in the NuttX pseudo file system.  By convention, this
+      can only reside in the NuttX pseudo filesystem.  By convention, this
       mount point is a subdirectory under /mnt.  The mount command will
       create whatever pseudo directories that may be needed to complete
       the full path but the full path must not already exist.
@@ -756,7 +665,7 @@ o mount [-t <fstype> <block-device> <dir-path>]
 o mv <old-path> <new-path>
 
   Rename the file object at <old-path> to <new-path>.  Both paths must
-  reside in the same mounted file system.
+  reside in the same mounted filesystem.
 
 o nfsmount <server-address> <mount-point> <remote-path>
 
@@ -803,7 +712,7 @@ o put [-b|-n] [-f <remote-path>] -h <ip-address> <local-path>
      The file will be saved with the same name on the host unless
       unless <local-path> is provided.
   -b|-n
-      Selects either binary ("octet") or test ("netascii") transfer
+      Selects either binary ("octect") or test ("netascii") transfer
       mode.  Default: text.
 
 o pwd
@@ -824,10 +733,10 @@ o pwd
 o rm <file-path>
 
   Remove the specified <file-path> name from the mounted file system.
-  Recall that NuttX uses a pseudo file system for its root file system.
+  Recall that NuttX uses a pseudo filesystem for its root file system.
   The rm command can only be used to remove (unlink) files in volumes
   set up with the mount command; it cannot be used to remove names from
-  the pseudo file system.
+  the pseudo filesystem.
 
   Example:
   ^^^^^^^^
@@ -845,10 +754,10 @@ o rm <file-path>
 o rmdir <dir-path>
 
   Remove the specified <dir-path> directory from the mounted file system.
-  Recall that NuttX uses a pseudo file system for its root file system. The
+  Recall that NuttX uses a pseudo filesystem for its root file system. The
   rmdir command can only be used to remove directories from volumes set up
   with the mount command; it cannot be used to remove directories from the
-  pseudo file system.
+  pseudo filesystem.
 
   Example:
   ^^^^^^^^
@@ -947,15 +856,12 @@ Command Dependencies on Configuration Settings
   Command    Depends on Configuration
   ---------- --------------------------
   [          !CONFIG_NSH_DISABLESCRIPT
-  addroute   CONFIG_NET && CONFIG_NET_ROUTE
   base64dec  CONFIG_NETUTILS_CODECS && CONFIG_CODECS_BASE64
   base64enc  CONFIG_NETUTILS_CODECS && CONFIG_CODECS_BASE64
-  break      !CONFIG_NSH_DISABLESCRIPT && !CONFIG_NSH_DISABLE_LOOPS
   cat        CONFIG_NFILE_DESCRIPTORS > 0
   cd         !CONFIG_DISABLE_ENVIRON && CONFIG_NFILE_DESCRIPTORS > 0
   cp         CONFIG_NFILE_DESCRIPTORS > 0
   dd         CONFIG_NFILE_DESCRIPTORS > 0
-  delrout    CONFIG_NET && CONFIG_NET_ROUTE
   df         !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_FS_READABLE (see note 3)
   echo       --
   exec       --
@@ -972,19 +878,19 @@ Command Dependencies on Configuration Settings
   ls         CONFIG_NFILE_DESCRIPTORS > 0
   md5        CONFIG_NETUTILS_CODECS && CONFIG_CODECS_HASH_MD5
   mb,mh,mw   ---
-  mkdir      (((!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS) && CONFIG_NFILE_DESCRIPTORS > 0)
+  mkdir      !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_FS_WRITABLE (see note 4)
   mkfatfs    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_FS_FAT
   mkfifo     CONFIG_NFILE_DESCRIPTORS > 0
   mkrd       !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_FS_WRITABLE (see note 4)
   mount      !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_FS_READABLE (see note 3)
-  mv         (((!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS) && CONFIG_NFILE_DESCRIPTORS > 0) (see note 4)
+  mv         !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_FS_WRITABLE (see note 4)
   nfsmount   !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_NET && CONFIG_NFS
   ping       CONFIG_NET && CONFIG_NET_ICMP && CONFIG_NET_ICMP_PING  && !CONFIG_DISABLE_CLOCK && !CONFIG_DISABLE_SIGNALS
   ps         --
   put        CONFIG_NET && CONFIG_NET_UDP && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_NET_BUFSIZE >= 558 (see note 1,2)
   pwd        !CONFIG_DISABLE_ENVIRON && CONFIG_NFILE_DESCRIPTORS > 0
-  rm         (((!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS) && CONFIG_NFILE_DESCRIPTORS > 0)
-  rmdir      (((!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS) && CONFIG_NFILE_DESCRIPTORS > 0)
+  rm         !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_FS_WRITABLE (see note 4)
+  rmdir      !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_FS_WRITABLE (see note 4)
   set        !CONFIG_DISABLE_ENVIRON
   sh         CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_NFILE_STREAMS > 0 && !CONFIG_NSH_DISABLESCRIPT
   sleep      !CONFIG_DISABLE_SIGNALS
@@ -1000,35 +906,34 @@ Command Dependencies on Configuration Settings
 * NOTES:
   1. Because of hardware padding, the actual buffersize required for put and get
      operations size may be larger.
-  2. Special TFTP server start-up options will probably be required to permit
+  2. Special TFTP server start-up optionss will probably be required to permit
      creation of file for the correct operation of the put command.
   3. CONFIG_FS_READABLE is not a user configuration but is set automatically
-     if any readable file system is selected.  At present, this is either CONFIG_FS_FAT
+     if any readable filesystem is selected.  At present, this is either CONFIG_FS_FAT
      and CONFIG_FS_ROMFS.
   4. CONFIG_FS_WRITABLE is not a user configuration but is set automatically
-     if any writeable file system is selected.  At present, this is only CONFIG_FS_FAT.
+     if any writable filesystem is selected.  At present, this is only CONFIG_FS_FAT.
 
 In addition, each NSH command can be individually disabled via one of the following
 settings.  All of these settings make the configuration of NSH potentially complex but
 also allow it to squeeze into very small memory footprints.
 
-  CONFIG_NSH_DISABLE_ADDROUTE,  CONFIG_NSH_DISABLE_BASE64DEC, CONFIG_NSH_DISABLE_BASE64ENC,
-  CONFIG_NSH_DISABLE_CAT,       CONFIG_NSH_DISABLE_CD,        CONFIG_NSH_DISABLE_CP,
-  CONFIG_NSH_DISABLE_DD,        CONFIG_NSH_DISABLE_DELROUTE,  CONFIG_NSH_DISABLE_DF,
-  CONFIG_NSH_DISABLE_ECHO,      CONFIG_NSH_DISABLE_EXEC,      CONFIG_NSH_DISABLE_EXIT,
-  CONFIG_NSH_DISABLE_FREE,      CONFIG_NSH_DISABLE_GET,       CONFIG_NSH_DISABLE_HELP,
-  CONFIG_NSH_DISABLE_HEXDUMP,   CONFIG_NSH_DISABLE_IFCONFIG,  CONFIG_NSH_DISABLE_IFUPDOWN,
-  CONFIG_NSH_DISABLE_KILL,      CONFIG_NSH_DISABLE_LOSETUP,   CONFIG_NSH_DISABLE_LS,
-  CONFIG_NSH_DISABLE_MD5        CONFIG_NSH_DISABLE_MB,        CONFIG_NSH_DISABLE_MKDIR,
-  CONFIG_NSH_DISABLE_MKFATFS,   CONFIG_NSH_DISABLE_MKFIFO,    CONFIG_NSH_DISABLE_MKRD,
-  CONFIG_NSH_DISABLE_MH,        CONFIG_NSH_DISABLE_MOUNT,     CONFIG_NSH_DISABLE_MW,
-  CONFIG_NSH_DISABLE_MV,        CONFIG_NSH_DISABLE_NFSMOUNT,  CONFIG_NSH_DISABLE_PS,
-  CONFIG_NSH_DISABLE_PING,      CONFIG_NSH_DISABLE_PUT,       CONFIG_NSH_DISABLE_PWD,
-  CONFIG_NSH_DISABLE_RM,        CONFIG_NSH_DISABLE_RMDIR,     CONFIG_NSH_DISABLE_SET,
-  CONFIG_NSH_DISABLE_SH,        CONFIG_NSH_DISABLE_SLEEP,     CONFIG_NSH_DISABLE_TEST,
-  CONFIG_NSH_DISABLE_UMOUNT,    CONFIG_NSH_DISABLE_UNSET,     CONFIG_NSH_DISABLE_URLDECODE,
-  CONFIG_NSH_DISABLE_URLENCODE, CONFIG_NSH_DISABLE_USLEEP,    CONFIG_NSH_DISABLE_WGET,
-  CONFIG_NSH_DISABLE_XD
+  CONFIG_NSH_DISABLE_BASE64DEC, CONFIG_NSH_DISABLE_BASE64ENC, CONFIG_NSH_DISABLE_CAT,
+  CONFIG_NSH_DISABLE_CD,        CONFIG_NSH_DISABLE_CP,        CONFIG_NSH_DISABLE_DD,
+  CONFIG_NSH_DISABLE_DF,        CONFIG_NSH_DISABLE_ECHO,      CONFIG_NSH_DISABLE_EXEC,
+  CONFIG_NSH_DISABLE_EXIT,      CONFIG_NSH_DISABLE_FREE,      CONFIG_NSH_DISABLE_GET,
+  CONFIG_NSH_DISABLE_HELP,      CONFIG_NSH_DISABLE_HEXDUMP,   CONFIG_NSH_DISABLE_IFCONFIG,
+  CONFIG_NSH_DISABLE_IFUPDOWN,  CONFIG_NSH_DISABLE_KILL,      CONFIG_NSH_DISABLE_LOSETUP,
+  CONFIG_NSH_DISABLE_LS,        CONFIG_NSH_DISABLE_MD5        CONFIG_NSH_DISABLE_MB,
+  CONFIG_NSH_DISABLE_MKDIR,     CONFIG_NSH_DISABLE_MKFATFS,   CONFIG_NSH_DISABLE_MKFIFO,
+  CONFIG_NSH_DISABLE_MKRD,      CONFIG_NSH_DISABLE_MH,        CONFIG_NSH_DISABLE_MOUNT,
+  CONFIG_NSH_DISABLE_MW,        CONFIG_NSH_DISABLE_MV,        CONFIG_NSH_DISABLE_NFSMOUNT,
+  CONFIG_NSH_DISABLE_PS,        CONFIG_NSH_DISABLE_PING,      CONFIG_NSH_DISABLE_PUT,
+  CONFIG_NSH_DISABLE_PWD,       CONFIG_NSH_DISABLE_RM,        CONFIG_NSH_DISABLE_RMDIR,
+  CONFIG_NSH_DISABLE_SET,       CONFIG_NSH_DISABLE_SH,        CONFIG_NSH_DISABLE_SLEEP,
+  CONFIG_NSH_DISABLE_TEST,      CONFIG_NSH_DISABLE_UMOUNT,    CONFIG_NSH_DISABLE_UNSET,
+  CONFIG_NSH_DISABLE_URLDECODE, CONFIG_NSH_DISABLE_URLENCODE, CONFIG_NSH_DISABLE_USLEEP,
+  CONFIG_NSH_DISABLE_WGET,      CONFIG_NSH_DISABLE_XD
 
 Verbose help output can be suppressed by defining CONFIG_NSH_HELP_TERSE.  In that
 case, the help command is still available but will be slightly smaller.
@@ -1039,19 +944,6 @@ NSH-Specific Configuration Settings
   The behavior of NSH can be modified with the following settings in
   the configs/<board-name>/defconfig file:
 
-  * CONFIG_NSH_READLINE
-      Selects the minimal implementation of readline().  This minimal
-      implementation provides on backspace for command line editing.
-
-  * CONFIG_NSH_CLE
-      Selects the more extensive, EMACS-like command line editor.
-      Select this option only if (1) you don't mind a modest increase
-      in the FLASH footprint, and (2) you work with a terminal that
-      support VT100 editing commands.
-
-      Selecting this option will add probably 1.5-2KB to the FLASH
-      footprint.
-
   * CONFIG_NSH_BUILTIN_APPS
       Support external registered, "builtin" applications that can be
       executed from the NSH command line (see apps/README.txt for
@@ -1059,7 +951,7 @@ NSH-Specific Configuration Settings
 
   * CONFIG_NSH_FILEIOSIZE
       Size of a static I/O buffer used for file access (ignored if
-      there is no file system). Default is 1024.
+      there is no filesystem). Default is 1024.
 
   * CONFIG_NSH_STRERROR
       strerror(errno) makes more readable output but strerror() is
@@ -1071,48 +963,6 @@ NSH-Specific Configuration Settings
       The maximum length of one command line and of one output line.
       Default: 80
 
-  * CONFIG_NSH_DISABLE_SEMICOLON
-      By default, you can enter multiple NSH commands on a line with
-      each command separated by a semicolon. You can disable this
-      feature to save a little memory on FLASH challenged platforms.
-      Default: n
-
-  * CONFIG_NSH_CMDPARMS
-     If selected, then the output from commands, from file applications, and
-     from NSH built-in commands can be used as arguments to other
-     commands.  The entity to be executed is identified by enclosing the
-     command line in back quotes.  For example,
-
-       set FOO `myprogram $BAR`
-
-     Will execute the program named myprogram passing it the value of the
-     environment variable BAR.  The value of the environment variable FOO
-     is then set output of myprogram on stdout.  Because this feature commits
-     significant resources, it is disabled by default.
-
-  * CONFIG_NSH_TMPDIR
-     If CONFIG_NSH_CMDPARMS is selected, then function output will be retained
-     in a temporary file.  In that case, this string must be provided to
-     specify the full path to a directory where temporary files can be
-     created.  This would be a good application of RAM disk: To provide
-     temporary storage for function output.
-
-  * CONFIG_NSH_MAXARGUMENTS
-     The maximum number of NSH command arguments. Default: 6
-
-  * CONFIG_NSH_ARGCAT
-     Support concatenation of strings with environment variables or command
-     output.  For example:
-
-       set FOO XYZ
-       set BAR 123
-       set FOOBAR ABC_${FOO}_${BAR}
-
-     would set the environment variable FOO to XYZ, BAR to 123 and FOOBAR
-     to ABC_XYZ_123.  If NSH_ARGCAT is not selected, then a slightly small
-     FLASH footprint results but then also only simple environment
-     variables like $FOO can be used on the command line.
-
   * CONFIG_NSH_NESTDEPTH
       The maximum number of nested if-then[-else]-fi sequences that
       are permissable.  Default: 3
@@ -1122,20 +972,6 @@ NSH-Specific Configuration Settings
       setting disables the 'sh', 'test', and '[' commands and the
       if-then[-else]-fi construct.  This would only be set on systems
       where a minimal footprint is a necessity and scripting is not.
-
-  * CONFIG_NSH_DISABLE_ITEF
-
-     If scripting is enabled, then then this option can be selected to
-     suppress support for if-then-else-fi sequences in scripts.  This would
-     only be set on systems where some minimal scripting is required but
-     if-then-else-fi is not.
-
-  * CONFIG_NSH_DISABLE_LOOPS
-
-     If scripting is enabled, then then this option can be selected
-     suppress support for while-do-done and until-do-done sequences in
-     scripts.  This would only be set on systems where some minimal
-     scripting is required but looping is not.
 
   * CONFIG_NSH_DISABLEBG
       This can be set to 'y' to suppress support for background
@@ -1152,7 +988,7 @@ NSH-Specific Configuration Settings
       Default is zero.
 
   * CONFIG_NSH_ROMFSETC
-      Mount a ROMFS file system at /etc and provide a startup script
+      Mount a ROMFS filesystem at /etc and provide a startup script
       at /etc/init.d/rcS.  The default startup script will mount
       a FAT FS RAMDISK at /tmp but the logic is easily extensible.
 

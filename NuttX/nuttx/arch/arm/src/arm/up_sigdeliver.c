@@ -92,7 +92,7 @@ void up_sigdeliver(void)
 
   int saved_errno = rtcb->pterrno;
 
-  board_led_on(LED_SIGNAL);
+  up_ledon(LED_SIGNAL);
 
   sdbg("rtcb=%p sigdeliver=%p sigpendactionq.head=%p\n",
         rtcb, rtcb->xcp.sigdeliver, rtcb->sigpendactionq.head);
@@ -100,7 +100,7 @@ void up_sigdeliver(void)
 
   /* Save the real return state on the stack. */
 
-  up_copyfullstate(regs, rtcb->xcp.regs);
+  up_copystate(regs, rtcb->xcp.regs);
   regs[REG_PC]         = rtcb->xcp.saved_pc;
   regs[REG_CPSR]       = rtcb->xcp.saved_cpsr;
 
@@ -131,7 +131,7 @@ void up_sigdeliver(void)
 
   /* Then restore the correct state for this thread of execution. */
 
-  board_led_off(LED_SIGNAL);
+  up_ledoff(LED_SIGNAL);
   up_fullcontextrestore(regs);
 }
 

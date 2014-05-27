@@ -63,7 +63,7 @@
  * of (400 / 2) / 4 = 50MHz
  */
 
-#define TIVA_SYSDIV          4
+#define LM_SYSDIV          4
 #define SYSCLK_FREQUENCY     50000000  /* 50MHz */
 
 /* Other RCC settings:
@@ -74,7 +74,7 @@
  * - No auto-clock gating reset
  */
 
-#define TIVA_RCC_VALUE (SYSCON_RCC_OSCSRC | SYSCON_RCC_XTAL | SYSCON_RCC_USESYSDIV | SYSCON_RCC_SYSDIV(TIVA_SYSDIV))
+#define LM_RCC_VALUE (SYSCON_RCC_OSCSRC | SYSCON_RCC_XTAL | SYSCON_RCC_USESYSDIV | SYSCON_RCC_SYSDIV(LM_SYSDIV))
 
 /* RCC2 settings -- RCC2 not used.  Other RCC2 settings
  *
@@ -83,7 +83,7 @@
  * - Not using RCC2
  */
 
-#define TIVA_RCC2_VALUE (SYSCON_RCC2_OSCSRC | SYSCON_RCC2_SYSDIV(TIVA_SYSDIV))
+#define LM_RCC2_VALUE (SYSCON_RCC2_OSCSRC | SYSCON_RCC2_SYSDIV(LM_SYSDIV))
 
 /* LED definitions ******************************************************************/
 
@@ -114,7 +114,7 @@
 #ifndef __ASSEMBLY__
 
 /************************************************************************************
- * Name: tiva_boardinitialize
+ * Name: lm_boardinitialize
  *
  * Description:
  *   All Stellaris architectures must provide the following entry point.  This entry
@@ -123,21 +123,21 @@
  *
  ************************************************************************************/
 
-void tiva_boardinitialize(void);
+extern void lm_boardinitialize(void);
 
 /************************************************************************************
- * Name: tiva_ethernetmac
+ * Name: lm_ethernetmac
  *
  * Description:
  *   For the MDL-S2E Reference Design, the MAC address will be stored in the 
- *   non-volatile USER0 and USER1 registers.  If CONFIG_TIVA_BOARDMAC is defined, 
+ *   non-volatile USER0 and USER1 registers.  If CONFIG_LM_BOARDMAC is defined, 
  *   this function will obtain the MAC address from these registers.
  *
  ************************************************************************************/
 
-#ifdef CONFIG_TIVA_BOARDMAC
+#ifdef CONFIG_LM_BOARDMAC
 struct ether_addr;
-void tiva_ethernetmac(struct ether_addr *ethaddr);
+extern void lm_ethernetmac(struct ether_addr *ethaddr);
 #endif
 
 #endif /* __ASSEMBLY__ */

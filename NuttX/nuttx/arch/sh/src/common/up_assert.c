@@ -87,9 +87,9 @@ static void _up_assert(int errorcode)
         for(;;)
           {
 #ifdef CONFIG_ARCH_LEDS
-            board_led_on(LED_PANIC);
+            up_ledon(LED_PANIC);
             up_mdelay(250);
-            board_led_off(LED_PANIC);
+            up_ledoff(LED_PANIC);
             up_mdelay(250);
 #endif
           }
@@ -114,7 +114,7 @@ void up_assert(const uint8_t *filename, int lineno)
   struct tcb_s *rtcb = (struct tcb_s*)g_readytorun.head;
 #endif
 
-  board_led_on(LED_ASSERTION);
+  up_ledon(LED_ASSERTION);
 
 #if CONFIG_TASK_NAME_SIZE > 0
   lldbg("Assertion failed at file:%s line: %d task: %s\n",

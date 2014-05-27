@@ -1,7 +1,7 @@
 /************************************************************************
- * arch/8051/src/up_idle.c
+ * up_idle.c
  *
- *   Copyright (C) 2007, 2009, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007, 2009 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
  * Private Data
  ************************************************************************/
 
-#if defined(CONFIG_ARCH_LEDS) && defined(CONFIG_ARCH_8051_BRINGUP)
+#if defined(CONFIG_ARCH_LEDS) && defined(CONFIG_ARCH_BRINGUP)
 static uint8_t g_ledtoggle = 0;
 #endif
 
@@ -81,15 +81,15 @@ static uint8_t g_ledtoggle = 0;
 
 void up_idle(void)
 {
-#if defined(CONFIG_ARCH_LEDS) && defined(CONFIG_ARCH_8051_BRINGUP)
+#if defined(CONFIG_ARCH_LEDS) && defined(CONFIG_ARCH_BRINGUP)
   g_ledtoggle++;
   if (g_ledtoggle == 0x80)
     {
-      board_led_on(LED_IDLE);
+      up_ledon(LED_IDLE);
     }
   else if (g_ledtoggle == 0x00)
     {
-      board_led_off(LED_IDLE);
+      up_ledoff(LED_IDLE);
     }
 #endif
 }

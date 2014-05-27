@@ -118,26 +118,26 @@ static int  g_nestcount;
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_led_initialize
+ * Name: up_ledinit
  ****************************************************************************/
 
-void board_led_initialize(void)
+void up_ledinit(void)
 {
   /* Configure all LED GPIO lines */
 
-  led_dumpgpio("board_led_initialize() Entry)");
+  led_dumpgpio("up_ledinit() Entry)");
 
   lpc17_configgpio(LINCOLN60_LED1);
   lpc17_configgpio(LINCOLN60_LED2);
 
-  led_dumpgpio("board_led_initialize() Exit");
+  led_dumpgpio("up_ledinit() Exit");
 }
 
 /****************************************************************************
- * Name: board_led_on
+ * Name: up_ledon
  ****************************************************************************/
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
   /* We will control LED1 and LED2 not yet completed the boot sequence. */
 
@@ -181,10 +181,10 @@ void board_led_on(int led)
 }
 
 /****************************************************************************
- * Name: board_led_off
+ * Name: up_ledoff
  ****************************************************************************/
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
   /* In all states, OFF can only mean turning off the HB LED */
 

@@ -1,5 +1,5 @@
 /****************************************************************************
- *  arch/arm/src/nuc1xx/nuc_idle.c
+ *  arch/arm/src/stm32/nuc_idle.c
  *
  *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -57,8 +57,8 @@
  */
 
 #if defined(CONFIG_ARCH_LEDS) && defined(LED_IDLE)
-#  define BEGIN_IDLE() board_led_on(LED_IDLE)
-#  define END_IDLE()   board_led_off(LED_IDLE)
+#  define BEGIN_IDLE() up_ledon(LED_IDLE)
+#  define END_IDLE()   up_ledoff(LED_IDLE)
 #else
 #  define BEGIN_IDLE()
 #  define END_IDLE()

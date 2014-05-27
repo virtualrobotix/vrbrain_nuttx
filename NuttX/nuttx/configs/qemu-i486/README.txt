@@ -156,41 +156,21 @@ A: Add -fno-stack-protector to ARCHCPUFLAGS in you Make.defs file.  Switch the
 Configurations
 ==============
 
-Common Configuration Notes
---------------------------
+ostest
+------
 
-  1. Each Qemu-i486 Web Server configuration is maintained in a sub-directory
-     and can be selected as follow:
+  The "standard" NuttX examples/ostest configuration.  This
+  configuration may be selected as follows:
 
-       cd tools
-       ./configure.sh qemu-i486/<subdir>
-       cd -
-       . ./setenv.sh
+    cd <nuttx-directory>/tools
+    ./configure.sh qemu-i486/ostest
 
-     Where <subdir> is one of the configuration sub-directories described in
-     the following paragraph.
+nsh
+---
 
-  2. These configurations use the mconf-based configuration tool.  To
-     change a configurations using that tool, you should:
+  Configures the NuttShell (nsh) located at examples/nsh.  This
+  configuration may be selected as follows:
 
-     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-        and misc/tools/
+    cd <nuttx-directory>/tools
+    ./configure.sh qemu-i486/nsh
 
-     b. Execute 'make menuconfig' in nuttx/ in order to start the
-        reconfiguration process.
-
-  3. By default, all configurations assume the Linux.  This is easily
-     reconfigured:
-
-        CONFIG_HOST_LINUX=y
-
-Configuration Sub-Directories
------------------------------
-
-  ostest
-
-    The "standard" NuttX examples/ostest configuration.
-
-  nsh
-
-    Configures the NuttShell (nsh) located at examples/nsh.

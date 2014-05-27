@@ -47,8 +47,6 @@
  * Pre-processor Definitions
  ************************************************************************************************/
 
-#define LPC31_EHCI_NRHPORT                1      /* There is only a single root hub port */
-
 /* USBOTG register base address offset into the USBOTG domain ***********************************/
 
 #define LPC31_USBOTG_VBASE                (LPC31_USBOTG_VSECTION)
@@ -58,9 +56,8 @@
                                                    /* 0x000 - 0x0ff: Reserved */
 /* Device/host capability registers */
 
-#define LPC31_USBOTG_HCCR_OFFSET           0x100 /* Offset to EHCI Host Controller Capabiliy registers */
-#define LPC31_USBOTG_CAPLENGTH_OFFSET      0x100 /* Capability register length (8-bit) */
-#define LPC31_USBHOST_HCIVERSION_OFFSET    0x102 /* Host interface version number (16-bit) */
+#define LPC31_USBOTG_CAPLENGTH_OFFSET      0x100 /* Capability register length */
+#define LPC31_USBHOST_HCIVERSION_OFFSET    0x102 /* Host interface version number */
 #define LPC31_USBHOST_HCSPARAMS_OFFSET     0x104 /* Host controller structural parameters */
 #define LPC31_USBHOST_HCCPARAMS_OFFSET     0x108 /* Host controller capability parameters */
 #define LPC31_USBDEV_DCIVERSION_OFFSET     0x120 /* Device interface version number */
@@ -68,12 +65,10 @@
 
 /* Device/host/OTG operational registers */
 
-#define LPC31_USBOTG_HCOR_OFFSET           0x140 /* Offset to EHCI Host Controller Operational Registers */
 #define LPC31_USBOTG_USBCMD_OFFSET         0x140 /* USB command (both) */
 #define LPC31_USBOTG_USBSTS_OFFSET         0x144 /* USB status (both) */
 #define LPC31_USBOTG_USBINTR_OFFSET        0x148 /* USB interrupt enable (both) */
 #define LPC31_USBOTG_FRINDEX_OFFSET        0x14C /* USB frame index (both) */
-                                                 /* EHCI 4G Segment Selector (not supported) */
 #define LPC31_USBOTG_PERIODICLIST_OFFSET   0x154 /* Frame list base address (host) */
 #define LPC31_USBOTG_DEVICEADDR_OFFSET     0x154 /* USB device address (device) */
 #define LPC31_USBOTG_ASYNCLISTADDR_OFFSET  0x158 /* Next asynchronous list address (host) */
@@ -131,7 +126,6 @@
 
 /* Device/host capability registers */
 
-#define LPC31_USBOTG_HCCR_BASE             (LPC31_USBOTG_VBASE+LPC31_USBOTG_HCCR_OFFSET)
 #define LPC31_USBOTG_CAPLENGTH             (LPC31_USBOTG_VBASE+LPC31_USBOTG_CAPLENGTH_OFFSET)
 #define LPC31_USBHOST_HCIVERSION           (LPC31_USBOTG_VBASE+LPC31_USBHOST_HCIVERSION_OFFSET)
 #define LPC31_USBHOST_HCSPARAMS            (LPC31_USBOTG_VBASE+LPC31_USBHOST_HCSPARAMS_OFFSET)
@@ -141,7 +135,6 @@
 
 /* Device/host operational registers */
 
-#define LPC31_USBOTG_HCOR_BASE             (LPC31_USBOTG_VBASE+LPC31_USBOTG_HCOR_OFFSET)
 #define LPC31_USBOTG_USBCMD                (LPC31_USBOTG_VBASE+LPC31_USBOTG_USBCMD_OFFSET)
 #define LPC31_USBOTG_USBSTS                (LPC31_USBOTG_VBASE+LPC31_USBOTG_USBSTS_OFFSET)
 #define LPC31_USBOTG_USBINTR               (LPC31_USBOTG_VBASE+LPC31_USBOTG_USBINTR_OFFSET)
@@ -422,11 +415,10 @@
 /* Port Status and Control register PRTSC1 (address 0x19000184) -- Device Mode */
 
 #define USBDEV_PRTSC1_PSPD_SHIFT             (26)      /* Bits 26-27: Port speed */
-#define USBDEV_PRTSC1_PSPD_MASK              (3 << USBDEV_PRTSC1_PSPD_SHIFT)
+#  define USBDEV_PRTSC1_PSPD_MASK            (3 << USBDEV_PRTSC1_PSPD_SHIFT)
 #  define USBDEV_PRTSC1_PSPD_FS              (0 << USBDEV_PRTSC1_PSPD_SHIFT) /* Full-speed */
-#  define USBDEV_PRTSC1_PSPD_LS              (1 << USBDEV_PRTSC1_PSPD_SHIFT) /* Low-speed */
 #  define USBDEV_PRTSC1_PSPD_HS              (2 << USBDEV_PRTSC1_PSPD_SHIFT) /* High-speed */
-#define USBDEV_PRTSC1_PFSC                   (1 << 24) /* Bit 24: Port force full speed connect */
+#  define USBDEV_PRTSC1_PFSC                 (1 << 24) /* Bit 24: Port force full speed connect */
 #define USBDEV_PRTSC1_PHCD                   (1 << 23) /* Bit 23: PHY low power suspend - clock disable (PLPSCD) */
 #define USBDEV_PRTSC1_PTC_SHIFT              (16)      /* Bits 16-19: 19: Port test control */
 #define USBDEV_PRTSC1_PTC_MASK               (15 << USBDEV_PRTSC1_PTC_SHIFT)

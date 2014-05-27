@@ -52,7 +52,7 @@
 #include <crc32.h>
 #include <debug.h>
 
-#include <nuttx/mtd/mtd.h>
+#include <nuttx/mtd.h>
 #include <nuttx/fs/nxffs.h>
 
 /****************************************************************************
@@ -370,11 +370,10 @@ static inline int nxffs_wrfile(FAR struct nxffs_filedesc_s *file)
               message("ERROR: Failed to write file: %d\n", err);
               message("  File name:    %s\n", file->name);
               message("  File size:    %d\n", file->len);
-              message("  Write offset: %ld\n", (long)offset);
-              message("  Write size:   %ld\n", (long)nbytestowrite);
+              message("  Write offset: %d\n", offset);
+              message("  Write size:   %d\n", nbytestowrite);
               ret = ERROR;
             }
-
           close(fd);
 
           /* Remove any garbage file that might have been left behind */
@@ -399,11 +398,10 @@ static inline int nxffs_wrfile(FAR struct nxffs_filedesc_s *file)
           message("ERROR: Partial write:\n");
           message("  File name:    %s\n", file->name);
           message("  File size:    %d\n", file->len);
-          message("  Write offset: %ld\n", (long)offset);
-          message("  Write size:   %ld\n", (long)nbytestowrite);
-          message("  Written:      %ld\n", (long)nbyteswritten);
+          message("  Write offset: %d\n", offset);
+          message("  Write size:   %d\n", nbytestowrite);
+          message("  Written:      %d\n", nbyteswritten);
         }
-
       offset += nbyteswritten;
     }
 
@@ -468,8 +466,8 @@ static ssize_t nxffs_rdblock(int fd, FAR struct nxffs_filedesc_s *file,
       message("ERROR: Failed to read file: %d\n", errno);
       message("  File name:    %s\n", file->name);
       message("  File size:    %d\n", file->len);
-      message("  Read offset:  %ld\n", (long)offset);
-      message("  Read size:    %ld\n", (long)len);
+      message("  Read offset:  %d\n", offset);
+      message("  Read size:    %d\n", len);
       return ERROR;
     }
   else if (nbytesread == 0)
@@ -478,8 +476,8 @@ static ssize_t nxffs_rdblock(int fd, FAR struct nxffs_filedesc_s *file,
       message("ERROR: Unexpected end-of-file:\n");
       message("  File name:    %s\n", file->name);
       message("  File size:    %d\n", file->len);
-      message("  Read offset:  %ld\n", (long)offset);
-      message("  Read size:    %ld\n", (long)len);
+      message("  Read offset:  %d\n", offset);
+      message("  Read size:    %d\n", len);
 #endif
       return ERROR;
     }
@@ -488,9 +486,9 @@ static ssize_t nxffs_rdblock(int fd, FAR struct nxffs_filedesc_s *file,
       message("ERROR: Partial read:\n");
       message("  File name:    %s\n", file->name);
       message("  File size:    %d\n", file->len);
-      message("  Read offset:  %ld\n", (long)offset);
-      message("  Read size:    %ld\n", (long)len);
-      message("  Bytes read:   %ld\n", (long)nbytesread);
+      message("  Read offset:  %d\n", offset);
+      message("  Read size:    %d\n", len);
+      message("  Bytes read:   %d\n", nbytesread);
     }
   return nbytesread;
 }
@@ -859,8 +857,8 @@ int nxffs_main(int argc, char *argv[])
        * (hopefully that the file system is full)
        */
 
-      message("\n=== FILLING %u =============================\n", i);
-      (void)nxffs_fillfs();
+      message("\n=== FILLING %d =============================\n", i);
+      ret = nxffs_fillfs();
       message("Filled file system\n");
       message("  Number of files: %d\n", g_nfiles);
       message("  Number deleted:  %d\n", g_ndeleted);
@@ -890,7 +888,7 @@ int nxffs_main(int argc, char *argv[])
 
       /* Delete some files */
 
-      message("\n=== DELETING %u ============================\n", i);
+      message("\n=== DELETING %d ============================\n", i);
       ret = nxffs_delfiles();
       if (ret < 0)
         {

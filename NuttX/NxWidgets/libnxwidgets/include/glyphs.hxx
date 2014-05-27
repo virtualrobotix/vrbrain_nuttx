@@ -97,8 +97,7 @@ namespace NXWidgets
 
   // Global RLE Paletted Bitmaps
 
-  extern const struct SRlePaletteBitmap g_nuttxBitmap160x160;
-  extern const struct SRlePaletteBitmap g_nuttxBitmap320x320;
+  extern const struct SRlePaletteBitmap g_nuttxBitmap;
 
   // Global Simple Bitmaps
 

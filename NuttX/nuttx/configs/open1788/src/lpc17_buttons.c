@@ -115,17 +115,17 @@ static uint8_t g_buttonirq[BOARD_NUM_BUTTONS] =
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_button_initialize
+ * Name: up_buttoninit
  *
  * Description:
- *   board_button_initialize() must be called to initialize button resources.  After
- *   that, board_buttons() may be called to collect the current state of all
- *   buttons or board_button_irq() may be called to register button interrupt
+ *   up_buttoninit() must be called to initialize button resources.  After
+ *   that, up_buttons() may be called to collect the current state of all
+ *   buttons or up_irqbutton() may be called to register button interrupt
  *   handlers.
  *
  ****************************************************************************/
 
-void board_button_initialize(void)
+void up_buttoninit(void)
 {
   int i;
 
@@ -138,14 +138,14 @@ void board_button_initialize(void)
 }
 
 /****************************************************************************
- * Name: board_buttons
+ * Name: up_buttons
  *
  * Description:
- *   board_button_initialize() must be called to initialize button resources.  After
- *   that, board_buttons() may be called to collect the current state of all
+ *   up_buttoninit() must be called to initialize button resources.  After
+ *   that, up_buttons() may be called to collect the current state of all
  *   buttons.
  *
- *   board_buttons() may be called at any time to harvest the state of every
+ *   up_buttons() may be called at any time to harvest the state of every
  *   button.  The state of the buttons is returned as a bitset with one
  *   bit corresponding to each button:  If the bit is set, then the button
  *   is pressed.  See the BOARD_BUTTON_*_BIT and BOARD_JOYSTICK_*_BIT
@@ -153,7 +153,7 @@ void board_button_initialize(void)
  *
  ****************************************************************************/
 
-uint8_t board_buttons(void)
+uint8_t up_buttons(void)
 {
   uint8_t ret = 0;
   int i;
@@ -181,25 +181,25 @@ uint8_t board_buttons(void)
  * Button support.
  *
  * Description:
- *   board_button_initialize() must be called to initialize button resources.  After
- *   that, board_button_irq() may be called to register button interrupt handlers.
+ *   up_buttoninit() must be called to initialize button resources.  After
+ *   that, up_irqbutton() may be called to register button interrupt handlers.
  *
- *   board_button_irq() may be called to register an interrupt handler that will
+ *   up_irqbutton() may be called to register an interrupt handler that will
  *   be called when a button is depressed or released.  The ID value is a
  *   button enumeration value that uniquely identifies a button resource. See the
  *   BOARD_BUTTON_* and BOARD_JOYSTICK_* definitions in board.h for the meaning
  *   of enumeration values.  The previous interrupt handler address is returned
  *   (so that it may restored, if so desired).
  *
- *   Note that board_button_irq() also enables button interrupts.  Button
+ *   Note that up_irqbutton() also enables button interrupts.  Button
  *   interrupts will remain enabled after the interrupt handler is attached.
- *   Interrupts may be disabled (and detached) by calling board_button_irq with
+ *   Interrupts may be disabled (and detached) by calling up_irqbutton with
  *   irqhandler equal to NULL.
  *
  ****************************************************************************/
 
 #if defined(CONFIG_ARCH_IRQBUTTONS) && defined(CONFIG_GPIO_IRQ)
-xcpt_t board_button_irq(int id, xcpt_t irqhandler)
+xcpt_t up_irqbutton(int id, xcpt_t irqhandler)
 {
   xcpt_t oldhandler = NULL;
   irqstate_t flags;
@@ -238,7 +238,7 @@ xcpt_t board_button_irq(int id, xcpt_t irqhandler)
             }
           else
             {
-              /* Disable then detach the old interrupt handler */
+              /* Disable then then detach the the old interrupt handler */
 
               up_disable_irq(irq);
               (void)irq_detach(irq);

@@ -47,14 +47,14 @@
 #include "up_arch.h"
 #include "chip.h"
 #include "up_internal.h"
-#include "tiva_gpio.h"
+#include "lm_gpio.h"
 #include "lm3s6432s2e_internal.h"
 
 /************************************************************************************
  * Definitions
  ************************************************************************************/
 
-#if defined(CONFIG_TIVA_UART1) && !defined(CONFIG_SSI0_DISABLE)
+#if defined(CONFIG_LM_UART1) && !defined(CONFIG_SSI0_DISABLE)
 #  error Only one of UART1 and SSI0 can be enabled on this board.
 #endif
 
@@ -67,7 +67,7 @@
  ************************************************************************************/
 
 /************************************************************************************
- * Name: tiva_boardinitialize
+ * Name: lm_boardinitialize
  *
  * Description:
  *   All Stellaris architectures must provide the following entry point.  This entry
@@ -76,7 +76,7 @@
  *
  ************************************************************************************/
 
-void tiva_boardinitialize(void)
+void lm_boardinitialize(void)
 {
   /* Configure SPI chip selects if 1) SSI is not disabled, and 2) the weak function
    * lm_ssiinitialize() has been brought into the link.
@@ -92,13 +92,13 @@ void tiva_boardinitialize(void)
   /* Configure on-board LEDs if LED support has been selected. */
 
 #ifdef CONFIG_ARCH_LEDS
-  board_led_initialize();
+  up_ledinit();
 #endif
 
   /* Configure serial transciever */
   
-  tiva_configgpio(XCVR_INV_GPIO);
-  tiva_configgpio(XCVR_ENA_GPIO);
-  tiva_configgpio(XCVR_ON_GPIO);
-  tiva_configgpio(XCVR_OFF_GPIO);
+  lm_configgpio(XCVR_INV_GPIO);
+  lm_configgpio(XCVR_ENA_GPIO);
+  lm_configgpio(XCVR_ON_GPIO);
+  lm_configgpio(XCVR_OFF_GPIO);
 }

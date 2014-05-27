@@ -185,7 +185,7 @@ int cimage_main(int argc, char *argv[])
 
   // Create an instance of the NuttX logo
 
-  CRlePaletteBitmap *nuttxBitmap = new CRlePaletteBitmap(&g_nuttxBitmap160x160);
+  CRlePaletteBitmap *nuttxBitmap = new CRlePaletteBitmap(&g_nuttxBitmap);
   updateMemoryUsage(&g_mmprevious, "After creating the bitmap");
 
   // Create a CImage instance

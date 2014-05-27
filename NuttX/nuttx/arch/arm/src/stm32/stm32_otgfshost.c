@@ -65,7 +65,7 @@
 
 #include "stm32_usbhost.h"
 
-#if defined(CONFIG_USBHOST) && (defined(CONFIG_STM32_OTGFS) || defined(CONFIG_STM32_OTGFS2))
+#if defined(CONFIG_USBHOST) && defined(CONFIG_STM32_OTGFS)
 
 /*******************************************************************************
  * Definitions
@@ -161,13 +161,6 @@
 
 #ifndef MAX
 #  define  MAX(a, b) (((a) > (b)) ? (a) : (b))
-#endif
-
-/* For OTGFS2 mode (FS mode of HS module), remap the IRQ number *****************/
-
-#ifdef CONFIG_STM32_OTGFS2
-#  undef  STM32_IRQ_OTGFS
-#  define STM32_IRQ_OTGFS   STM32_IRQ_OTGHS
 #endif
 
 /*******************************************************************************
@@ -365,14 +358,10 @@ static void stm32_txfe_enable(FAR struct stm32_usbhost_s *priv, int chidx);
 
 /* USB host controller operations **********************************************/
 
-static int stm32_wait(FAR struct usbhost_connection_s *conn,
-                      FAR const bool *connected);
-static int stm32_enumerate(FAR struct usbhost_connection_s *conn, int rhpndx);
-
+static int stm32_wait(FAR struct usbhost_driver_s *drvr, bool connected);
+static int stm32_enumerate(FAR struct usbhost_driver_s *drvr);
 static int stm32_ep0configure(FAR struct usbhost_driver_s *drvr, uint8_t funcaddr,
                               uint16_t maxpacketsize);
-static int stm32_getdevinfo(FAR struct usbhost_driver_s *drvr,
-                            FAR struct usbhost_devinfo_s *devinfo);
 static int stm32_epalloc(FAR struct usbhost_driver_s *drvr,
                          FAR const FAR struct usbhost_epdesc_s *epdesc,
                          FAR usbhost_ep_t *ep);
@@ -417,8 +406,9 @@ static struct stm32_usbhost_s g_usbhost =
 {
   .drvr             =
     {
+      .wait         = stm32_wait,
+      .enumerate    = stm32_enumerate,
       .ep0configure = stm32_ep0configure,
-      .getdevinfo   = stm32_getdevinfo,
       .epalloc      = stm32_epalloc,
       .epfree       = stm32_epfree,
       .alloc        = stm32_alloc,
@@ -431,14 +421,6 @@ static struct stm32_usbhost_s g_usbhost =
       .disconnect   = stm32_disconnect,
     },
   .class            = NULL,
-};
-
-/* This is the connection/enumeration interface */
-
-static struct usbhost_connection_s g_usbconn =
-{
-  .wait             = stm32_wait,
-  .enumerate        = stm32_enumerate,
 };
 
 /*******************************************************************************
@@ -1003,7 +985,7 @@ static int stm32_chan_wait(FAR struct stm32_usbhost_s *priv,
 static void stm32_chan_wakeup(FAR struct stm32_usbhost_s *priv,
                               FAR struct stm32_chan_s *chan)
 {
-  /* Is the transfer complete? Is there a thread waiting for this transfer
+  /* Is the the transfer complete? Is there a thread waiting for this transfer
    * to complete?
    */
 
@@ -1781,7 +1763,7 @@ static inline void stm32_gint_hcinisr(FAR struct stm32_usbhost_s *priv,
           stm32_chan_halt(priv, chidx, CHREASON_XFRC);
 
           /* Clear any pending NAK condition.  The 'indata1' data toggle
-           * should have been appropriately updated by the RxFIFO
+           * should have been appropriately updated by the the RxFIFO
            * logic as each packet was received.
            */
 
@@ -2968,7 +2950,7 @@ static inline void stm32_hostinit_enable(void)
  *   Enable Tx FIFO empty interrupts.  This is necessary when the entire
  *   transfer will not fit into Tx FIFO.  The transfer will then be completed
  *   when the Tx FIFO is empty.  NOTE:  The Tx FIFO interrupt is disabled
- *   the fifo empty interrupt handler when the transfer is complete.
+ *   the the fifo empty interrupt handler when the transfer is complete.
  *
  * Input Parameters:
  *   priv - Driver state structure reference
@@ -3029,10 +3011,10 @@ static void stm32_txfe_enable(FAR struct stm32_usbhost_s *priv, int chidx)
  *   Wait for a device to be connected or disconneced.
  *
  * Input Parameters:
- *   conn - The USB host connection instance obtained as a parameter from the call to
- *      the USB driver initialization logic.
- *   connected - A pointer to a boolean value.  TRUE: Wait for device to be
- *      connected; FALSE: wait for device to be disconnected
+ *   drvr - The USB host driver instance obtained as a parameter from the call to
+ *      the class create() method.
+ *   connected - TRUE: Wait for device to be connected; FALSE: wait for device
+ *      to be disconnected
  *
  * Returned Values:
  *   Zero (OK) is returned when a device in connected. This function will not
@@ -3046,16 +3028,15 @@ static void stm32_txfe_enable(FAR struct stm32_usbhost_s *priv, int chidx)
  *
  *******************************************************************************/
 
-static int stm32_wait(FAR struct usbhost_connection_s *conn,
-                      FAR const bool *connected)
+static int stm32_wait(FAR struct usbhost_driver_s *drvr, bool connected)
 {
-  FAR struct stm32_usbhost_s *priv = &g_usbhost;
+  FAR struct stm32_usbhost_s *priv = (FAR struct stm32_usbhost_s *)drvr;
   irqstate_t flags;
 
   /* Are we already connected? */
 
   flags = irqsave();
-  while (priv->connected == *connected)
+  while (priv->connected == connected)
     {
       /* No... wait for the connection/disconnection */
 
@@ -3083,9 +3064,8 @@ static int stm32_wait(FAR struct usbhost_connection_s *conn,
  *   charge of the sequence of operations.
  *
  * Input Parameters:
- *   conn - The USB host connection instance obtained as a parameter from the call to
- *      the USB driver initialization logic.
- *   rphndx - Root hub port index.  0-(n-1) corresponds to root hub port 1-n.
+ *   drvr - The USB host driver instance obtained as a parameter from the call to
+ *      the class create() method.
  *
  * Returned Values:
  *   On success, zero (OK) is returned. On a failure, a negated errno value is
@@ -3098,14 +3078,12 @@ static int stm32_wait(FAR struct usbhost_connection_s *conn,
  *
  *******************************************************************************/
 
-static int stm32_enumerate(FAR struct usbhost_connection_s *conn, int rhpndx)
+static int stm32_enumerate(FAR struct usbhost_driver_s *drvr)
 {
-  FAR struct stm32_usbhost_s *priv = &g_usbhost;
+  struct stm32_usbhost_s *priv = (struct stm32_usbhost_s *)drvr;
   uint32_t regval;
   int chidx;
   int ret;
-
-  DEBUGASSERT(priv && rhpndx == 0);
 
   /* Are we connected to a device?  The caller should have called the wait()
    * method first to be assured that a device is connected.
@@ -3171,7 +3149,7 @@ static int stm32_enumerate(FAR struct usbhost_connection_s *conn, int rhpndx)
 
   uvdbg("Enumerate the device\n");
   priv->smstate = SMSTATE_ENUM;
-  ret = usbhost_enumerate(&g_usbhost.drvr, 1, &priv->class);
+  ret = usbhost_enumerate(drvr, 1, &priv->class);
 
   /* The enumeration may fail either because of some HCD interfaces failure
    * or because the device class is not supported.  In either case, we just
@@ -3241,37 +3219,6 @@ static int stm32_ep0configure(FAR struct usbhost_driver_s *drvr, uint8_t funcadd
   stm32_chan_configure(priv, priv->ep0in);
 
   stm32_givesem(&priv->exclsem);
-  return OK;
-}
-
-/************************************************************************************
- * Name: stm32_getdevinfo
- *
- * Description:
- *   Get information about the connected device.
- *
- * Input Parameters:
- *   drvr - The USB host driver instance obtained as a parameter from the call to
- *      the class create() method.
- *   devinfo - A pointer to memory provided by the caller in which to return the
- *      device information.
- *
- * Returned Values:
- *   On success, zero (OK) is returned. On a failure, a negated errno value is
- *   returned indicating the nature of the failure
- *
- * Assumptions:
- *   This function will *not* be called from an interrupt handler.
- *
- ************************************************************************************/
-
-static int stm32_getdevinfo(FAR struct usbhost_driver_s *drvr,
-                            FAR struct usbhost_devinfo_s *devinfo)
-{
-  FAR struct stm32_usbhost_s *priv = (FAR struct stm32_usbhost_s *)drvr;
-
-  DEBUGASSERT(drvr && devinfo);
-  devinfo->speed = priv->lowspeed ? DEVINFO_SPEED_LOW : DEVINFO_SPEED_FULL;
   return OK;
 }
 
@@ -3858,8 +3805,6 @@ static int stm32_transfer(FAR struct usbhost_driver_s *drvr, usbhost_ep_t ep,
 static void stm32_disconnect(FAR struct usbhost_driver_s *drvr)
 {
   struct stm32_usbhost_s *priv = (struct stm32_usbhost_s *)drvr;
-  DEBUGASSERT(priv);
-
   priv->class = NULL;
 }
 
@@ -4248,14 +4193,14 @@ static inline int stm32_hw_initialize(FAR struct stm32_usbhost_s *priv)
  *******************************************************************************/
 
 /*******************************************************************************
- * Name: stm32_otgfshost_initialize
+ * Name: usbhost_initialize
  *
  * Description:
  *   Initialize USB host device controller hardware.
  *
  * Input Parameters:
  *   controller -- If the device supports more than USB host controller, then
- *     this identifies which controller is being initialized.  Normally, this
+ *     this identifies which controller is being intialized.  Normally, this
  *     is just zero.
  *
  * Returned Value:
@@ -4272,7 +4217,7 @@ static inline int stm32_hw_initialize(FAR struct stm32_usbhost_s *priv)
  *
  *******************************************************************************/
 
-FAR struct usbhost_connection_s *stm32_otgfshost_initialize(int controller)
+FAR struct usbhost_driver_s *usbhost_initialize(int controller)
 {
   /* At present, there is only support for a single OTG FS host. Hence it is
    * pre-allocated as g_usbhost.  However, in most code, the private data
@@ -4317,15 +4262,9 @@ FAR struct usbhost_connection_s *stm32_otgfshost_initialize(int controller)
    * *Pins may vary from device-to-device.
    */
 
-#ifdef CONFIG_STM32_OTGFS2
-  stm32_configgpio(GPIO_OTGFS2_DM);
-  stm32_configgpio(GPIO_OTGFS2_DP);
-  stm32_configgpio(GPIO_OTGFS2_ID);   /* Only needed for OTG */
-#else
   stm32_configgpio(GPIO_OTGFS_DM);
   stm32_configgpio(GPIO_OTGFS_DP);
   stm32_configgpio(GPIO_OTGFS_ID);    /* Only needed for OTG */
-#endif
 
   /* SOF output pin configuration is configurable */
 
@@ -4352,7 +4291,7 @@ FAR struct usbhost_connection_s *stm32_otgfshost_initialize(int controller)
   /* Enable interrupts at the interrupt controller */
 
   up_enable_irq(STM32_IRQ_OTGFS);
-  return &g_usbconn;
+  return &priv->drvr;
 }
 
 #endif /* CONFIG_USBHOST && CONFIG_STM32_OTGFS */

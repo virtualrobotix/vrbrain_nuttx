@@ -51,20 +51,15 @@
 
 #include <nuttx/kmalloc.h>
 #include <nuttx/fs/ioctl.h>
-#include <nuttx/spi/spi.h>
-#include <nuttx/mtd/mtd.h>
+#include <nuttx/spi.h>
+#include <nuttx/mtd.h>
 
 /************************************************************************************
  * Pre-processor Definitions
  ************************************************************************************/
-/* Configuration ********************************************************************/
 
 #ifndef CONFIG_AT25_SPIMODE
 #  define CONFIG_AT25_SPIMODE SPIDEV_MODE0
-#endif
-
-#ifndef CONFIG_AT25_SPIFREQUENCY
-#  define CONFIG_AT25_SPIFREQUENCY 20000000
 #endif
 
 /* AT25 Registers *******************************************************************/
@@ -100,16 +95,10 @@
 
 /* Status register bit definitions */
 
-#define AT25_SR_BUSY       (1 << 0)    /* Bit 0: Ready/Busy Status */
-#define AT25_SR_WEL        (1 << 1)    /* Bit 1: Write enable latch bit */
-#define AT25_SR_SWP_SHIFT  (2)         /* Bits 2-3: Software protection */
-#define AT25_SR_SWP_MASK   (3 << AT25_SR_SWP_SHIFT)
-#define AT25_SR_WPP        (1 << 4)    /* Bit 4: Write Protect (/WP) Pin Status */
-#define AT25_SR_EPE        (1 << 5)    /* Bit 5: Erase/program error */
-                                       /* Bit 6: Reserved */
-#define AT25_SR_SPRL       (1 << 7)    /* Bit 7: Sector Protection Registers Locked */
-
-#define AT25_SR_UNPROT 0x00    /* Global unprotect command */
+#define AT25_SR_WIP            (1 << 0)    /* Bit 0: Write in progress bit */
+#define AT25_SR_WEL            (1 << 1)    /* Bit 1: Write enable latch bit */
+#define AT25_SR_EPE            (1 << 5)    /* Bit 5: Erase/program error */
+#define AT25_SR_UNPROT         0x00        /* Global unprotect command */
 
 #define AT25_DUMMY     0xa5
 
@@ -191,7 +180,7 @@ static void at25_lock(FAR struct spi_dev_s *dev)
 
   SPI_SETMODE(dev, CONFIG_AT25_SPIMODE);
   SPI_SETBITS(dev, 8);
-  (void)SPI_SETFREQUENCY(dev, CONFIG_AT25_SPIFREQUENCY);
+  (void)SPI_SETFREQUENCY(dev, 20000000);
 }
 
 /************************************************************************************
@@ -211,6 +200,7 @@ static inline int at25_readid(struct at25_dev_s *priv)
 {
   uint16_t manufacturer;
   uint16_t memory;
+  uint16_t version;
 
   fvdbg("priv: %p\n", priv);
 
@@ -275,7 +265,7 @@ static void at25_waitwritecomplete(struct at25_dev_s *priv)
 
       status = SPI_SEND(priv->dev, AT25_DUMMY);
     }
-  while ((status & AT25_SR_BUSY) != 0);
+  while ((status & AT25_SR_WIP) != 0);
 
   /* Deselect the FLASH */
 
@@ -308,19 +298,19 @@ static void at25_waitwritecomplete(struct at25_dev_s *priv)
        * other peripherals to access the SPI bus.
        */
 
-      if ((status & AT25_SR_BUSY) != 0)
+      if ((status & AT25_SR_WIP) != 0)
         {
           at25_unlock(priv->dev);
           usleep(10000);
           at25_lock(priv->dev);
         }
     }
-  while ((status & AT25_SR_BUSY) != 0);
+  while ((status & AT25_SR_WIP) != 0);
 #endif
 
   if (status & AT25_SR_EPE)
     {
-      fdbg("ERROR: Write error, status: 0x%02x\n", status);
+      fdbg("Write error, status: 0x%02x\n", status);
     }
   
   fvdbg("Complete, status: 0x%02x\n", status);
@@ -699,7 +689,7 @@ FAR struct mtd_dev_s *at25_initialize(FAR struct spi_dev_s *dev)
         {
           /* Unrecognized! Discard all of that work we just did and return NULL */
 
-          fdbg("ERROR: Unrecognized\n");
+          fdbg("Unrecognized\n");
           kfree(priv);
           priv = NULL;
         }
@@ -714,12 +704,6 @@ FAR struct mtd_dev_s *at25_initialize(FAR struct spi_dev_s *dev)
           SPI_SELECT(priv->dev, SPIDEV_FLASH, false);
         }
     }
-
-  /* Register the MTD with the procfs system if enabled */
-
-#ifdef CONFIG_MTD_REGISTRATION
-  mtd_register(&priv->mtd, "at25");
-#endif
 
   /* Return the implementation-specific state structure as the MTD device */
 

@@ -132,18 +132,6 @@ int net_startmonitor(FAR struct socket *psock)
 
   conn->connection_private = (void*)psock;
   conn->connection_event   = connection_event;
-
-  /* Check if the connection has already been closed before any callbacks have
-   * been registered. (Maybe the connection is lost before accept has registered
-   * the monitoring callback.)
-   */
-
-  if (!(conn->tcpstateflags == UIP_ESTABLISHED ||
-        conn->tcpstateflags == UIP_SYN_RCVD))
-    {
-      connection_event(conn, UIP_CLOSE);
-    }
-
   return OK;
 }
 

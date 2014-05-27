@@ -237,6 +237,6 @@ void up_initialize(void)
 
   up_usbinitialize();
 
-  board_led_on(LED_IRQSENABLED);
+  up_ledon(LED_IRQSENABLED);
 }
 

@@ -341,8 +341,7 @@
 #undef EXTERN
 #if defined(__cplusplus)
 #define EXTERN extern "C"
-extern "C"
-{
+extern "C" {
 #else
 #define EXTERN extern
 #endif
@@ -355,11 +354,11 @@ extern "C"
  * either as macros or via syscalls.
  */
 
-FAR int *get_errno_ptr(void);
+EXTERN FAR int *get_errno_ptr(void);
 
 #ifdef CONFIG_NUTTX_KERNEL
-void set_errno(int errcode);
-int  get_errno(void);
+EXTERN void set_errno(int errcode);
+EXTERN int  get_errno(void);
 #endif
 
 #undef EXTERN

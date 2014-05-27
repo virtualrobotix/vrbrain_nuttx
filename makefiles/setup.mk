@@ -41,31 +41,31 @@
 # the number of duplicate slashes we have lying around in paths,
 # and is consistent with joining the results of $(dir) and $(notdir).
 #
-export VRBRAIN_INCLUDE_DIR	= $(abspath $(VRBRAIN_BASE)/src/include)/
-export VRBRAIN_MODULE_SRC	= $(abspath $(VRBRAIN_BASE)/src)/
-export VRBRAIN_LIB_DIR	 	= $(abspath $(VRBRAIN_BASE)/src/lib)/
-export VRBRAIN_MK_DIR	 	= $(abspath $(VRBRAIN_BASE)/makefiles)/
-export NUTTX_SRC	 	= $(abspath $(VRBRAIN_BASE)/NuttX/nuttx)/
-export NUTTX_APP_SRC	 	= $(abspath $(VRBRAIN_BASE)/NuttX/apps)/
-export MAVLINK_SRC	 	= $(abspath $(VRBRAIN_BASE)/mavlink)/
-export ROMFS_SRC	 	= $(abspath $(VRBRAIN_BASE)/ROMFS)/
-export IMAGE_DIR	 	= $(abspath $(VRBRAIN_BASE)/Images)/
-export BUILD_DIR	 	= $(abspath $(VRBRAIN_BASE)/Build)/
-export ARCHIVE_DIR	 	= $(abspath $(VRBRAIN_BASE)/Archives)/
+export VRX_INCLUDE_DIR	= $(abspath $(VRX_BASE)/src/include)/
+export VRX_MODULE_SRC	= $(abspath $(VRX_BASE)/src)/
+export VRX_LIB_DIR	= $(abspath $(VRX_BASE)/src/lib)/
+export VRX_MK_DIR	= $(abspath $(VRX_BASE)/makefiles)/
+export NUTTX_SRC	= $(abspath $(VRX_BASE)/NuttX/nuttx)/
+export NUTTX_APP_SRC	= $(abspath $(VRX_BASE)/NuttX/apps)/
+export MAVLINK_SRC	= $(abspath $(VRX_BASE)/mavlink)/
+export ROMFS_SRC	= $(abspath $(VRX_BASE)/ROMFS)/
+export IMAGE_DIR	= $(abspath $(VRX_BASE)/Images)/
+export BUILD_DIR	= $(abspath $(VRX_BASE)/Build)/
+export ARCHIVE_DIR	= $(abspath $(VRX_BASE)/Archives)/
 
 #
 # Default include paths
 #
-export INCLUDE_DIRS	:= $(VRBRAIN_MODULE_SRC) \
-			   $(VRBRAIN_MODULE_SRC)/modules/ \
-			   $(VRBRAIN_INCLUDE_DIR) \
-			   $(VRBRAIN_LIB_DIR)
+export INCLUDE_DIRS	:= $(VRX_MODULE_SRC) \
+			   $(VRX_MODULE_SRC)/modules/ \
+			   $(VRX_INCLUDE_DIR) \
+			   $(VRX_LIB_DIR)
 
 #
 # Tools
 #
-export MKFW		 = $(VRBRAIN_BASE)/Tools/px_mkfw.py
-export UPLOADER		 = $(VRBRAIN_BASE)/Tools/px_uploader.py
+export MKFW		 = $(VRX_BASE)/Tools/px_mkfw.py
+export UPLOADER		 = $(VRX_BASE)/Tools/px_uploader.py
 export COPY		 = cp
 export COPYDIR		 = cp -Rf
 export REMOVE		 = rm -f

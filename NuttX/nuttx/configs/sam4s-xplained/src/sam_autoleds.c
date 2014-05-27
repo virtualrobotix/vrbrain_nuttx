@@ -97,10 +97,10 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_led_initialize
+ * Name: up_ledinit
  ****************************************************************************/
 
-void board_led_initialize(void)
+void up_ledinit(void)
 {
   /* Configure LED1-2 GPIOs for output */
 
@@ -109,10 +109,10 @@ void board_led_initialize(void)
 }
 
 /****************************************************************************
- * Name: board_led_on
+ * Name: up_ledon
  ****************************************************************************/
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
   bool led1on = false;
   bool led2on = false;
@@ -140,10 +140,10 @@ void board_led_on(int led)
 }
 
 /****************************************************************************
- * Name: board_led_off
+ * Name: up_ledoff
  ****************************************************************************/
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
   if (led != 2)
     {

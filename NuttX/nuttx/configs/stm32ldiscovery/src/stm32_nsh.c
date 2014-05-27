@@ -82,11 +82,13 @@
 
 int nsh_archinitialize(void)
 {
-#ifdef CONFIG_STM32_LCD
+  int ret = OK;
+
   /* Initialize the SLCD and register the SLCD device as /dev/slcd */
 
-  return stm32_slcd_initialize();
-#else
-  return OK;
+#ifdef CONFIG_STM32_LCD
+  ret = stm32_slcd_initialize();
 #endif
+
+  return ret;
 }

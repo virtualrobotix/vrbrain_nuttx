@@ -64,19 +64,15 @@ endif
 
 # Applications
 
-CXXSRCS += cstartwindow.cxx chexcalculator.cxx
+CXXSRCS += cstartwindow.cxx cnxconsole.cxx chexcalculator.cxx
 
 ifeq ($(CONFIG_NXWM_TOUCHSCREEN),y)
 CXXSRCS += ccalibration.cxx
 endif
 
-ifeq ($(CONFIG_NXWM_NXCONSOLE),y)
-CXXSRCS +=  cnxconsole.cxx
-endif
-
 # Images
 CXXSRCS += glyph_calculator.cxx glyph_calibration.cxx glyph_cmd.cxx
-CXXSRCS += glyph_minimize.cxx glyph_nsh.cxx glyph_play24x24.cxx glyph_start.cxx
+CXXSRCS += glyph_minimize.cxx glyph_nsh.cxx glyph_play.cxx glyph_start.cxx
 CXXSRCS += glyph_stop.cxx
 
 ifeq ($(CONFIG_NXWM_MEDIAPLAYER),y)

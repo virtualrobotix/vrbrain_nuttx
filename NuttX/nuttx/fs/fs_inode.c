@@ -52,31 +52,11 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define NO_HOLDER (pid_t)-1;
-
-/****************************************************************************
- * Private Types
- ****************************************************************************/
-/* Implements a re-entrant mutex for inode access.  This must be re-entrant
- * because there can be cycles.  For example, it may be necessary to destroy
- * a block driver inode on umount() after a removable block device has been
- * removed.  In that case umount() hold the inode semaphore, but the block
- * driver may callback to unregister_blockdriver() after the un-mount,
- * requiring the seamphore again.
- */
-
-struct inode_sem_s
-{
-  sem_t   sem;     /* The semaphore */
-  pid_t   holder;  /* The current holder of the semaphore */
-  int16_t count;   /* Number of counts held */
-};
-
 /****************************************************************************
  * Private Variables
  ****************************************************************************/
 
-static struct inode_sem_s g_inode_sem;
+static sem_t tree_sem;
 
 /****************************************************************************
  * Public Variables
@@ -184,9 +164,7 @@ void fs_initialize(void)
    * a-time access to the inode tree).
    */
 
-  (void)sem_init(&g_inode_sem.sem, 0, 1);
-  g_inode_sem.holder = NO_HOLDER;
-  g_inode_sem.count  = 0;
+  (void)sem_init(&tree_sem, 0, 1);
 
   /* Initialize files array (if it is used) */
 
@@ -202,42 +180,21 @@ void fs_initialize(void)
  * Name: inode_semtake
  *
  * Description:
- *   Get exclusive access to the in-memory inode tree (g_inode_sem).
+ *   Get exclusive access to the in-memory inode tree (tree_sem).
  *
  ****************************************************************************/
 
 void inode_semtake(void)
 {
-  pid_t me;
-
-  /* Do we already hold the semaphore? */
-
-  me = getpid();
-  if (me == g_inode_sem.holder)
-    {
-      /* Yes... just increment the count */
-
-      g_inode_sem.count++;
-      DEBUGASSERT(g_inode_sem.count > 0);
-    }
-
   /* Take the semaphore (perhaps waiting) */
 
-  else
+  while (sem_wait(&tree_sem) != 0)
     {
-      while (sem_wait(&g_inode_sem.sem) != 0)
-        {
-          /* The only case that an error should occr here is if
-           * the wait was awakened by a signal.
-           */
+      /* The only case that an error should occr here is if
+       * the wait was awakened by a signal.
+       */
 
-          ASSERT(get_errno() == EINTR);
-        }
-
-      /* No we hold the semaphore */
-
-      g_inode_sem.holder = me;
-      g_inode_sem.count  = 1;
+      ASSERT(get_errno() == EINTR);
     }
 }
 
@@ -245,31 +202,13 @@ void inode_semtake(void)
  * Name: inode_semgive
  *
  * Description:
- *   Relinquish exclusive access to the in-memory inode tree (g_inode_sem).
+ *   Relinquish exclusive access to the in-memory inode tree (tree_sem).
  *
  ****************************************************************************/
 
 void inode_semgive(void)
 {
-  DEBUGASSERT(g_inode_sem.holder == getpid());
-
-  /* Is this our last count on the semaphore? */
-
-  if (g_inode_sem.count > 1)
-    {
-      /* No.. just decrement the count */
-
-      g_inode_sem.count--;
-    }
-
-  /* Yes.. then we can really release the semaphore */
-
-  else
-    {
-      g_inode_sem.holder = NO_HOLDER;
-      g_inode_sem.count  = 0;
-      sem_post(&g_inode_sem.sem);
-    }
+  sem_post(&tree_sem);
 }
 
 /****************************************************************************
@@ -280,7 +219,7 @@ void inode_semgive(void)
  *   and references to its companion nodes.
  *
  * Assumptions:
- *   The caller holds the g_inode_sem semaphore
+ *   The caller holds the tree_sem
  *
  ****************************************************************************/
 
@@ -408,15 +347,15 @@ void inode_free(FAR struct inode *node)
  * Name: inode_nextname
  *
  * Description:
- *   Given a path with node names separated by '/', return the next path
- *   segment name.
+ *   Given a path with node names separated by '/', return the next node
+ *   name.
  *
  ****************************************************************************/
 
 FAR const char *inode_nextname(FAR const char *name)
 {
   /* Search for the '/' delimiter or the NUL terminator at the end of the
-   * path segment.
+   * string.
    */
 
    while (*name && *name != '/')
@@ -435,3 +374,4 @@ FAR const char *inode_nextname(FAR const char *name)
 
    return name;
 }
+

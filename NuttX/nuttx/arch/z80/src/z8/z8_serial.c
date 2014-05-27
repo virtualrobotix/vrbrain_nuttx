@@ -284,7 +284,8 @@ static uint8_t z8_disableuartirq(FAR struct uart_dev_s *dev)
 
 static void z8_restoreuartirq(FAR struct uart_dev_s *dev, uint8_t state)
 {
-  irqstate_t flags = irqsave();
+  struct z8_uart_s *priv  = (struct z8_uart_s*)dev->priv;
+  irqstate_t          flags = irqsave();
 
   z8_txint(dev, (state & STATE_TXENABLED) ? true : false);
   z8_rxint(dev, (state & STATE_RXENABLED) ? true : false);
@@ -321,7 +322,8 @@ static void z8_consoleput(uint8_t ch)
 
 void z8_uartconfigure(void)
 {
-  uint8_t val;
+  uint16_t brg;
+  uint8_t  val;
 
   /* Configure GPIO Port A pins 4 & 5 for alternate function */
 
@@ -419,6 +421,7 @@ static int z8_setup(FAR struct uart_dev_s *dev)
 
 static void z8_shutdown(FAR struct uart_dev_s *dev)
 {
+  struct z8_uart_s *priv = (struct z8_uart_s*)dev->priv;
   (void)z8_disableuartirq(dev);
 }
 

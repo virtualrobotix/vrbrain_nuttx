@@ -85,20 +85,17 @@
  *   dev - The device driver structure containing the received UDP packet
  *
  * Return:
- *   OK  The packet has been processed  and can be deleted
- *   ERROR Hold the packet and try again later. There is a listening socket
- *         but no recv in place to catch the packet yet.
+ *   None
  *
  * Assumptions:
  *   Called from the interrupt level or with interrupts disabled.
  *
  ****************************************************************************/
 
-int uip_udpinput(struct uip_driver_s *dev)
+void uip_udpinput(struct uip_driver_s *dev)
 {
   struct uip_udp_conn  *conn;
   struct uip_udpip_hdr *pbuf = UDPBUF;
-  int ret = OK;
 
 #ifdef CONFIG_NET_STATISTICS
   uip_stat.udp.recv++;
@@ -129,8 +126,6 @@ int uip_udpinput(struct uip_driver_s *dev)
       conn = uip_udpactive(pbuf);
       if (conn)
         {
-          uint16_t flags;
-
           /* Setup for the application callback */
 
           dev->d_appdata = &dev->d_buf[UIP_LLH_LEN + UIP_IPUDPH_LEN];
@@ -139,20 +134,7 @@ int uip_udpinput(struct uip_driver_s *dev)
 
           /* Perform the application callback */
 
-          flags = uip_udpcallback(dev, conn, UIP_NEWDATA);
-
-          /* If the operation was successful, the UIP_NEWDATA flag is removed
-           * and thus the packet can be deleted (OK will be returned).
-           */
-
-          if ((flags & UIP_NEWDATA) != 0)
-            {
-              /* No.. the packet was not processed now.  Return ERROR so
-               * that the driver may retry again later.
-               */
-
-              ret = ERROR;
-            }
+          uip_udpcallback(dev, conn, UIP_NEWDATA);
 
           /* If the application has data to send, setup the UDP/IP header */
 
@@ -168,7 +150,7 @@ int uip_udpinput(struct uip_driver_s *dev)
         }
     }
 
-  return ret;
+  return;
 }
 
 #endif /* CONFIG_NET && CONFIG_NET_UDP */

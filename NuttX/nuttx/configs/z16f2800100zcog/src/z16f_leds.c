@@ -67,11 +67,11 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_led_initialize
+ * Name: up_ledinit
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_LEDS
-void board_led_initialize(void)
+void up_ledinit(void)
 {
   /* The following is performed up_lowinit() as well */
 
@@ -80,10 +80,10 @@ void board_led_initialize(void)
 }
 
 /****************************************************************************
- * Name: board_led_on
+ * Name: up_ledon
  ****************************************************************************/
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
   if ((unsigned)led <= 7)
     {
@@ -92,14 +92,14 @@ void board_led_on(int led)
 }
 
 /****************************************************************************
- * Name: board_led_off
+ * Name: up_ledoff
  ****************************************************************************/
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
   if (led >= 1)
     {
-      board_led_on(led-1);
+      up_ledon(led-1);
     }
 }
 #endif /* CONFIG_ARCH_LEDS */

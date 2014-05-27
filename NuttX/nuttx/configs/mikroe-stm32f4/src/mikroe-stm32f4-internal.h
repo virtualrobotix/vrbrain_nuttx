@@ -189,7 +189,6 @@
 #define GPIO_VS1053_RST (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
                          GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN7)
 #define GPIO_VS1053_DREQ (GPIO_INPUT|GPIO_SPEED_50MHz|GPIO_PORTC|GPIO_PIN6)
-#define GPIO_VS1053_DREQ_IRQ  STM32_IRQ_EXTI95
 
 /****************************************************************************************************
  * Public Types
@@ -250,7 +249,7 @@ void weak_function stm32_usbinitialize(void);
  *
  ****************************************************************************************************/
 
-#if defined(CONFIG_LCD_MIO283QT2) || defined(CONFIG_LCD_MIO283QT9A)
+#ifdef CONFIG_LCD_MIO283QT2
 void stm32_lcdinitialize(void);
 #endif
 
@@ -263,7 +262,7 @@ void stm32_lcdinitialize(void);
  *
  ****************************************************************************************************/
 
-#if defined(CONFIG_LCD_MIO283QT2) || defined(CONFIG_LCD_MIO283QT9A)
+#ifdef CONFIG_LCD_MIO283QT2
 int up_lcdinitialize(void);
 #endif
 

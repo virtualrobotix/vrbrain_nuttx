@@ -38,10 +38,9 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/spi/spi.h>
+#include <nuttx/spi.h>
 
 #include <unistd.h>
-#include <semaphore.h>
 #include <debug.h>
 
 #include "up_arch.h"

@@ -194,7 +194,7 @@
 #define SAM_GPIOB_BASE             SAM_GPION_BASE(SAM_GPIOB)
 #define SAM_GPIOC_BASE             SAM_GPION_BASE(SAM_GPIOC)
 
-/* GPIO register addresses **************************************************************/
+/* GPIO register adresses ***************************************************************/
 
 #define SAM_GPIO_GPER(n)           (SAM_GPION_BASE(n)+SAM_GPIO_GPER_OFFSET)
 #define SAM_GPIO_GPERS(n)          (SAM_GPION_BASE(n)+SAM_GPIO_GPERS_OFFSET)
@@ -289,7 +289,7 @@
 #define SAM_GPIO_PARAMETER(n)      (SAM_GPION_BASE(n)+SAM_GPIO_PARAMETER_OFFSET)
 #define SAM_GPIO_VERSION (n)       (SAM_GPION_BASE(n)+SAM_GPIO_VERSION_OFFSET)
 
-/* GPIO PORTA register addresses ********************************************************/
+/* GPIO PORTA register adresses *********************************************************/
 
 #define SAM_GPIOA_GPER             (SAM_GPIOA_BASE+SAM_GPIO_GPER_OFFSET)
 #define SAM_GPIOA_GPERS            (SAM_GPIOA_BASE+SAM_GPIO_GPERS_OFFSET)
@@ -384,7 +384,7 @@
 #define SAM_GPIOA_PARAMETER        (SAM_GPIOA_BASE+SAM_GPIO_PARAMETER_OFFSET)
 #define SAM_GPIOA_VERSION          (SAM_GPIOA_BASE+SAM_GPIO_VERSION_OFFSET)
 
-/* GPIO PORTB register addresses ********************************************************/
+/* GPIO PORTB register adresses *********************************************************/
 
 #define SAM_GPIOB_GPER             (SAM_GPIOB_BASE+SAM_GPIO_GPER_OFFSET)
 #define SAM_GPIOB_GPERS            (SAM_GPIOB_BASE+SAM_GPIO_GPERS_OFFSET)
@@ -479,7 +479,7 @@
 #define SAM_GPIOB_PARAMETER        (SAM_GPIOB_BASE+SAM_GPIO_PARAMETER_OFFSET)
 #define SAM_GPIOB_VERSION          (SAM_GPIOB_BASE+SAM_GPIO_VERSION_OFFSET)
 
-/* GPIO PORTC register addresses ********************************************************/
+/* GPIO PORTC register adresses *********************************************************/
 
 #define SAM_GPIOC_GPER             (SAM_GPIOC_BASE+SAM_GPIO_GPER_OFFSET)
 #define SAM_GPIOC_GPERS            (SAM_GPIOC_BASE+SAM_GPIO_GPERS_OFFSET)

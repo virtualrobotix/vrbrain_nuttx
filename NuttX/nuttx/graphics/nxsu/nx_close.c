@@ -88,8 +88,6 @@
 
 void nx_close(NXHANDLE handle)
 {
-  /* For consistency, we use the user-space allocate (if available) */
-
-  kufree(handle);
+  kfree(handle);
 }
 

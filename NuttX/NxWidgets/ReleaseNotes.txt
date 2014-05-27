@@ -169,7 +169,7 @@ Additional new features and extended functionality in Version 1.5:
 * NxWM::CScrollingPanel::scrollChildren(): Avoid unnecessary redraws in
   CScrollingPanel
 * Kconfig: Added several "enabling" settings that must be selected to
-  override the default setting.
+  override the default setting. 
 * UnitTests:  Changes for compatibility with NuttX-6.25
 
 Bugfixes:
@@ -284,97 +284,3 @@ Bugfixes:
 * NxWM::CScrollbarPanel:  Fix spelling error in class name: CScollbarPanel
   should be CScrollbarPanel
 * NxWidgets::CGlyphButton:  Prevent drawing outside of the bitmap size.
-
-NxWidgets-1.8
-=============
-
-The 9th release of the NxWidgets package was made on June 14, 2013.  This
-release depends on NuttX-6.26 or above and should not be used with older
-NuttX releases.
-
-Note: Most of the changes between 1.7 and 1.8 were the result of the
-efforts of Ken Pettit and Petteri Aimonen.
-
-Additional new features and extended functionality in Version 1.8:
-
-* NxWM::CMediaPlayer: Shell application for an MP3 Media Player (from Ken
-  Pettit).
-* NxWidgets::CGlyphSliderHorizontal and NxWidgets::CGlyphSliderHorizontalGrip:
-  New widgets added by Ken Pettit.  Includes a Unit Test.
-* NxWidgets::CImage:  Allow a NULL pointer for a bitmap (from Petteri
-  Aimonen).
-* NxWidgets::CNumericEdit:  Delay before auto-incrementing now varies: A
-  longer delay is required to start auto-incrementing and speed increases
-  while pressed (from Petteri Aimonen).
-* NxWM::CTaskbar: Add a method to redraw the taskbar and the current
-  application.  This should only be necessary if the display loses state due
-  to e.g. powerdown or other manual intervention (from Petteri Aimonen).
-
-Bugfixes:
-
-* NxWM::CCalibration: Fix a race condition that would cause the calibration
-  screen to fail to come up when its icon was touched (from Ken Pettit).
-* Default priorities for NxWidget and NxWM threads should be 100, not 50, to
-  be consistent with other default priorities.
-* NxWidgets::CGlyphSliderHorizontal:  Fix a drawing error (from Ken Pettit).
-* Update the way that NSH the Unit Tests are registered as built-in NSH
-  applications.
-
-NxWidgets-1.9
-=============
-
-The 10th release of the NxWidgets package was made on October 28, 2013.  This
-release depends on NuttX-6.26 or above and should not be used with older
-NuttX releases.
-
-Additional new features and extended functionality in Version 1.9:
-
-* NxWM::CCalibration.cxx/hxx:  If CONFIG_NXWM_CALIBRATION_MESSAGES is
-  defined then CCalibration will provide some instructions in the center
-  of the display.
-* NxWM::CCalibration.cxx/hxx:  Add options to collect and average
-  multiple samples at each location.  Also logic to discard the most
-  extreme samples before averaging.
-* NxWidgets::CScaledImage:  This new class is a wrapper for an class
-  the exports IBitMap.  It will perform scaling via bi-linear interpolation
-  so that images can be scaled to any size desired.
-* NxWM::CTaskbar:: Can now be configured to scale taskbar icons using
-  NxWidgets::CScaledImage.
-* NxWidgets/libnxwidgets/src/glyph_nxlogo320x320.cxx:  Add a big, 320x320
-  NuttX logo image.  The older, smaller NuttX logo was renamed from
-  nxlogo to nxlogo160x160 in all places.
-* NxWM::CCalibration and NxWM::CTouchscreen:  Add a complex touchscreen
-  scaling algorithm to handling the case where the measured X values also
-  vary with y position (and vice versa).
-
-Bugfixes:
-
-(There are no bugfixes recorded for this release).
-
-NxWidgets-1.10
-==============
-
-The 11th release of the NxWidgets package was made on December 7, 2013.  This
-release depends on NuttX-6.26 or above and should not be used with older
-NuttX releases.
-
-Additional new features and extended functionality in Version 1.10:
-
-* NxWM:Calibration and UnitTests/nxwm:  Add logic to enable saving and
-  recovering touchscreen calibration data.  This depends upon having
-  platform-dependent support for storage of configuration data.  Portions
-  suggested by Ken Pettit.
-
-NxWidgets-1.11
-==============
-
-The 12th release of the NxWidgets package was made on January 20, 2014.  This
-release depends on NuttX-6.33 or above and should not be used with older
-NuttX releases.
-
-Additional new features and extended functionality in Version 1.11:
-
-* Primarily changes associated with the NuttX kernel build where the
-  graphics application lies in user space and the graphics server lies in
-  protected kernel space.  This change is mostly a matter of repartitioning
-  functionality and should not cause in any functional differences.

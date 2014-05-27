@@ -5,17 +5,6 @@
 
 comment "Common LCD Settings"
 
-config LCD_CONSOLE
-	bool "LCD console output"
-	default n
-	---help---
-		It is possible to use an LCD to provide console output.  This option
-		enables that possibility.
-
-		At present, only one architecture supports this option (M16C).
-		However, this feature could be provided by other architectures in
-		the future.
-
 config LCD_NOGETRUN
 	bool "Write-only LCD"
 	default n
@@ -32,7 +21,7 @@ config LCD_NOGETRUN
 
 config LCD_MAXCONTRAST
 	int "LCD maximum contrast"
-	default 63 if NOKIA6100_S1D15G10 || LCD_SHARP_MEMLCD
+	default 63 if NOKIA6100_S1D15G10
 	default 127 if NOKIA6100_PCF8833
 	default 255 if LCD_P14201 || LCD_LCD1602
 	default 63
@@ -149,17 +138,18 @@ config NOKIA6100_FREQUENCY
 	---help---
 		Define to use a different bus frequency
 
+config NOKIA6100_BLINIT
+	bool "Back light initial"
+	default n
+	---help---
+		Initial backlight setting
+		The following may need to be tuned for your hardware:
+
 config NOKIA6100_BPP
 	int "Display bits per pixel"
 	default 8
 	---help---
 		Device supports 8, 12, and 16 bits per pixel.
-
-config NOKIA6100_BLINIT
-	int "Back light initial"
-	default 40
-	---help---
-		Initial backlight setting
 
 config NOKIA6100_INVERT
 	int "Display inversion"
@@ -215,7 +205,6 @@ config LCD_MIO283QT2
 config LCD_UG9664HSWAG01
 	bool "UG-9664HSWAG01 OLED Display Module"
 	default n
-	depends on SPI
 	---help---
 		OLED Display Module, UG-9664HSWAG01, Univision Technology Inc.  Used
 		with the LPCXpresso and Embedded Artists base board.
@@ -232,7 +221,6 @@ if LCD_UG9664HSWAG01
 config UG9664HSWAG01_SPIMODE
 	int "UG-9664HSWAG01 SPI Mode"
 	default 0
-	range 0 3
 	---help---
 		Controls the SPI mode
 
@@ -259,68 +247,6 @@ config UG9664HSWAG01_POWER
 
 endif
 
-config LCD_UG2864HSWEG01
-	bool "UG-2864HSWEG01 OLED Display Module"
-	default n
-	depends on SPI
-	select LCD_SSD1306
-	---help---
-		OLED Display Module, UG-2864HSWEG01, Univision Technology Inc based
-		on the Solomon Tech SSD1306 LCD controller.
-
-		Required LCD driver settings:
-		LCD_MAXCONTRAST should be 255, but any value >0 and <=255 will be accepted.
-		LCD_MAXPOWER should be 1:  0=off, 1=on
-
-		Required SPI driver settings:
-		SPI_CMDDATA - Include support for cmd/data selection.
-
-
-config LCD_UG2832HSWEG04
-	bool "UG-2832HSWEG04 OLED Display Module"
-	default n
-	depends on SPI && !LCD_UG2864HSWEG01
-	select LCD_SSD1306
-	---help---
-		OLED Display Module, UG-UG2832HSWEG04, Univision Technology Inc
-		based on the Solomon Tech SSD1306 LCD controller.  Used with the
-		Atmel SAM4L Xplained Pro board on the OLED1 module.
-
-		Required LCD driver settings:
-		LCD_MAXCONTRAST should be 255, but any value >0 and <=255 will be accepted.
-		LCD_MAXPOWER should be 1:  0=off, 1=on
-
-		Required SPI driver settings:
-		SPI_CMDDATA - Include support for cmd/data selection.
-
-config LCD_SSD1306
-	bool
-
-if LCD_SSD1306
-
-config SSD1306_SPIMODE
-	int "SSD1306 SPI Mode"
-	default 0
-	range 0 3
-	---help---
-		Selects the SPI mode used with the SSD1306 device
-
-config SSD1306_FREQUENCY
-	int "SSD1306 SPI Frequency"
-	default 3500000
-	---help---
-		Selects the SPI bus frequency used with the SSD1306 device
-
-#config SSD1306_NINTERFACES
-#	int "Number of SSD1306 Devices"
-#	default 1
-#	---help---
-#		Specifies the number of physical SSD1306 devices that will be
-#		supported.  NOTE:  At present, this must be undefined or defined to
-#		be 1.
-
-endif
-
 config LCD_ST7567
 	bool "ST7567 LCD Display Module"
 	default n
@@ -340,7 +266,6 @@ if LCD_ST7567
 config ST7567_SPIMODE
 	int "ST7567 SPI Mode"
 	default 0
-	range 0 3
 	---help---
 		Controls the SPI mode
 
@@ -394,10 +319,9 @@ config LCD_UG2864AMBAG01
 
 if LCD_UG2864AMBAG01
 
-config UG2864AMBAG01_SPIMODE
+	config UG2864AMBAG01_SPIMODE
 	int "UG-2864AMBAG01 SPI Mode"
 	default 3
-	range 0 3
 	---help---
 		Controls the SPI mode
 
@@ -443,56 +367,6 @@ config SSD1289_PROFILE3
 endchoice
 endif
 
-config LCD_SHARP_MEMLCD
-	bool "Sharp Memory LCD Suite"
-	default n
-	---help---
-		memlcd.c. Driver for Sharp Memory LCD Suite.
-
-if LCD_SHARP_MEMLCD
-
-choice MEMLCD_MODEL
-	prompt "Choose Model"
-	default MEMLCD_LS013B7DH03
-
-config MEMLCD_LS013B7DH01
-	bool "LS013B7DH01"
-	---help---
-		Selects the LS013B7DH01 model
-
-config MEMLCD_LS013B7DH03
-	bool "LS013B7DH03"
-	---help---
-		Selects the LS013B7DH03 model
-
-endchoice
-
-config MEMLCD_NINTERFACES
-	int "Number of physical Memory LCD devices"
-	default 1
-	range 1 1
-	---help---
-		Specifies the number of physical Memory LCD devices that will
-		be supported.
-
-config MEMLCD_EXTCOMIN_MODE_HW
-	bool "Use hardware mode for EXTCOMIN"
-	default n
-	---help---
-		If use hardware mode to toggle VCOM, we need to send specific
-		command at a constant frequency to trigger the LCD intenal
-		hardware logic.  While use software mode, we set up a timer to
-		toggle EXTCOMIN connected IO, basically, it is a hardware
-		timer to ensure a constant frequency.
-
-config MEMLCD_SPI_FREQUENCY
-	int "SPI frequency"
-	default 3500000
-	---help---
-		Define to use a different bus frequency, FIXME DEFAULT VALUE OK?
-
-endif
-
 choice
 	prompt "LCD Orientation"
 	default LCD_LANDSCAPE
@@ -506,28 +380,28 @@ config LCD_LANDSCAPE
 	bool "Landscape orientation"
 	---help---
 		Define for "landscape" orientation support.  Landscape mode refers one
-		of two orientations where the display is wider than it is tall
+		of two orientations where the the display is wider than it is tall
 		(LCD_RLANDSCAPE is the other).  This is the default orientation.
 
 config LCD_PORTRAIT
 	bool "Portrait orientation"
 	---help---
 		Define for "portrait" orientation support.  Portrait mode refers one
-		of two orientations where the display is taller than it is wide
+		of two orientations where the the display is taller than it is wide
 		(LCD_RPORTAIT is the other).
 
 config LCD_RPORTRAIT
 	bool "Reverse portrait display"
 	---help---
 		Define for "reverse portrait" orientation support.  Reverse portrait mode
-		refers one of two orientations where the display is taller than it is
+		refers one of two orientations where the the display is taller than it is
 		wide (LCD_PORTAIT is the other).
 
 config LCD_RLANDSCAPE
 	bool "Reverse landscape orientation"
 	---help---
 		Define for "reverse landscape" orientation support.  Reverse landscape mode
-		refers one of two orientations where the display is wider than it is
+		refers one of two orientations where the the display is wider than it is
 		tall (LCD_LANDSCAPE is the other).
 
 endchoice

@@ -71,7 +71,7 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_led_initialize
+ * Name: up_ledinit
  *
  * Description:
  *   Initialize LED GPIOs so that LEDs can be controlled.
@@ -79,25 +79,25 @@
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_LEDS
-void board_led_initialize(void)
+void up_ledinit(void)
 {
   /* The KwikStik-K40 board has no MCU driven, GPIO-based LEDs */
 }
 
 /****************************************************************************
- * Name: board_led_on
+ * Name: up_ledon
  ****************************************************************************/
 
-void board_led_on(int led)
+void up_ledon(int led)
 {
   /* The KwikStik-K40 board has no MCU driven, GPIO-based LEDs */
 }
 
 /****************************************************************************
- * Name: board_led_off
+ * Name: up_ledoff
  ****************************************************************************/
 
-void board_led_off(int led)
+void up_ledoff(int led)
 {
   /* The KwikStik-K40 board has no MCU driven, GPIO-based LEDs */
 }

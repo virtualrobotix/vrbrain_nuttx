@@ -116,7 +116,6 @@ int cmd_rpwd(SESSION handle, int argc, char **argv)
       free(pwd);
       return OK;
     }
-
   return ERROR;
 }
 
@@ -276,7 +275,6 @@ int cmd_rls(SESSION handle, int argc, char **argv)
     {
       printf("  %s\n", dirlist->name[i]);
     }
-
   FFLUSH();
 
   /* We are responsible for freeing the directory structure allocated by
@@ -310,7 +308,7 @@ int cmd_rget(SESSION handle, int argc, char **argv)
         }
       else
         {
-          printf("%s: Unrecognized option: '%c'\n", "rget", option);
+          printf("%s: Unrecognized option: '%c'\n", "put", option);
           return ERROR;
         }
     }
@@ -319,7 +317,7 @@ int cmd_rget(SESSION handle, int argc, char **argv)
 
   if (optind >= argc)
     {
-      printf("%s: Missing required arguments\n", "rget");
+      printf("%s: Missing required arguments\n", "get");
       return ERROR;
     }
 
@@ -334,7 +332,7 @@ int cmd_rget(SESSION handle, int argc, char **argv)
 
   if (optind != argc)
     {
-      printf("%s: Too many arguments\n", "rget");
+      printf("%s: Too many arguments\n", "get");
       return ERROR;
     }
 
@@ -366,7 +364,7 @@ int cmd_rput(SESSION handle, int argc, char **argv)
         }
       else
         {
-          printf("%s: Unrecognized option: '%c'\n", "rput", option);
+          printf("%s: Unrecognized option: '%c'\n", "put", option);
           return ERROR;
         }
     }
@@ -375,7 +373,7 @@ int cmd_rput(SESSION handle, int argc, char **argv)
 
   if (optind >= argc)
     {
-      printf("%s: Missing required arguments\n", "rput");
+      printf("%s: Missing required arguments\n", "get");
       return ERROR;
     }
 
@@ -390,7 +388,7 @@ int cmd_rput(SESSION handle, int argc, char **argv)
 
   if (optind != argc)
     {
-      printf("%s: Too many arguments\n", "rput");
+      printf("%s: Too many arguments\n ");
       return ERROR;
     }
 

@@ -1,7 +1,7 @@
 /****************************************************************************
- * examples/hidkbd/hidkbd_main.c
+ * examples/hidkbd/null_main.c
  *
- *   Copyright (C) 2011, 2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,7 @@
 #endif
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Definitions
  ****************************************************************************/
 /* Configuration ************************************************************/
 
@@ -112,17 +112,7 @@ struct hidbkd_instream_s
  * Private Data
  ****************************************************************************/
 
-static FAR struct usbhost_connection_s *g_usbconn;
-
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-/* The platform-specific code must provide a wrapper called
- * arch_usbhost_initialize() that will perform the actual USB host
- * initialization.
- */
-
-FAR struct usbhost_connection_s *arch_usbhost_initialize(void);
+static struct usbhost_driver_s *g_drvr;
 
 /****************************************************************************
  * Private Functions
@@ -234,21 +224,15 @@ static void hidkbd_decode(FAR char *buffer, ssize_t nbytes)
 static int hidkbd_waiter(int argc, char *argv[])
 {
   bool connected = false;
-  int rhpndx;
+  int ret;
 
   printf("hidkbd_waiter: Running\n");
   for (;;)
     {
-      /* Wait for the device to change state.
-       *
-       * REVISIT:  This will not handle USB implementations (such as the the
-       * SAMA5) which have multiple downstream, root hub ports.  In such cases,
-       * connected must be an array with dimension equal to the number of root
-       * hub ports.
-       */
+      /* Wait for the device to change state */
 
-      rhpndx = CONN_WAIT(g_usbconn, &connected);
-      DEBUGASSERT(rhpndx == OK);
+      ret = DRVR_WAIT(g_drvr, connected);
+      DEBUGASSERT(ret == OK);
 
       connected = !connected;
       printf("hidkbd_waiter: %s\n", connected ? "connected" : "disconnected");
@@ -259,7 +243,7 @@ static int hidkbd_waiter(int argc, char *argv[])
         {
           /* Yes.. enumerate the newly connected device */
 
-          (void)CONN_ENUMERATE(g_usbconn, rhpndx);
+          (void)DRVR_ENUMERATE(g_drvr);
         }
     }
 
@@ -293,14 +277,11 @@ int hidkbd_main(int argc, char *argv[])
       printf("hidkbd_main: Failed to register the KBD class\n");
     }
 
-  /* Then get an instance of the USB host interface.  The platform-specific
-   * code must provide a wrapper called arch_usbhost_initialize() that will
-   * perform the actual USB host initialization.
-   */
+  /* Then get an instance of the USB host interface */
 
   printf("hidkbd_main: Initialize USB host keyboard driver\n");
-  g_usbconn = arch_usbhost_initialize();
-  if (g_usbconn)
+  g_drvr = usbhost_initialize(0);
+  if (g_drvr)
     {
       /* Start a thread to handle device connection. */
 

@@ -1,7 +1,7 @@
 /************************************************************************
- * arch/8051/src/up_irqtest.c
+ * up_irqtest.c
  *
- *   Copyright (C) 2007, 2011, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007, 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -160,12 +160,13 @@ void os_start(void)
 
   IE = 0;
 
-  /* Then verify all of the interrupts */
+  /* Then verify all of the interrupt */
 
   g_irqtest = false;
 
   up_extint0();
-#ifdef CONFIG_ARCH_8051_NOSYSTIMER
+  up_timer0();
+#ifndef CONFIG_8052_TIMER2
   up_timer0();
 #endif
   up_extint1();
@@ -250,23 +251,23 @@ void up_dumpframe(FAR struct xcptcontext *context)
 }
 
 /************************************************************************
- * Name: board_led_initialize, board_led_on, board_led_off
+ * Name: up_ledinit, up_ledon, up_ledoff
  *
  * Description:
  *   "Fake" LED routines if needed
  *
  ************************************************************************/
 
-void board_led_initialize(void)
+void up_ledinit(void)
 {
 }
 
-void board_led_on(uint8_t led)
+void up_ledon(uint8_t led)
 {
   led;
 }
 
-void board_led_off(uint8_t led)
+void up_ledoff(uint8_t led)
 {
   led;
 }

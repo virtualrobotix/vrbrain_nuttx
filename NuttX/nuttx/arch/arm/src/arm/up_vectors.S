@@ -139,7 +139,7 @@ up_vectorirq:
 	bl	up_decodeirq		/* Call the handler */
 #endif
 
-	/* Restore the CPSR, SVC mode registers and return */
+	/* Restore the CPSR, SVC modr registers and return */
 .Lnoirqset:
 	ldr	r0, [sp, #(4*REG_CPSR)]	/* Setup the SVC mode SPSR */
 	msr	spsr, r0
@@ -149,7 +149,7 @@ up_vectorirq:
 	.word	g_irqtmp
 #if CONFIG_ARCH_INTERRUPTSTACK > 3
 .Lirqstackbase:
-	.word	g_intstackbase
+	.word	up_stackbase
 #endif
 	.size	up_vectorirq, . - up_vectorirq
 	.align	5
@@ -192,7 +192,7 @@ up_vectorswi:
 	mov	r0, sp			/* Get r0=xcp */
 	bl	up_syscall		/* Call the handler */
 
-	/* Restore the CPSR, SVC mode registers and return */
+	/* Restore the CPSR, SVC modr registers and return */
 
 	ldr	r0, [sp, #(4*REG_CPSR)]	/* Setup the SVC mode SPSR */
 	msr	spsr, r0
@@ -263,7 +263,7 @@ up_vectordata:
 #endif
 	bl	up_dataabort		/* Call the handler */
 
-	/* Restore the CPSR, SVC mode registers and return */
+	/* Restore the CPSR, SVC modr registers and return */
 
 	ldr	r0, [sp, #(4*REG_CPSR)]	/* Setup the SVC mode SPSR */
 	msr	spsr_cxsf, r0
@@ -333,7 +333,7 @@ up_vectorprefetch:
 	mov	r0, sp			/* Get r0=xcp */
 	bl	up_prefetchabort	/* Call the handler */
 
-	/* Restore the CPSR, SVC mode registers and return */
+	/* Restore the CPSR, SVC modr registers and return */
 
 	ldr	r0, [sp, #(4*REG_CPSR)]	/* Setup the SVC mode SPSR */
 	msr	spsr_cxsf, r0
@@ -400,7 +400,7 @@ up_vectorundefinsn:
 	mov	r0, sp			/* Get r0=xcp */
 	bl	up_undefinedinsn	/* Call the handler */
 
-	/* Restore the CPSR, SVC mode registers and return */
+	/* Restore the CPSR, SVC modr registers and return */
 
 	ldr	r0, [sp, #(4*REG_CPSR)]	/* Setup the SVC mode SPSR */
 	msr	spsr_cxsf, r0
@@ -427,21 +427,20 @@ up_vectorfiq:
 	.size	up_vectorfiq, . - up_vectorfiq
 
 /************************************************************************************
- *  Name: g_intstackalloc/g_intstackbase
+ *  Name: up_interruptstack/g_userstack
  ************************************************************************************/
 
 #if CONFIG_ARCH_INTERRUPTSTACK > 3
 	.bss
 	.align	4
-	.globl	g_intstackalloc
-	.type	g_intstackalloc, object
-	.globl	g_intstackbase
-	.type	g_intstackbase, object
-g_intstackalloc:
+	.globl	g_userstack
+	.type	g_userstack, object
+up_interruptstack:
 	.skip	((CONFIG_ARCH_INTERRUPTSTACK & ~3) - 4)
-g_intstackbase:
+g_userstack:
+up_stackbase:
 	.skip	4
-	.size	g_intstackbase, 4
-	.size	g_intstackalloc, (CONFIG_ARCH_INTERRUPTSTACK & ~3)
+	.size	g_userstack, 4
+	.size	up_interruptstack, (CONFIG_ARCH_INTERRUPTSTACK & ~3)
 #endif
 	.end

@@ -1,7 +1,7 @@
 /****************************************************************************
  * fs/fs_internal.h
  *
- *   Copyright (C) 2007, 2009, 2012, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007, 2009, 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -119,7 +119,7 @@ extern "C" {
  *
  ****************************************************************************/
 
-void inode_semtake(void);
+EXTERN void inode_semtake(void);
 
 /****************************************************************************
  * Name: inode_semgive
@@ -129,7 +129,7 @@ void inode_semtake(void);
  *
  ****************************************************************************/
 
-void inode_semgive(void);
+EXTERN void inode_semgive(void);
 
 /****************************************************************************
  * Name: inode_search
@@ -143,10 +143,10 @@ void inode_semgive(void);
  *
  ****************************************************************************/
 
-FAR struct inode *inode_search(FAR const char **path,
-                               FAR struct inode **peer,
-                               FAR struct inode **parent,
-                               FAR const char **relpath);
+EXTERN FAR struct inode *inode_search(FAR const char **path,
+                                      FAR struct inode **peer,
+                                      FAR struct inode **parent,
+                                      FAR const char **relpath);
 
 /****************************************************************************
  * Name: inode_free
@@ -156,7 +156,7 @@ FAR struct inode *inode_search(FAR const char **path,
  *
  ****************************************************************************/
 
-void inode_free(FAR struct inode *node);
+EXTERN void inode_free(FAR struct inode *node);
 
 /****************************************************************************
  * Name: inode_nextname
@@ -167,7 +167,7 @@ void inode_free(FAR struct inode *node);
  *
  ****************************************************************************/
 
-const char *inode_nextname(FAR const char *name);
+EXTERN const char *inode_nextname(FAR const char *name);
 
 /* fs_inodereserver.c *******************************************************/
 /****************************************************************************
@@ -192,39 +192,20 @@ const char *inode_nextname(FAR const char *name);
  *
  ****************************************************************************/
 
-int inode_reserve(FAR const char *path, FAR struct inode **inode);
+EXTERN int inode_reserve(FAR const char *path, FAR struct inode **inode);
 
 /* fs_inoderemove.c *********************************************************/
-/****************************************************************************
- * Name: inode_unlink
- *
- * Description:
- *   Given a path, remove a the node from the in-memory, inode tree that the
- *   path refers to.  This is normally done in preparation to removing or
- *   moving an inode.
- *
- * Assumptions/Limitations:
- *   The caller must hold the inode semaphore
- *
- ****************************************************************************/
-
-FAR struct inode *inode_unlink(FAR const char *path);
-
 /****************************************************************************
  * Name: inode_remove
  *
  * Description:
- *   Given a path, remove a the node from the in-memory, inode tree that the
- *   path refers to and free all resources related to the inode.  If the
- *   inode is in-use, then it will be unlinked, but will not be freed until
- *   the last reference to the inode is released.
+ *   Remove a node from the in-memory, inode tree
  *
- * Assumptions/Limitations:
- *   The caller must hold the inode semaphore
+ *   NOTE: Caller must hold the inode semaphore
  *
  ****************************************************************************/
 
-int inode_remove(FAR const char *path);
+EXTERN int inode_remove(FAR const char *path);
 
 /* fs_inodefind.c ***********************************************************/
 /****************************************************************************
@@ -236,15 +217,15 @@ int inode_remove(FAR const char *path);
  *
  ****************************************************************************/
 
-FAR struct inode *inode_find(FAR const char *path, const char **relpath);
+EXTERN FAR struct inode *inode_find(FAR const char *path, const char **relpath);
 
 /* fs_inodeaddref.c *********************************************************/
 
-void inode_addref(FAR struct inode *inode);
+EXTERN void inode_addref(FAR struct inode *inode);
 
 /* fs_inoderelease.c ********************************************************/
 
-void inode_release(FAR struct inode *inode);
+EXTERN void inode_release(FAR struct inode *inode);
 
 /* fs_foreachinode.c ********************************************************/
 /****************************************************************************
@@ -263,7 +244,7 @@ void inode_release(FAR struct inode *inode);
  *
  ****************************************************************************/
 
-int foreach_inode(foreach_inode_t handler, FAR void *arg);
+EXTERN int foreach_inode(foreach_inode_t handler, FAR void *arg);
 
 /* fs_files.c ***************************************************************/
 /****************************************************************************
@@ -274,7 +255,7 @@ int foreach_inode(foreach_inode_t handler, FAR void *arg);
  *
  ****************************************************************************/
 
-void weak_function files_initialize(void);
+EXTERN void weak_function files_initialize(void);
 
 /****************************************************************************
  * Name: files_allocate
@@ -285,7 +266,7 @@ void weak_function files_initialize(void);
  *
  ****************************************************************************/
 
-int files_allocate(FAR struct inode *inode, int oflags, off_t pos, int minfd);
+EXTERN int  files_allocate(FAR struct inode *inode, int oflags, off_t pos, int minfd);
 
 /****************************************************************************
  * Name: files_close
@@ -298,7 +279,7 @@ int files_allocate(FAR struct inode *inode, int oflags, off_t pos, int minfd);
  *
  ****************************************************************************/
 
-int files_close(int fd);
+EXTERN int  files_close(int filedes);
 
 /****************************************************************************
  * Name: files_release
@@ -309,7 +290,7 @@ int files_close(int fd);
  *
  ****************************************************************************/
 
-void files_release(int fd);
+EXTERN void files_release(int filedes);
 
 /* fs_findblockdriver.c *****************************************************/
 /****************************************************************************
@@ -335,8 +316,8 @@ void files_release(int fd);
  *
  ****************************************************************************/
 
-int find_blockdriver(FAR const char *pathname, int mountflags,
-                     FAR struct inode **ppinode);
+EXTERN int find_blockdriver(FAR const char *pathname, int mountflags,
+                            FAR struct inode **ppinode);
 
 #undef EXTERN
 #if defined(__cplusplus)

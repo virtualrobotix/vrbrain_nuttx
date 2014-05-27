@@ -42,7 +42,7 @@
 
 #include <sys/types.h>
 #include <stdint.h>
-#include <nuttx/video/fb.h>
+#include <nuttx/fb.h>
 
 /****************************************************************************
  * Pre-processor Definitions

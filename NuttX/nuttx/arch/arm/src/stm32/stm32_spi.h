@@ -54,8 +54,7 @@
 #undef EXTERN
 #if defined(__cplusplus)
 #define EXTERN extern "C"
-extern "C"
-{
+extern "C" {
 #else
 #define EXTERN extern
 #endif
@@ -78,7 +77,7 @@ enum    spi_dev_e;
  *   The external functions, stm32_spi1/2/...select, stm32_spi1/2/...status, and
  *   stm32_spi1/2/...cmddata must be provided by board-specific logic.  These are
  *   implementations of the select, status, and cmddata methods of the SPI interface
- *   defined by struct spi_ops_s (see include/nuttx/spi/spi.h). All other methods
+ *   defined by struct spi_ops_s (see include/nuttx/spi.h). All other methods
  *   (including up_spiinitialize()) are provided by common STM32 logic.  To use this
  *   common SPI logic on your board:
  *
@@ -100,41 +99,29 @@ enum    spi_dev_e;
  *
  ************************************************************************************/
 
-#ifdef CONFIG_STM32_SPI1
-void stm32_spi1select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t stm32_spi1status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
-int stm32_spi1cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
-#endif
+EXTERN void  stm32_spi1select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
+EXTERN uint8_t stm32_spi1status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+EXTERN int stm32_spi1cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
 
-#ifdef CONFIG_STM32_SPI2
-void stm32_spi2select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t stm32_spi2status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
-int stm32_spi2cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
-#endif
+EXTERN void  stm32_spi2select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
+EXTERN uint8_t stm32_spi2status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+EXTERN int stm32_spi2cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
 
-#ifdef CONFIG_STM32_SPI3
-void stm32_spi3select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t stm32_spi3status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
-int stm32_spi3cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
-#endif
+EXTERN void  stm32_spi3select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
+EXTERN uint8_t stm32_spi3status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+EXTERN int stm32_spi3cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
 
-#ifdef CONFIG_STM32_SPI4
-void stm32_spi4select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t stm32_spi4status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
-int stm32_spi4cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
-#endif
+EXTERN void  stm32_spi4select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
+EXTERN uint8_t stm32_spi4status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+EXTERN int stm32_spi4cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
 
-#ifdef CONFIG_STM32_SPI5
-void stm32_spi5select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t stm32_spi5status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
-int stm32_spi5cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
-#endif
+EXTERN void  stm32_spi5select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
+EXTERN uint8_t stm32_spi5status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+EXTERN int stm32_spi5cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
 
-#ifdef CONFIG_STM32_SPI6
-void stm32_spi6select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t stm32_spi6status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
-int stm32_spi6cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
-#endif
+EXTERN void  stm32_spi6select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
+EXTERN uint8_t stm32_spi6status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+EXTERN int stm32_spi6cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
 
 #undef EXTERN
 #if defined(__cplusplus)

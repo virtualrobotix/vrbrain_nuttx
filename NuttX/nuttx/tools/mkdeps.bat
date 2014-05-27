@@ -39,8 +39,6 @@ set cflags=
 set altpath=
 set files=
 set args=
-set objpath=
-set suffix=.o
 set debug=n
 
 :Loop
@@ -59,18 +57,6 @@ if "%1"=="--dep-path" (
   ) else (
     set args=%args% %2
   )
-  shift
-  goto NextParm
-)
-
-if "%1"=="--obj-path" (
-  set objpath=%2
-  shift
-  goto NextParm
-)
-
-if "%1"=="--obj-suffix" (
-  set suffix=%2
   shift
   goto NextParm
 )
@@ -125,15 +111,8 @@ for %%G in (%files%) do (
   call :Checkpaths
   if "%debug%"=="y" echo %file%: fullpath=%fullpath%
   if "%fullpath%"=="" goto :NoFile
-
-  mtarg=""
-  if "%objpath%"=="" (
-    set objname=%~n1
-    set mtarg="-MT %objpath%\%objname%%suffix%
-  )
-
   if "%debug%"=="y" echo CMD: %cc% -M %cflags% %fullpath%
-  %cc% -M %mtarg% %cflags% %fullpath% || goto DepFail
+  %cc% -M %cflags% %fullpath% || goto DepFail
 )
 goto :End
 
@@ -188,12 +167,6 @@ echo   --dep-path ^<path^>
 echo     Do not look in the current directory for the file.  Instead, look in <path> to see
 echo     if the file resides there.  --dep-path may be used multiple times to specify
 echo     multiple alternative location
-echo   --obj-path ^<path^>
-echo     The final objects will not reside in this path but, rather, at the path provided by
-echo     ^<path^>.  if provided multiple time, only the last --obj-path will be used.
-echo   --obj-suffix ^<suffix^>
-echo     If and object path is provided, then the extension will be assumed to be .o.  This
-echo     default suffix can be overrided with this command line option.
 echo   --help
 echo     Shows this message and exits
 

@@ -412,7 +412,7 @@ static int wget_base(FAR const char *url, FAR char *buffer, int buflen,
   char *dest,post_size[8];
   int sockfd;
   int len,post_len;
-  int ret;
+  int ret = OK;
 
   /* Initialize the state structure */
 

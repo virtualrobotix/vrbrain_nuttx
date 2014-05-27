@@ -1,7 +1,7 @@
 /****************************************************************************
  * arch/avr/src/avr/avr_internal.h
  *
- *   Copyright (C) 2011-2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ extern volatile uint8_t *current_regs;
 
 /* This is the beginning of heap as provided from up_head.S. This is the first
  * address in DRAM after the loaded program+bss+idle stack.  The end of the
- * heap is CONFIG_RAM_END
+ * heap is CONFIG_DRAM_END
  */
 
 extern uint16_t g_idle_topstack;
@@ -104,7 +104,7 @@ extern uint16_t g_idle_topstack;
  *
  ************************************************************************************/
 
-void up_copystate(uint8_t *dest, uint8_t *src);
+extern void up_copystate(uint8_t *dest, uint8_t *src);
 
 /************************************************************************************
  * Name:  up_fullcontextrestore
@@ -114,7 +114,7 @@ void up_copystate(uint8_t *dest, uint8_t *src);
  *
  ************************************************************************************/
 
-void up_fullcontextrestore(uint8_t *restoreregs) noreturn_function;
+extern void up_fullcontextrestore(uint8_t *restoreregs) noreturn_function;
 
 /************************************************************************************
  * Name:  up_switchcontext
@@ -124,7 +124,7 @@ void up_fullcontextrestore(uint8_t *restoreregs) noreturn_function;
  *
  ************************************************************************************/
 
-void up_switchcontext(uint8_t *saveregs, uint8_t *restoreregs);
+extern void up_switchcontext(uint8_t *saveregs, uint8_t *restoreregs);
 
 /************************************************************************************
  * Name:  up_doirq
@@ -134,7 +134,7 @@ void up_switchcontext(uint8_t *saveregs, uint8_t *restoreregs);
  *
  ************************************************************************************/
 
-uint8_t *up_doirq(uint8_t irq, uint8_t *regs);
+extern uint8_t *up_doirq(uint8_t irq, uint8_t *regs);
 
 /************************************************************************************
  * Name:  avr_spiselect, avr_spitatus, and avr_spicmddata
@@ -142,7 +142,7 @@ uint8_t *up_doirq(uint8_t irq, uint8_t *regs);
  * Description:
  *   These external functions must be provided by board-specific logic.  They are
  *   implementations of the select, status, and cmddata methods of the SPI interface
- *   defined by struct spi_ops_s (see include/nuttx/spi/spi.h). All other methods 
+ *   defined by struct spi_ops_s (see include/nuttx/spi.h). All other methods 
  *   including up_spiinitialize()) are provided by common LPC17xx logic.  To use
  *   this common SPI logic on your board:
  *
@@ -167,11 +167,31 @@ struct spi_dev_s;
 enum spi_dev_e;
 
 #ifdef CONFIG_AVR_SPI
-void  avr_spiselect(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t avr_spistatus(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+extern void  avr_spiselect(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
+extern uint8_t avr_spistatus(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
 #ifdef CONFIG_SPI_CMDDATA
-int avr_spicmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
+extern int avr_spicmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
 #endif
+#endif
+
+/****************************************************************************
+ * Name: up_check_stack
+ *
+ * Description:
+ *   Determine (approximately) how much stack has been used be searching the
+ *   stack memory for a high water mark.  That is, the deepest level of the
+ *   stack that clobbered some recognizable marker in the stack memory.
+ *
+ * Input Parameters:
+ *   None
+ *
+ * Returned value:
+ *   The estimated amount of stack space used.
+ *
+ ****************************************************************************/
+
+#if defined(CONFIG_DEBUG) && defined(CONFIG_DEBUG_STACK)
+extern size_t up_check_stack(void);
 #endif
 
 #endif /* __ASSEMBLY__ */

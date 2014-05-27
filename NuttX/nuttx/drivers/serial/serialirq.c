@@ -84,7 +84,7 @@ void uart_xmitchars(FAR uart_dev_t *dev)
 {
   uint16_t nbytes = 0;
 
-  /* Send while we still have data in the TX buffer & room in the fifo */
+  /* Send while we still have data & room in the fifo */
 
   while (dev->xmit.head != dev->xmit.tail && uart_txready(dev))
     {
@@ -103,11 +103,6 @@ void uart_xmitchars(FAR uart_dev_t *dev)
 
   /* When all of the characters have been sent from the buffer disable the TX
    * interrupt.
-   *
-   * Potential bug?  If nbytes == 0 && (dev->xmit.head == dev->xmit.tail) &&
-   * dev->xmitwaiting == true, then disabling the TX interrupt will leave
-   * the uart_write() logic waiting to TX to complete with no TX interrupts.
-   * Can that happen?
    */
 
   if (dev->xmit.head == dev->xmit.tail)
@@ -153,7 +148,7 @@ void uart_recvchars(FAR uart_dev_t *dev)
 
   while (uart_rxavailable(dev))
     {
-      char ch = uart_receive(dev, &status);
+      char ch =  uart_receive(dev, &status);
       
       /* If the RX buffer becomes full, then the serial data is discarded.  This is
        * necessary because on most serial hardware, you must read the data in order

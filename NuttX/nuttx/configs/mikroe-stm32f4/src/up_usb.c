@@ -53,7 +53,6 @@
 
 #include "up_arch.h"
 #include "stm32.h"
-#include "stm32_otgfs.h"
 #include "mikroe-stm32f4-internal.h"
 
 #ifdef CONFIG_STM32_OTGFS
@@ -82,7 +81,7 @@
  ************************************************************************************/
 
 #ifdef CONFIG_USBHOST
-static struct usbhost_connection_s *g_usbconn;
+static struct usbhost_driver_s *g_drvr;
 #endif
 
 /************************************************************************************
@@ -108,7 +107,7 @@ static int usbhost_waiter(int argc, char *argv[])
     {
       /* Wait for the device to change state */
 
-      ret = CONN_WAIT(g_usbconn, &connected);
+      ret = DRVR_WAIT(g_drvr, connected);
       DEBUGASSERT(ret == OK);
 
       connected = !connected;
@@ -120,7 +119,7 @@ static int usbhost_waiter(int argc, char *argv[])
         {
           /* Yes.. enumerate the newly connected device */
 
-          (void)CONN_ENUMERATE(g_usbconn, 0);
+          (void)DRVR_ENUMERATE(g_drvr);
         }
     }
 
@@ -186,8 +185,8 @@ int stm32_usbhost_initialize(void)
   /* Then get an instance of the USB host interface */
 
   uvdbg("Initialize USB host\n");
-  g_usbconn = stm32_otgfshost_initialize(0);
-  if (g_usbconn)
+  g_drvr = usbhost_initialize(0);
+  if (g_drvr)
     {
       /* Start a thread to handle device connection. */
 

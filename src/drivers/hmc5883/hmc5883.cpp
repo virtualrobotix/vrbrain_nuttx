@@ -667,6 +667,9 @@ HMC5883::ioctl(struct file *filp, int cmd, unsigned long arg)
 		return check_calibration();
 
 	case MAGIOCGEXTERNAL:
+		if (_bus == I2C_BUS_EXPANSION_HMC5883)
+			return 1;
+		else
 			return 0;
 
 	default:
@@ -834,19 +837,42 @@ HMC5883::collect()
 	 * to align the sensor axes with the board, x and y need to be flipped
 	 * and y needs to be negated
 	 */
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+	new_report.x_raw = report.y;
+	new_report.y_raw = -report.x;
+	/* z remains z */
+	new_report.z_raw = report.z;
+
+	/* scale values for output */
+
+#ifdef I2C_BUS_ONBOARD_HMC5883
+	if (_bus == I2C_BUS_ONBOARD_HMC5883) {
+		// convert onboard so it matches offboard for the
+		// scaling below
+		report.y = -report.y;
+		report.x = -report.x;
+        }
+#endif
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
 	new_report.x_raw = report.y;
 	new_report.y_raw = report.x;
 	new_report.z_raw = -report.z;
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-	new_report.x_raw = report.y;
+	new_report.x_raw = -report.y;
 	new_report.y_raw = report.x;
-	new_report.z_raw = -report.z;
+	new_report.z_raw = report.z;
+//	new_report.x_raw = report.y;
+//	new_report.y_raw = report.x;
+//	new_report.z_raw = -report.z;
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
 	new_report.x_raw = report.y;
 	new_report.y_raw = report.x;
 	new_report.z_raw = -report.z;
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
+	new_report.x_raw = report.y;
+	new_report.y_raw = report.x;
+	new_report.z_raw = -report.z;
+#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
 	new_report.x_raw = report.y;
 	new_report.y_raw = report.x;
 	new_report.z_raw = -report.z;
@@ -862,33 +888,35 @@ HMC5883::collect()
 #endif
 #endif
 
-	/* scale values for output */
-
-
-
-
-
-
-
-
-
-
 	/* the standard external mag by 3DR has x pointing to the
 	 * right, y pointing backwards, and z down, therefore switch x
 	 * and y and invert y */
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+	new_report.x = ((-report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+	/* flip axes and negate value for y */
+	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
+	/* z remains z */
+	new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
 	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
 	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
 	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+	new_report.x = ((-report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
 	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+	new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+//	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+//	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
+//	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
 	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
 	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
 	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
+	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
+	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
 	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
 	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
 	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
@@ -1307,23 +1335,23 @@ start()
 		/* if already started, the still command succeeded */
 		errx(0, "already started");
 
+	/* create the driver, attempt expansion bus first */
+	g_dev = new HMC5883(I2C_BUS_EXPANSION_HMC5883);
+	if (g_dev != nullptr && OK != g_dev->init()) {
+		delete g_dev;
+		g_dev = nullptr;
+	}
 
 
-
-
-
-
-
-
-
+#ifdef I2C_BUS_ONBOARD_HMC5883
 	/* if this failed, attempt onboard sensor */
 	if (g_dev == nullptr) {
-		g_dev = new HMC5883(I2C_BUS_HMC5883);
+		g_dev = new HMC5883(I2C_BUS_ONBOARD_HMC5883);
 		if (g_dev != nullptr && OK != g_dev->init()) {
 			goto fail;
 		}
 	}
-
+#endif
 
 	if (g_dev == nullptr)
 		goto fail;

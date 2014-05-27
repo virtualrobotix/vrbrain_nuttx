@@ -48,12 +48,13 @@ GNU Toolchain Options
   add one of the following configuration options to your .config (or defconfig)
   file:
 
-    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYW=y  : CodeSourcery under Windows
-    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYL=y  : CodeSourcery under Linux
-    CONFIG_ARMV7M_TOOLCHAIN_ATOLLIC=y        : The Atollic toolchain under Windows
-    CONFIG_ARMV7M_TOOLCHAIN_DEVKITARM=y      : devkitARM under Windows
-    CONFIG_ARMV7M_TOOLCHAIN_RAISONANCE=y     : Raisonance RIDE7 under Windows
-    CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin (default)
+    CONFIG_STM32_CODESOURCERYW=y  : CodeSourcery under Windows
+    CONFIG_STM32_CODESOURCERYL=y  : CodeSourcery under Linux
+    CONFIG_STM32_ATOLLIC_LITE=y   : The free, "Lite" version of Atollic toolchain under Windows
+    CONFIG_STM32_ATOLLIC_PRO=y    : The paid, "Pro" version of Atollic toolchain under Windows
+    CONFIG_STM32_DEVKITARM=y      : devkitARM under Windows
+    CONFIG_STM32_RAISONANCE=y     : Raisonance RIDE7 under Windows
+    CONFIG_STM32_BUILDROOT=y      : NuttX buildroot under Linux or Cygwin (default)
 
   If you change the default toolchain, then you may also have to modify the PATH in
   the setenv.sh file if your make cannot find the tools.
@@ -333,13 +334,13 @@ configured on pins PA3 and PA2, respectively.
     CONFIG_ENDIAN_BIG - define if big endian (default is little
        endian)
 
-    CONFIG_RAM_SIZE - Describes the installed DRAM (SRAM in this case):
+    CONFIG_DRAM_SIZE - Describes the installed DRAM (SRAM in this case):
 
-       CONFIG_RAM_SIZE=24576 (24kB)
+       CONFIG_DRAM_SIZE=24576 (24kB)
 
-    CONFIG_RAM_START - The start address of installed DRAM
+    CONFIG_DRAM_START - The start address of installed DRAM
 
-       CONFIG_RAM_START=0x20000000
+       CONFIG_DRAM_START=0x20000000
 
     CONFIG_ARCH_IRQPRIO - STM32F100RC chip supports interrupt prioritization
 
@@ -463,6 +464,29 @@ and can be selected as follow:
 
 Where <subdir> is one of the following:
 
+  ostest:
+  ------
+    This configuration directory, performs a simple OS test using
+    apps/examples/ostest.
+
+    NOTES:
+
+    1. This configuration uses the mconf-based configuration tool.  To
+       change this configuration using that tool, you should:
+
+       a. Build and install the mconf tool.  See nuttx/README.txt and
+          misc/tools/
+
+       b. Execute 'make menuconfig' in nuttx/ in order to start the
+          reconfiguration process.
+
+    2. Default toolchain:
+
+       CONFIG_STM32_CODESOURCERYL=y  : CodeSourcery under Linux / Mac OS X
+
+    3. By default, this project assumes that you are *NOT* using the DFU
+       bootloader.
+
   nsh:
   ---
     Configures the NuttShell (nsh) located at apps/examples/nsh.  The
@@ -470,4 +494,4 @@ Where <subdir> is one of the following:
 
     Default toolchain:
 
-    CONFIG_ARMV7M_TOOLCHAIN_CODESOURCERYL=y  : CodeSourcery under Linux / Mac OS X
+    CONFIG_STM32_CODESOURCERYL=y  : CodeSourcery under Linux / Mac OS X

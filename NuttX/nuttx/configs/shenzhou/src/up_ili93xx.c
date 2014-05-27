@@ -121,7 +121,7 @@
 #include <debug.h>
 
 #include <nuttx/arch.h>
-#include <nuttx/spi/spi.h>
+#include <nuttx/spi.h>
 #include <nuttx/lcd/lcd.h>
 
 #include <arch/board/board.h>
@@ -1784,7 +1784,7 @@ static inline int stm32_lcdinitialize(FAR struct stm32_dev_s *priv)
   stm32_lcdoutput(priv);
   up_mdelay(10);
 
-  /* Initialize the LCD hardware */
+  /* Intialize the LCD hardware */
 
 #ifndef CONFIG_STM32_ILI9300_DISABLE
   if (id == ILI9300_ID)

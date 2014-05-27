@@ -41,8 +41,6 @@
 #include <nuttx/init.h>
 #include <nuttx/arch.h>
 
-#include <cstdio>
-#include <fstream>
 #include <iostream>
 #include <vector>
 #include <map>
@@ -54,13 +52,6 @@ using namespace std;
 //***************************************************************************
 // Definitions
 //***************************************************************************
-// Configuration ************************************************************
-// C++ initialization requires CXX initializer support
-
-#if !defined(CONFIG_HAVE_CXX) || !defined(CONFIG_HAVE_CXXINITIALIZE)
-#  warning Support for static initializers is NOT enabled
-#  undef CONFIG_EXAMPLES_CXXTEST_CXXINITIALIZE
-#endif
 
 //***************************************************************************
 // Private Classes
@@ -77,7 +68,7 @@ class Extend : public Base
 public:
   void printExtend(void)
   {
-    std::cout << "extend" << std::endl;
+    cout << "extend" << endl;
   }
 };
 
@@ -90,55 +81,26 @@ public:
 //***************************************************************************
 
 //***************************************************************************
-// Name: test_ostream
-//***************************************************************************/
-
-static void test_ofstream(void)
-{
-  std::ofstream ttyOut;
-
-  std::cout << "test ofstream===========================" << std::endl;
-  std::printf("printf: Starting test_ostream\n");
-  ttyOut.open ("/dev/console");
-  if (!ttyOut.good())
-    {
-      std::printf("printf: Failed opening /dev/console\n");
-      std::cout << "cout: Failed opening /dev/console" << std::endl;
-      std::cout << " good()=" << ttyOut.good();
-      std::cout << " eof()=" << ttyOut.eof();
-      std::cout << " fail()=" << ttyOut.fail();
-      std::cout << " bad()=" << ttyOut.bad() << std::endl;
-    }
-  else
-    {
-      std::printf("printf: Successfully opened /dev/console\n");
-      std::cout << "cout: Successfully opened /dev/console" << std::endl;
-      ttyOut << "Writing this to /dev/console\n";
-      ttyOut.close();
-    }
-}
-
-//***************************************************************************
 // Name: test_iostream
 //***************************************************************************/
 
 static void test_iostream(void)
 {
-  std::cout << "test iostream===========================" << std::endl;
-  std::cout << "Hello, this is only a test" << std::endl;
-  std::cout << "Print an int: "  <<  190  <<  std::endl;
-  std::cout <<  "Print a char: "  <<  'd'  <<  std::endl;
+  cout << "test iostream===========================" << endl;
+  cout << "Hello, this is only a test" << endl;
+  cout << "Print an int: "  <<  190  <<  endl;
+  cout <<  "Print a char: "  <<  'd'  <<  endl;
 
 #if 0
   int a;
   string s;
 
-  std::cout << "Please type in an int:" << std::endl;
-  std::cin >> a;
-  std::cout << "You type in: " << a << std::endl;
-  std::cout << "Please type in a string:" << std::endl;
-  std::cin >> s;
-  std::cout << "You type in: " << s << std::endl;
+  cout << "Please type in an int:" << endl;
+  cin >> a;
+  cout << "You type in: " << a << endl;
+  cout << "Please type in a string:" << endl;
+  cin >> s;
+  cout << "You type in: " << s << endl;
 #endif
 }
 
@@ -148,7 +110,7 @@ static void test_iostream(void)
 
 static void test_stl(void)
 {
-  std::cout << "test vector=============================" << std::endl;
+  cout << "test vector=============================" << endl;
 
   vector<int> v1;
   assert(v1.empty());
@@ -164,7 +126,7 @@ static void test_stl(void)
   v1.pop_back();
   assert(v1.size() == 3);
 
-  std::cout << "v1=" << v1[0] << ' ' << v1[1] << ' ' << v1[2] << std::endl;
+  cout << "v1=" << v1[0] << ' ' << v1[1] << ' ' << v1[2] << endl;
   assert(v1[2] == 3);
 
   vector<int> v2 = v1;
@@ -173,15 +135,15 @@ static void test_stl(void)
   string words[4] = {"Hello", "World", "Good", "Luck"};
   vector<string> v3(words, words + 4);
   vector<string>::iterator it;
-  for (it = v3.begin(); it != v3.end(); ++it)
+  for (it = v3.begin(); it != v3.end(); it++)
     {
-      std::cout << *it << ' ';
+      cout << *it << ' ';
     }
 
-  std::cout << std::endl;
+  cout << endl;
   assert(v3[1] == "World");
 
-  std::cout << "test map================================" << std::endl;
+  cout << "test map================================" << endl;
 
   map<int,string> m1;
   m1[12] = "Hello";
@@ -196,7 +158,7 @@ static void test_stl(void)
 
 static void test_rtti(void)
 {
-  std::cout << "test rtti===============================" << std::endl;
+  cout << "test rtti===============================" << endl;
   Base *a = new Base();
   Base *b = new Extend();
   assert(a);
@@ -220,7 +182,7 @@ static void test_rtti(void)
 #ifdef CONFIG_UCLIBCXX_EXCEPTION
 static void test_exception(void)
 {
-  std::cout << "test exception==========================" << std::endl;
+  cout << "test exception==========================" << endl;
   try
   {
     throw runtime_error("runtime error");
@@ -228,7 +190,7 @@ static void test_exception(void)
 
   catch (runtime_error &e)
   {
-    std::cout << "Catch exception: " << e.what() << std::endl;
+    cout << "Catch exception: " << e.what() << endl;
   }
 }
 #endif
@@ -248,11 +210,10 @@ extern "C"
     // If C++ initialization for static constructors is supported, then do
     // that first
 
-#ifdef CONFIG_EXAMPLES_CXXTEST_CXXINITIALIZE
+#ifdef CONFIG_HAVE_CXXINITIALIZE
     up_cxxinitialize();
 #endif
 
-    test_ofstream();
     test_iostream();
     test_stl();
     test_rtti();

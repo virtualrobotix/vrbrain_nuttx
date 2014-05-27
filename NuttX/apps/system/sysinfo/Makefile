@@ -46,13 +46,12 @@ ifeq ($(WINTOOL),y)
 INCDIROPT	= -w
 endif
 
-# NSH sysinfo command
-
-CONFIG_SYSTEM_SYSINFO_STACKSIZE ?= 1024
+# Hello Application
+# TODO: appname can be automatically extracted from the directory name
 
 APPNAME		= sysinfo
 PRIORITY	= SCHED_PRIORITY_DEFAULT
-STACKSIZE	= $(CONFIG_SYSTEM_SYSINFO_STACKSIZE)
+STACKSIZE	= 768
 
 ASRCS		=
 CSRCS		= sysinfo.c

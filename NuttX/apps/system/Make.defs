@@ -2,7 +2,7 @@
 # apps/system/Make.defs
 # Adds selected applications to apps/ build
 #
-#   Copyright (C) 2012-2014 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2012-2013 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
@@ -50,24 +50,12 @@ ifeq ($(CONFIG_SYSTEM_I2CTOOL),y)
 CONFIGURED_APPS += system/i2c
 endif
 
-ifeq ($(CONFIG_SYSTEM_INIFILE),y)
-CONFIGURED_APPS += system/inifile
-endif
-
 ifeq ($(CONFIG_SYSTEM_INSTALL),y)
 CONFIGURED_APPS += system/install
 endif
 
 ifeq ($(CONFIG_SYSTEM_FLASH_ERASEALL),y)
 CONFIGURED_APPS += system/flash_eraseall
-endif
-
-ifeq ($(CONFIG_SYSTEM_NXPLAYER),y)
-CONFIGURED_APPS += system/nxplayer
-endif
-
-ifeq ($(CONFIG_SYSTEM_RAMTEST),y)
-CONFIGURED_APPS += system/ramtest
 endif
 
 ifeq ($(CONFIG_SYSTEM_READLINE),y)
@@ -94,22 +82,6 @@ ifeq ($(CONFIG_SYSTEM_USBMONITOR),y)
 CONFIGURED_APPS += system/usbmonitor
 endif
 
-ifeq ($(CONFIG_SYSTEM_STACKMONITOR),y)
-CONFIGURED_APPS += system/stackmonitor
-endif
-
 ifeq ($(CONFIG_SYSTEM_USBMSC),y)
 CONFIGURED_APPS += system/usbmsc
-endif
-
-ifeq ($(CONFIG_SYSTEM_CLE),y)
-CONFIGURED_APPS += system/cle
-endif
-
-ifeq ($(CONFIG_SYSTEM_VI),y)
-CONFIGURED_APPS += system/vi
-endif
-
-ifeq ($(CONFIG_SYSTEM_ZMODEM),y)
-CONFIGURED_APPS += system/zmodem
 endif

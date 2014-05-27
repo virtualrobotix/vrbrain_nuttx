@@ -1,7 +1,7 @@
 /********************************************************************************
  * include/time.h
  *
- *   Copyright (C) 2007-2011, 2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
  * Pre-processor Definitions
  ********************************************************************************/
 
-/* Clock tick of the system (frequency Hz).
+/* Clock tick of the system (frequency Hz).  
  *
  * NOTE: This symbolic name CLK_TCK has been removed from the standard.  It is
  * replaced with CLOCKS_PER_SEC.  Both are defined here.
@@ -100,7 +100,7 @@
 #define localtime_r(c,r)   gmtime_r(c,r)
 
 /********************************************************************************
- * Public Types
+ * Global Type Declarations
  ********************************************************************************/
 
 typedef uint32_t  time_t;         /* Holds time in seconds */
@@ -147,13 +147,13 @@ struct itimerspec
 struct sigevent;
 
 /********************************************************************************
- * Public Data
+ * Global Variables
  ********************************************************************************/
 
 /* extern char *tznames[]; not supported */
 
 /********************************************************************************
- * Public Function Prototypes
+ * Global Function Prototypes
  ********************************************************************************/
 
 #undef EXTERN
@@ -164,30 +164,25 @@ extern "C" {
 #define EXTERN extern
 #endif
 
-clock_t clock(void);
+EXTERN clock_t clock(void);
 
-int clock_settime(clockid_t clockid, FAR const struct timespec *tp);
-int clock_gettime(clockid_t clockid, FAR struct timespec *tp);
-int clock_getres(clockid_t clockid, FAR struct timespec *res);
+EXTERN int clock_settime(clockid_t clockid, const struct timespec *tp);
+EXTERN int clock_gettime(clockid_t clockid, struct timespec *tp);
+EXTERN int clock_getres(clockid_t clockid, struct timespec *res);
 
-time_t mktime(FAR const struct tm *tp);
-FAR struct tm *gmtime(FAR const time_t *timer);
-FAR struct tm *gmtime_r(FAR const time_t *timer, FAR struct tm *result);
-size_t strftime(char *s, size_t max, FAR const char *format,
-                FAR const struct tm *tm);
+EXTERN time_t mktime(const struct tm *tp);
+EXTERN FAR struct tm *gmtime(FAR const time_t *timer);
+EXTERN FAR struct tm *gmtime_r(FAR const time_t *timer, FAR struct tm *result);
+EXTERN size_t strftime(char *s, size_t max, const char *format, const struct tm *tm);
 
-time_t time(FAR time_t *tloc);
+EXTERN time_t time(time_t *tloc);
 
-int timer_create(clockid_t clockid, FAR struct sigevent *evp,
-                 FAR timer_t *timerid);
-int timer_delete(timer_t timerid);
-int timer_settime(timer_t timerid, int flags,
-                  FAR const struct itimerspec *value,
-                  FAR struct itimerspec *ovalue);
-int timer_gettime(timer_t timerid, FAR struct itimerspec *value);
-int timer_getoverrun(timer_t timerid);
-
-int nanosleep(FAR const struct timespec *rqtp, FAR struct timespec *rmtp);
+EXTERN int timer_create(clockid_t clockid, FAR struct sigevent *evp, FAR timer_t *timerid);
+EXTERN int timer_delete(timer_t timerid);
+EXTERN int timer_settime(timer_t timerid, int flags, FAR const struct itimerspec *value,
+                         FAR struct itimerspec *ovalue);
+EXTERN int timer_gettime(timer_t timerid, FAR struct itimerspec *value);
+EXTERN int timer_getoverrun(timer_t timerid);
 
 #undef EXTERN
 #if defined(__cplusplus)

@@ -2507,7 +2507,7 @@ void up_usbinitialize(void)
         }
     }
 
-  /* Enable USB to AHB clock and to Event router */
+  /* Enable USB to AHB clock and to Event router*/
 
   lpc31_enableclock (CLKID_USBOTGAHBCLK);
   lpc31_enableclock (CLKID_EVENTROUTERPCLK);
@@ -2544,6 +2544,7 @@ void up_usbinitialize(void)
                (uint16_t)LPC31_IRQ_USBOTG);
       goto errout;
     }
+
 
   /* Program the controller to be the USB device controller */
 
@@ -2602,6 +2603,7 @@ void up_usbuninitialize(void)
 
   lpc31_disableclock (CLKID_USBOTGAHBCLK);
   lpc31_disableclock (CLKID_EVENTROUTERPCLK);
+
 
   irqrestore(flags);
 }
@@ -2664,7 +2666,6 @@ int usbdev_register(struct usbdevclass_driver_s *driver)
 
       lpc31_pullup(&g_usbdev.usbdev, true);
     }
-
   return ret;
 }
 

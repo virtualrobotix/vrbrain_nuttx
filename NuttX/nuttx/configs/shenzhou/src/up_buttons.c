@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/shenzhou/src/board_buttons.c
+ * configs/shenzhou/src/up_buttons.c
  *
- *   Copyright (C) 2012, 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,9 +41,7 @@
 
 #include <stdint.h>
 
-#include <nuttx/arch.h>
 #include <arch/board/board.h>
-
 #include "shenzhou-internal.h"
 
 #ifdef CONFIG_ARCH_BUTTONS
@@ -73,17 +71,17 @@ static const uint16_t g_buttons[NUM_BUTTONS] =
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_button_initialize
+ * Name: up_buttoninit
  *
  * Description:
- *   board_button_initialize() must be called to initialize button resources.  After
- *   that, board_buttons() may be called to collect the current state of all
- *   buttons or board_button_irq() may be called to register button interrupt
+ *   up_buttoninit() must be called to initialize button resources.  After
+ *   that, up_buttons() may be called to collect the current state of all
+ *   buttons or up_irqbutton() may be called to register button interrupt
  *   handlers.
  *
  ****************************************************************************/
 
-void board_button_initialize(void)
+void up_buttoninit(void)
 {
   int i;
 
@@ -98,10 +96,10 @@ void board_button_initialize(void)
 }
 
 /****************************************************************************
- * Name: board_buttons
+ * Name: up_buttons
  ****************************************************************************/
 
-uint8_t board_buttons(void)
+uint8_t up_buttons(void)
 {
   uint8_t ret = 0;
   int i;
@@ -135,17 +133,17 @@ uint8_t board_buttons(void)
  * Button support.
  *
  * Description:
- *   board_button_initialize() must be called to initialize button resources.  After
- *   that, board_buttons() may be called to collect the current state of all
- *   buttons or board_button_irq() may be called to register button interrupt
+ *   up_buttoninit() must be called to initialize button resources.  After
+ *   that, up_buttons() may be called to collect the current state of all
+ *   buttons or up_irqbutton() may be called to register button interrupt
  *   handlers.
  *
- *   After board_button_initialize() has been called, board_buttons() may be called to
- *   collect the state of all buttons.  board_buttons() returns an 8-bit bit set
+ *   After up_buttoninit() has been called, up_buttons() may be called to
+ *   collect the state of all buttons.  up_buttons() returns an 8-bit bit set
  *   with each bit associated with a button.  See the BUTTON_*_BIT and JOYSTICK_*_BIT
  *   definitions in board.h for the meaning of each bit.
  *
- *   board_button_irq() may be called to register an interrupt handler that will
+ *   up_irqbutton() may be called to register an interrupt handler that will
  *   be called when a button is depressed or released.  The ID value is a
  *   button enumeration value that uniquely identifies a button resource. See the
  *   BUTTON_* and JOYSTICK_* definitions in board.h for the meaning of enumeration
@@ -155,7 +153,7 @@ uint8_t board_buttons(void)
  ************************************************************************************/
 
 #ifdef CONFIG_ARCH_IRQBUTTONS
-xcpt_t board_button_irq(int id, xcpt_t irqhandler)
+xcpt_t up_irqbutton(int id, xcpt_t irqhandler)
 {
   xcpt_t oldhandler = NULL;
 

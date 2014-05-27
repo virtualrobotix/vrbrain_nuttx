@@ -70,3 +70,4 @@ FAR char **getoptargp(void)
 {
   return &optarg;
 }
+

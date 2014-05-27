@@ -292,9 +292,9 @@ HCS12/DEMO9S12NEC64-specific Configuration Options
 	CONFIG_ENDIAN_BIG - define if big endian (default is little
 	   endian)
 
-	CONFIG_RAM_SIZE - Describes the installed RAM.
+	CONFIG_DRAM_SIZE - Describes the installed RAM.
 
-	CONFIG_RAM_START - The start address of installed RAM
+	CONFIG_DRAM_START - The start address of installed RAM
 
 	CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
 	   have LEDs
@@ -327,7 +327,7 @@ HCS12/DEMO9S12NEC64-specific Configuration Options
 
 	CONFIG_HCS12_NONBANKED - Indicates that the target systems does not
 	  support banking.  Only short calls are made; one fixed page is
-	  presented in the paging window.  Only 48Kb of FLASH is usable
+	  presented the the paging window.  Only 48Kb of FLASH is usable
 	  in this configuration: pages 3e, 3d, then 3f will appear as a
 	  contiguous address space in memory.
 
@@ -358,40 +358,17 @@ HCS12/DEMO9S12NEC64-specific Configuration Options
 Configurations
 ^^^^^^^^^^^^^^
 
-Common Configuration Notes
---------------------------
+Each Freescale HCS12 configuration is maintained in a sub-directory and
+can be selected as follow:
 
-  1. Each Freescale HCS12 configuration is maintained in a sub-directory and
-     can be selected as follow:
+	cd tools
+	./configure.sh demo9s12nec64/<subdir>
+	cd -
+	. ./setenv.sh
 
-       cd tools
-       ./configure.sh demo9s12nec64/<subdir>
-       cd -
-       . ./setenv.sh
+Where <subdir> is one of the following:
 
-     Where <subdir> is one of the configuration sub-directories described in
-     the following paragraph.
-
-  2. These configurations use the mconf-based configuration tool.  To
-     change a configurations using that tool, you should:
-
-     a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-        and misc/tools/
-
-     b. Execute 'make menuconfig' in nuttx/ in order to start the
-        reconfiguration process.
-
-  3. By default, all configurations assume the that you are building under
-     under Linux (should work under Windows with Cygwin as well).  This
-     is easily reconfigured:
-
-        CONFIG_HOST_LINUX=y
-
-Configuration Sub-Directories
------------------------------
-
-  ostest
-
-    This configuration directory, performs a simple OS test using
-    examples/ostest.
+ostest:
+  This configuration directory, performs a simple OS test using
+  examples/ostest.
 

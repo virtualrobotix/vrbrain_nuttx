@@ -30,7 +30,7 @@
 #
 
 #
-# Generic Makefile for VRBRAIN firmware images.
+# Generic Makefile for VRX firmware images.
 #
 # Requires:
 #
@@ -48,7 +48,7 @@
 #		$(MODULE_SEARCH_DIRS)
 #		WORK_DIR
 #		MODULE_SRC
-#		VRBRAIN_MODULE_SRC
+#		VRX_MODULE_SRC
 #
 #	Application directories are expected to contain a module.mk
 #	file which provides build configuration for the module. See
@@ -59,7 +59,7 @@
 #	by modules / libraries. Each entry in this list is formatted
 #	as <command>.<priority>.<stacksize>.<entrypoint>
 #
-# VRBRAIN_BASE:
+# VRX_BASE:
 #	Points to a PX4 distribution. Normally determined based on the
 #	path to this file.
 #
@@ -98,16 +98,16 @@
 # Work out where this file is, so we can find other makefiles in the
 # same directory.
 #
-# If VRBRAIN_BASE wasn't set previously, work out what it should be
+# If VRX_BASE wasn't set previously, work out what it should be
 # and set it here now.
 #
 MK_DIR			?= $(dir $(lastword $(MAKEFILE_LIST)))
-ifeq ($(VRBRAIN_BASE),)
-export VRBRAIN_BASE		:= $(abspath $(MK_DIR)/..)
+ifeq ($(VRX_BASE),)
+export VRX_BASE		:= $(abspath $(MK_DIR)/..)
 endif
-$(info %  VRBRAIN_BASE            = $(VRBRAIN_BASE))
-ifneq ($(words $(VRBRAIN_BASE)),1)
-$(error Cannot build when the VRBRAIN_BASE path contains one or more space characters.)
+$(info %  VRX_BASE            = $(VRX_BASE))
+ifneq ($(words $(VRX_BASE)),1)
+$(error Cannot build when the VRX_BASE path contains one or more space characters.)
 endif
 
 $(info %  GIT_DESC            = $(GIT_DESC))
@@ -132,7 +132,7 @@ include $(MK_DIR)/setup.mk
 ifneq ($(CONFIG_FILE),)
 CONFIG			:= $(subst config_,,$(basename $(notdir $(CONFIG_FILE))))
 else
-CONFIG_FILE		:= $(wildcard $(VRBRAIN_MK_DIR)/config_$(CONFIG).mk)
+CONFIG_FILE		:= $(wildcard $(VRX_MK_DIR)/config_$(CONFIG).mk)
 endif
 ifeq ($(CONFIG),)
 $(error Missing configuration name or file (specify with CONFIG=<config>))
@@ -150,7 +150,7 @@ $(info %  CONFIG              = $(CONFIG))
 ifeq ($(BOARD),)
 BOARD			:= $(firstword $(subst _, ,$(CONFIG)))
 endif
-BOARD_FILE		:= $(wildcard $(VRBRAIN_MK_DIR)/board_$(BOARD).mk)
+BOARD_FILE		:= $(wildcard $(VRX_MK_DIR)/board_$(BOARD).mk)
 ifeq ($(BOARD_FILE),)
 $(error Config $(CONFIG) references board $(BOARD), but no board definition file found)
 endif
@@ -188,20 +188,20 @@ export EXTRADEFINES := -DGIT_VERSION=$(GIT_DESC)
 #
 # Append the per-board driver directory to the header search path.
 #
-INCLUDE_DIRS		+= $(VRBRAIN_MODULE_SRC)drivers/boards/$(BOARD)
+INCLUDE_DIRS		+= $(VRX_MODULE_SRC)drivers/boards/$(BOARD)
 
 ################################################################################
 # NuttX libraries and paths
 ################################################################################
 
-include $(VRBRAIN_MK_DIR)/nuttx.mk
+include $(VRX_MK_DIR)/nuttx.mk
 
 ################################################################################
 # Modules
 ################################################################################
 
 # where to look for modules
-MODULE_SEARCH_DIRS	+= $(WORK_DIR) $(MODULE_SRC) $(VRBRAIN_MODULE_SRC)
+MODULE_SEARCH_DIRS	+= $(WORK_DIR) $(MODULE_SRC) $(VRX_MODULE_SRC)
 
 # sort and unique the modules list
 MODULES			:= $(sort $(MODULES))
@@ -234,7 +234,7 @@ $(MODULE_OBJS):		mkfile = $(patsubst %module.pre.o,%module.mk,$(relpath))
 $(MODULE_OBJS):		workdir = $(@D)
 $(MODULE_OBJS):		$(GLOBAL_DEPS) $(NUTTX_CONFIG_HEADER)
 	$(Q) $(MKDIR) -p $(workdir)
-	$(Q) $(MAKE) -r -f $(VRBRAIN_MK_DIR)module.mk \
+	$(Q) $(MAKE) -r -f $(VRX_MK_DIR)module.mk \
 		-C $(workdir) \
 		MODULE_WORK_DIR=$(workdir) \
 		MODULE_OBJ=$@ \
@@ -251,7 +251,7 @@ $(MODULE_CLEANS):	relpath = $(patsubst $(WORK_DIR)%,%,$@)
 $(MODULE_CLEANS):	mkfile = $(patsubst %clean,%module.mk,$(relpath))
 $(MODULE_CLEANS):
 	@$(ECHO) %% cleaning using $(mkfile)
-	$(Q) $(MAKE) -r -f $(VRBRAIN_MK_DIR)module.mk \
+	$(Q) $(MAKE) -r -f $(VRX_MK_DIR)module.mk \
 	MODULE_WORK_DIR=$(dir $@) \
 	MODULE_MK=$(mkfile) \
 	clean
@@ -261,7 +261,7 @@ $(MODULE_CLEANS):
 ################################################################################
 
 # where to look for libraries
-LIBRARY_SEARCH_DIRS	+= $(WORK_DIR) $(MODULE_SRC) $(VRBRAIN_MODULE_SRC)
+LIBRARY_SEARCH_DIRS	+= $(WORK_DIR) $(MODULE_SRC) $(VRX_MODULE_SRC)
 
 # sort and unique the library list
 LIBRARIES		:= $(sort $(LIBRARIES))
@@ -294,7 +294,7 @@ $(LIBRARY_LIBS):	mkfile = $(patsubst %library.a,%library.mk,$(relpath))
 $(LIBRARY_LIBS):	workdir = $(@D)
 $(LIBRARY_LIBS):	$(GLOBAL_DEPS) $(NUTTX_CONFIG_HEADER)
 	$(Q) $(MKDIR) -p $(workdir)
-	$(Q) $(MAKE) -r -f $(VRBRAIN_MK_DIR)library.mk \
+	$(Q) $(MAKE) -r -f $(VRX_MK_DIR)library.mk \
 		-C $(workdir) \
 		LIBRARY_WORK_DIR=$(workdir) \
 		LIBRARY_LIB=$@ \
@@ -311,7 +311,7 @@ $(LIBRARY_CLEANS):	relpath = $(patsubst $(WORK_DIR)%,%,$@)
 $(LIBRARY_CLEANS):	mkfile = $(patsubst %clean,%library.mk,$(relpath))
 $(LIBRARY_CLEANS):
 	@$(ECHO) %% cleaning using $(mkfile)
-	$(Q) $(MAKE) -r -f $(VRBRAIN_MK_DIR)library.mk \
+	$(Q) $(MAKE) -r -f $(VRX_MK_DIR)library.mk \
 	LIBRARY_WORK_DIR=$(dir $@) \
 	LIBRARY_MK=$(mkfile) \
 	clean
@@ -355,6 +355,9 @@ ROMFS_OBJ		 = $(ROMFS_CSRC:.c=.o)
 LIBS			+= $(ROMFS_OBJ)
 LINK_DEPS		+= $(ROMFS_OBJ)
 
+# Remove all comments from startup and mixer files
+ROMFS_PRUNER	 = $(VRX_BASE)/Tools/px_romfs_pruner.py
+
 # Turn the ROMFS image into an object file
 $(ROMFS_OBJ): $(ROMFS_IMG) $(GLOBAL_DEPS)
 	$(call BIN_TO_OBJ,$<,$@,romfs_img)
@@ -372,6 +375,7 @@ ifneq ($(ROMFS_EXTRA_FILES),)
 	$(Q) $(MKDIR) -p $(ROMFS_SCRATCH)/extras
 	$(Q) $(COPY) $(ROMFS_EXTRA_FILES) $(ROMFS_SCRATCH)/extras
 endif
+	$(Q) $(PYTHON) -u $(ROMFS_PRUNER) --folder $(ROMFS_SCRATCH)
 
 EXTRA_CLEANS		+= $(ROMGS_OBJ) $(ROMFS_IMG)
 
@@ -492,7 +496,9 @@ $(filter %.S.o,$(OBJS)): $(WORK_DIR)%.S.o: %.S $(GLOBAL_DEPS)
 
 $(PRODUCT_BUNDLE):	$(PRODUCT_BIN)
 	@$(ECHO) %% Generating $@
-	$(Q) $(MKFW) --prototype $(IMAGE_DIR)/$(BOARD).prototype --image $< > $@
+	$(Q) $(MKFW) --prototype $(IMAGE_DIR)/$(BOARD).prototype \
+		--git_identity $(VRX_BASE) \
+		--image $< > $@
 
 $(PRODUCT_BIN):		$(PRODUCT_ELF)
 	$(call SYM_TO_BIN,$(PRODUCT_ELF),$(PRODUCT_BIN))
@@ -507,7 +513,7 @@ $(PRODUCT_ELF):		$(OBJS) $(MODULE_OBJS) $(LIBRARY_LIBS) $(GLOBAL_DEPS) $(LINK_DE
 
 .PHONY: upload
 upload:	$(PRODUCT_BUNDLE) $(PRODUCT_BIN)
-	$(Q) $(MAKE) -f $(VRBRAIN_MK_DIR)/upload.mk \
+	$(Q) $(MAKE) -f $(VRX_MK_DIR)/upload.mk \
 		METHOD=serial \
 		CONFIG=$(CONFIG) \
 		BOARD=$(BOARD) \

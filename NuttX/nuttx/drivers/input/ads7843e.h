@@ -58,7 +58,7 @@
 #include <wdog.h>
 #include <nuttx/wqueue.h>
 
-#include <nuttx/spi/spi.h>
+#include <nuttx/spi.h>
 #include <nuttx/clock.h>
 #include <nuttx/input/ads7843e.h>
 
@@ -108,7 +108,7 @@
 
 /* This describes the state of one contact */
 
-enum ads7843e_contact_e
+enum ads7843e_contact_3
 {
   CONTACT_NONE = 0,                    /* No contact */
   CONTACT_DOWN,                        /* First contact */

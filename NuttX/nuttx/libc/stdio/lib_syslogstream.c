@@ -119,3 +119,5 @@ void lib_syslogstream(FAR struct lib_outstream_s *stream)
 }
 
 #endif /* CONFIG_SYSLOG */
+
+

@@ -33,8 +33,8 @@
  *
  ****************************************************************************/
 
-#ifndef __INCLUDE_NUTTX_AUDIO_VS1053_H
-#define __INCLUDE_NUTTX_AUDIO_VS1053_H
+#ifndef __INCLUDE_NUTTX_NET_VS1053_H
+#define __INCLUDE_NUTTX_NET_VS1053_H
 
 /****************************************************************************
  * Included Files
@@ -42,7 +42,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
+ 
 #include <nuttx/irq.h>
 
 /****************************************************************************
@@ -59,8 +59,8 @@
  * Public Types
  ****************************************************************************/
 
-/* The VS1053 provides Data Request (DREQ) interrupts to the MCU via a GPIO
- * pin and also has a chip reset GPIO.  The following structure provides an
+/* The VS1053 provides Data Request (DREQ) interrupts to the MCU via a GPIO 
+ * pin and also has a chip reset GPIO.  The following structure provides an 
  * MCU-independent mechanism for controlling the VS1053 GPIOs.
  */
 
@@ -70,8 +70,6 @@ struct vs1053_lower_s
   void (*enable)(FAR const struct vs1053_lower_s *lower);
   void (*disable)(FAR const struct vs1053_lower_s *lower);
   void (*reset)(FAR const struct vs1053_lower_s *lower, bool state);
-  int  (*read_dreq)(FAR const struct vs1053_lower_s *lower);
-  int  irq;
 };
 
 /****************************************************************************
@@ -80,8 +78,7 @@ struct vs1053_lower_s
 
 #ifdef __cplusplus
 #define EXTERN extern "C"
-extern "C"
-{
+extern "C" {
 #else
 #define EXTERN extern
 #endif
@@ -94,7 +91,7 @@ extern "C"
  * Function: vs1053_initialize
  *
  * Description:
- *   Initialize the VS1053 driver.  This will perform a chip reset of the
+ *   Initialize the VS1053 driver.  This will perform a chip reset of the 
  *   device as part of initialization.
  *
  * Parameters:
@@ -111,9 +108,9 @@ extern "C"
  *
  ****************************************************************************/
 
-struct spi_dev_s; /* see nuttx/spi/spi.h */
+struct spi_dev_s; /* see nuttx/spi.h */
 struct audio_lowerhalf_s; /* see nutt/audio.h */
-FAR struct audio_lowerhalf_s *vs1053_initialize(FAR struct spi_dev_s *spi,
+EXTERN FAR struct audio_lowerhalf_s *vs1053_initialize(FAR struct spi_dev_s *spi,
                           FAR const struct vs1053_lower_s *lower,
                           unsigned int devno);
 
@@ -122,4 +119,4 @@ FAR struct audio_lowerhalf_s *vs1053_initialize(FAR struct spi_dev_s *spi,
 }
 #endif
 
-#endif /* __INCLUDE_NUTTX_AUDIO_VS1053_H */
+#endif /* __INCLUDE_NUTTX_NET_VS1053_H */

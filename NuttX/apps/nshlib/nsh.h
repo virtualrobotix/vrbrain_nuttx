@@ -1,7 +1,7 @@
 /****************************************************************************
  * apps/nshlib/nsh.h
  *
- *   Copyright (C) 2007-2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,42 +68,6 @@
 #  endif
 #endif
 
-#if CONFIG_NFILE_STREAMS == 0
-#  undef CONFIG_NSH_TELNET
-#  undef CONFIG_NSH_FILE_APPS
-#  undef CONFIG_NSH_TELNET
-#  undef CONFIG_NSH_CMDPARMS
-#endif
-
-/* rmdir, mkdir, rm, and mv are only available if mountpoints are enabled
- * AND there is a writeable file system OR if these operations on the
- * pseudo-filesystem are not disabled.
- */
-
-#undef NSH_HAVE_WRITABLE_MOUNTPOINT
-#if !defined(CONFIG_DISABLE_MOUNTPOINT) && defined(CONFIG_FS_WRITABLE) && \
-    CONFIG_NFILE_STREAMS > 0
-#  define NSH_HAVE_WRITABLE_MOUNTPOINT 1
-#endif
-
-#undef NSH_HAVE_PSEUDOFS_OPERATIONS
-#if !defined(CONFIG_DISABLE_PSEUDOFS_OPERATIONS) && CONFIG_NFILE_STREAMS > 0
-#  define NSH_HAVE_PSEUDOFS_OPERATIONS 1
-#endif
-
-#undef NSH_HAVE_DIROPTS
-#if defined(NSH_HAVE_WRITABLE_MOUNTPOINT) || defined(NSH_HAVE_PSEUDOFS_OPERATIONS)
-#  define NSH_HAVE_DIROPTS 1
-#endif
-
-/* If CONFIG_NSH_CMDPARMS is selected, then the path to a directory to
- * hold temporary files must be provided.
- */
-
-#if defined(CONFIG_NSH_CMDPARMS) && !defined(CONFIG_NSH_TMPDIR)
-#  define CONFIG_NSH_TMPDIR "/tmp"
-#endif
-
 /* Telnetd requires networking support */
 
 #ifndef CONFIG_NET
@@ -158,56 +122,55 @@
 #    define CONFIG_NSH_USBCONDEV "/dev/console"
 #  endif
 
-#endif /* HAVE_USB_CONSOLE */
-
 /* USB trace settings */
 
-#ifndef CONFIG_USBDEV_TRACE
-#  undef CONFIG_NSH_USBDEV_TRACE
-#endif
+#  ifndef CONFIG_USBDEV_TRACE
+#    undef CONFIG_NSH_USBDEV_TRACE
+#  endif 
 
-#ifdef CONFIG_NSH_USBDEV_TRACE
-#  ifdef CONFIG_NSH_USBDEV_TRACEINIT
-#    define TRACE_INIT_BITS         (TRACE_INIT_BIT)
-#  else
-#    define TRACE_INIT_BITS         (0)
-#  endif
+#  ifdef CONFIG_NSH_USBDEV_TRACE
+#    ifdef CONFIG_NSH_USBDEV_TRACEINIT
+#      define TRACE_INIT_BITS       (TRACE_INIT_BIT)
+#    else
+#      define TRACE_INIT_BITS       (0)
+#    endif
 
-#  define TRACE_ERROR_BITS          (TRACE_DEVERROR_BIT|TRACE_CLSERROR_BIT)
+#    define TRACE_ERROR_BITS        (TRACE_DEVERROR_BIT|TRACE_CLSERROR_BIT)
 
-#  ifdef CONFIG_NSH_USBDEV_TRACECLASS
-#    define TRACE_CLASS_BITS        (TRACE_CLASS_BIT|TRACE_CLASSAPI_BIT|\
+#    ifdef CONFIG_NSH_USBDEV_TRACECLASS
+#      define TRACE_CLASS_BITS      (TRACE_CLASS_BIT|TRACE_CLASSAPI_BIT|\
                                      TRACE_CLASSSTATE_BIT)
-#  else
-#    define TRACE_CLASS_BITS        (0)
-#  endif
+#    else
+#      define TRACE_CLASS_BITS      (0)
+#    endif
 
-#  ifdef CONFIG_NSH_USBDEV_TRACETRANSFERS
-#    define TRACE_TRANSFER_BITS     (TRACE_OUTREQQUEUED_BIT|TRACE_INREQQUEUED_BIT|\
+#    ifdef CONFIG_NSH_USBDEV_TRACETRANSFERS
+#      define TRACE_TRANSFER_BITS   (TRACE_OUTREQQUEUED_BIT|TRACE_INREQQUEUED_BIT|\
                                      TRACE_READ_BIT|TRACE_WRITE_BIT|\
                                      TRACE_COMPLETE_BIT)
-#  else
-#    define TRACE_TRANSFER_BITS     (0)
-#  endif
+#    else
+#      define TRACE_TRANSFER_BITS   (0)
+#    endif
 
-#  ifdef CONFIG_NSH_USBDEV_TRACECONTROLLER
-#    define TRACE_CONTROLLER_BITS   (TRACE_EP_BIT|TRACE_DEV_BIT)
-#  else
-#    define TRACE_CONTROLLER_BITS   (0)
-#  endif
+#    ifdef CONFIG_NSH_USBDEV_TRACECONTROLLER
+#      define TRACE_CONTROLLER_BITS (TRACE_EP_BIT|TRACE_DEV_BIT)
+#    else
+#      define TRACE_CONTROLLER_BITS (0)
+#    endif
 
-#  ifdef CONFIG_NSH_USBDEV_TRACEINTERRUPTS
-#    define TRACE_INTERRUPT_BITS    (TRACE_INTENTRY_BIT|TRACE_INTDECODE_BIT|\
+#    ifdef CONFIG_NSH_USBDEV_TRACEINTERRUPTS
+#      define TRACE_INTERRUPT_BITS  (TRACE_INTENTRY_BIT|TRACE_INTDECODE_BIT|\
                                      TRACE_INTEXIT_BIT)
-#  else
-#    define TRACE_INTERRUPT_BITS    (0)
-#  endif
+#    else
+#      define TRACE_INTERRUPT_BITS  (0)
+#    endif
 
-#  define TRACE_BITSET              (TRACE_INIT_BITS|TRACE_ERROR_BITS|\
+#    define TRACE_BITSET            (TRACE_INIT_BITS|TRACE_ERROR_BITS|\
                                      TRACE_CLASS_BITS|TRACE_TRANSFER_BITS|\
                                      TRACE_CONTROLLER_BITS|TRACE_INTERRUPT_BITS)
 
-#endif /* CONFIG_NSH_USBDEV_TRACE */
+#  endif /* CONFIG_NSH_USBDEV_TRACE */
+#endif /* HAVE_USB_CONSOLE */
 
 /* If Telnet is selected for the NSH console, then we must configure
  * the resources used by the Telnet daemon and by the Telnet clients.
@@ -370,24 +333,6 @@
 # endif
 #endif
 
-/* Argument list size
- *
- *   argv[0]:      The command name.
- *   argv[1]:      The beginning of argument (up to CONFIG_NSH_MAXARGUMENTS)
- *   argv[argc-3]: Possibly '>' or '>>'
- *   argv[argc-2]: Possibly <file>
- *   argv[argc-1]: Possibly '&' (if pthreads are enabled)
- *   argv[argc]:   NULL terminating pointer
- *
- * Maximum size is CONFIG_NSH_MAXARGUMENTS+5
- */
-
-#ifndef CONFIG_NSH_DISABLEBG
-#  define MAX_ARGV_ENTRIES (CONFIG_NSH_MAXARGUMENTS+5)
-#else
-#  define MAX_ARGV_ENTRIES (CONFIG_NSH_MAXARGUMENTS+4)
-#endif
-
 /* strerror() produces much nicer output but is, however, quite large and
  * will only be used if CONFIG_NSH_STRERROR is defined.  Note that the strerror
  * interface must also have been enabled with CONFIG_LIBC_STRERROR.
@@ -439,7 +384,7 @@
 /* Stubs used when working directory is not supported */
 
 #if CONFIG_NFILE_DESCRIPTORS <= 0 || defined(CONFIG_DISABLE_ENVIRON)
-#  define nsh_getfullpath(v,p) ((FAR char*)(p))
+#  define nsh_getfullpath(v,p) ((char*)(p))
 #  define nsh_freefullpath(p)
 #endif
 
@@ -475,90 +420,42 @@
  * Public Types
  ****************************************************************************/
 
-#ifndef CONFIG_NSH_DISABLE_ITEF
-/* State when parsing and if-then-else sequence */
-
-enum nsh_itef_e
+enum nsh_parser_e
 {
-  NSH_ITEF_NORMAL = 0,         /* Not in an if-then-else sequence */
-  NSH_ITEF_IF,                 /* Just parsed 'if', expect condition */
-  NSH_ITEF_THEN,               /* Just parsed 'then', looking for 'else' or 'fi' */
-  NSH_ITEF_ELSE                /* Just parsed 'else', look for 'fi' */
+   NSH_PARSER_NORMAL = 0,
+   NSH_PARSER_IF,
+   NSH_PARSER_THEN,
+   NSH_PARSER_ELSE
 };
 
-/* All state data for parsing one if-then-else sequence */
-
-struct nsh_itef_s
+struct nsh_state_s
 {
-  uint8_t   ie_ifcond   : 1;   /* Value of command in 'if' statement */
-  uint8_t   ie_disabled : 1;   /* TRUE: Unconditionally disabled */
-  uint8_t   ie_unused   : 4;
-  uint8_t   ie_state    : 2;   /* If-then-else state (see enum nsh_itef_e) */
+  uint8_t   ns_ifcond   : 1; /* Value of command in 'if' statement */
+  uint8_t   ns_disabled : 1; /* TRUE: Unconditionally disabled */
+  uint8_t   ns_unused   : 4;
+  uint8_t   ns_state    : 2; /* Parser state (see enum nsh_parser_e) */
 };
-#endif
-
-#ifndef CONFIG_NSH_DISABLE_LOOPS
-/* State when parsing and while-do-done or until-do-done sequence */
-
-enum nsh_lp_e
-{
-  NSH_LOOP_NORMAL = 0,         /* Not in a while-do-done or until-do-done sequence */
-  NSH_LOOP_WHILE,              /* Just parsed 'while', expect condition */
-  NSH_LOOP_UNTIL,              /* Just parsed 'until', expect condition */
-  NSH_LOOP_DO                  /* Just parsed 'do', looking for 'done' */
-};
-
-/* All state data for parsing one while-do-done or until-do-done sequence */
-
-struct nsh_loop_s
-{
-  uint8_t   lp_enable   : 1;   /* Loop command processing is enabled */
-  uint8_t   lp_unused   : 5;
-  uint8_t   lp_state    : 2;   /* Loop state (see enume nsh_lp_e) */
-#ifndef CONFIG_NSH_DISABLE_ITEF
-  uint8_t   lp_iendx;          /* Saved if-then-else-fi index */
-#endif
-  long      lp_topoffs;        /* Top of loop file offset */
-};
-#endif
-
-/* These structure provides the overall state of the parser */
 
 struct nsh_parser_s
 {
 #ifndef CONFIG_NSH_DISABLEBG
-  bool     np_bg;       /* true: The last command executed in background */
+  bool    np_bg;       /* true: The last command executed in background */
 #endif
-#if CONFIG_NFILE_STREAMS > 0
-  bool     np_redirect; /* true: Output from the last command was re-directed */
+  bool    np_redirect; /* true: Output from the last command was re-directed */
+  bool    np_fail;     /* true: The last command failed */
+#ifndef CONFIG_NSH_DISABLESCRIPT
+  uint8_t np_ndx;      /* Current index into np_st[] */
 #endif
-  bool     np_fail;     /* true: The last command failed */
 #ifndef CONFIG_NSH_DISABLEBG
-  int      np_nice;     /* "nice" value applied to last background cmd */
+  int     np_nice;     /* "nice" value applied to last background cmd */
 #endif
+
+  /* This is a stack of parser state information.  It supports nested
+   * execution of commands that span multiple lines (like if-then-else-fi)
+   */
 
 #ifndef CONFIG_NSH_DISABLESCRIPT
-  FILE    *np_stream;   /* Stream of current script */
-#ifndef CONFIG_NSH_DISABLE_LOOPS
-  long     np_foffs;    /* File offset to the beginning of a line */
-#ifndef NSH_DISABLE_SEMICOLON
-  uint16_t np_loffs;    /* Byte offset to the beginning of a command */
-  bool     np_jump;     /* "Jump" to the top of the loop */
-#endif
-  uint8_t  np_lpndx;    /* Current index into np_lpstate[] */
-#endif
-#ifndef CONFIG_NSH_DISABLE_ITEF
-  uint8_t  np_iendx;    /* Current index into np_iestate[] */
-#endif
-
-  /* This is a stack of parser state information. */
-
-#ifndef CONFIG_NSH_DISABLE_ITEF
-  struct nsh_itef_s np_iestate[CONFIG_NSH_NESTDEPTH];
-#endif
-#ifndef CONFIG_NSH_DISABLE_LOOPS
-  struct nsh_loop_s np_lpstate[CONFIG_NSH_NESTDEPTH];
-#endif
+  struct nsh_state_s np_st[CONFIG_NSH_NESTDEPTH];
 #endif
 };
 
@@ -581,7 +478,6 @@ extern const char g_loginfailure[];
 extern const char g_nshprompt[];
 extern const char g_nshsyntax[];
 extern const char g_fmtargrequired[];
-extern const char g_fmtnomatching[];
 extern const char g_fmtarginvalid[];
 extern const char g_fmtargrange[];
 extern const char g_fmtcmdnotfound[];
@@ -646,8 +542,6 @@ int nsh_parse(FAR struct nsh_vtbl_s *vtbl, char *cmdline);
 
 /* Application interface */
 
-int nsh_command(FAR struct nsh_vtbl_s *vtbl, int argc, char *argv[]);
-
 #ifdef CONFIG_NSH_BUILTIN_APPS
 int nsh_builtin(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
                 FAR char **argv, FAR const char *redirfile, int oflags);
@@ -662,9 +556,8 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
 
 #if CONFIG_NFILE_DESCRIPTORS > 0 && !defined(CONFIG_DISABLE_ENVIRON)
 FAR const char *nsh_getcwd(void);
-FAR char *nsh_getfullpath(FAR struct nsh_vtbl_s *vtbl,
-                          FAR const char *relpath);
-void nsh_freefullpath(FAR char *fullpath);
+char *nsh_getfullpath(FAR struct nsh_vtbl_s *vtbl, const char *relpath);
+void nsh_freefullpath(char *relpath);
 #endif
 
 /* Debug */
@@ -680,9 +573,6 @@ void nsh_usbtrace(void);
 
 /* Shell command handlers */
 
-#if !defined(CONFIG_NSH_DISABLESCRIPT) && !defined(CONFIG_NSH_DISABLE_LOOPS)
-  int cmd_break(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#endif
 #ifndef CONFIG_NSH_DISABLE_ECHO
   int cmd_echo(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #endif
@@ -707,7 +597,7 @@ void nsh_usbtrace(void);
 #ifndef CONFIG_NSH_DISABLE_XD
   int cmd_xd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #endif
-
+  
 #if !defined(CONFIG_NSH_DISABLESCRIPT) && !defined(CONFIG_NSH_DISABLE_TEST)
   int cmd_test(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
   int cmd_lbracket(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
@@ -727,7 +617,7 @@ void nsh_usbtrace(void);
       int cmd_cp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #  endif
 #  ifndef CONFIG_NSH_DISABLE_CMP
-      int cmd_cmp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+int cmd_cmp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #  endif
 #  ifndef CONFIG_NSH_DISABLE_DD
       int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
@@ -746,22 +636,6 @@ void nsh_usbtrace(void);
        int cmd_sh(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #     endif
 # endif  /* CONFIG_NFILE_STREAMS && !CONFIG_NSH_DISABLESCRIPT */
-
-# ifdef NSH_HAVE_DIROPTS
-#  ifndef CONFIG_NSH_DISABLE_MKDIR
-      int cmd_mkdir(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#  endif
-#  ifndef CONFIG_NSH_DISABLE_MV
-      int cmd_mv(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#  endif
-#  ifndef CONFIG_NSH_DISABLE_RM
-      int cmd_rm(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#  endif
-#  ifndef CONFIG_NSH_DISABLE_RMDIR
-      int cmd_rmdir(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#  endif
-# endif /* CONFIG_NFILE_STREAMS && NSH_HAVE_DIROPTS */
-
 # ifndef CONFIG_DISABLE_MOUNTPOINT
 #   ifndef CONFIG_NSH_DISABLE_LOSETUP
        int cmd_losetup(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
@@ -780,8 +654,20 @@ void nsh_usbtrace(void);
          int cmd_umount(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #     endif
 #     ifdef CONFIG_FS_WRITABLE
+#       ifndef CONFIG_NSH_DISABLE_MKDIR
+           int cmd_mkdir(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+#       endif
 #       ifndef CONFIG_NSH_DISABLE_MKRD
            int cmd_mkrd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+#       endif
+#       ifndef CONFIG_NSH_DISABLE_MV
+           int cmd_mv(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+#       endif
+#       ifndef CONFIG_NSH_DISABLE_RM
+           int cmd_rm(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+#       endif
+#       ifndef CONFIG_NSH_DISABLE_RMDIR
+           int cmd_rmdir(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #       endif
 #     endif /* CONFIG_FS_WRITABLE */
 #   endif /* CONFIG_FS_READABLE */
@@ -807,17 +693,6 @@ void nsh_usbtrace(void);
 #endif /* CONFIG_NFILE_DESCRIPTORS */
 
 #if defined(CONFIG_NET)
-#  if defined(CONFIG_NET_ROUTE) && !defined(CONFIG_NSH_DISABLE_ADDROUTE)
-      int cmd_addroute(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#  endif
-#  if defined(CONFIG_NET_ROUTE) && !defined(CONFIG_NSH_DISABLE_DELROUTE)
-      int cmd_delroute(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#  endif
-#  if defined(CONFIG_NET_UDP) && CONFIG_NFILE_DESCRIPTORS > 0
-#    ifndef CONFIG_NSH_DISABLE_GET
-      int cmd_get(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#    endif
-#  endif
 #  ifndef CONFIG_NSH_DISABLE_IFCONFIG
       int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #  endif
@@ -825,29 +700,32 @@ void nsh_usbtrace(void);
       int cmd_ifup(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
       int cmd_ifdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #  endif
-#  if !defined(CONFIG_DISABLE_MOUNTPOINT) && CONFIG_NFILE_DESCRIPTORS > 0 && \
-      defined(CONFIG_FS_READABLE) && defined(CONFIG_NFS)
-#    ifndef CONFIG_NSH_DISABLE_NFSMOUNT
-      int cmd_nfsmount(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#    endif
+#if defined(CONFIG_NET_UDP) && CONFIG_NFILE_DESCRIPTORS > 0
+#  ifndef CONFIG_NSH_DISABLE_GET
+      int cmd_get(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #  endif
-#  if defined(CONFIG_NET_ICMP) && defined(CONFIG_NET_ICMP_PING) && \
-     !defined(CONFIG_DISABLE_CLOCK) && !defined(CONFIG_DISABLE_SIGNALS)
-#    ifndef CONFIG_NSH_DISABLE_PING
-        int cmd_ping(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#    endif
-#  endif
-#  if defined(CONFIG_NET_UDP) && CONFIG_NFILE_DESCRIPTORS > 0
-#    ifndef CONFIG_NSH_DISABLE_PUT
+#  ifndef CONFIG_NSH_DISABLE_PUT
       int cmd_put(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#    endif
 #  endif
-#  if defined(CONFIG_NET_TCP) && CONFIG_NFILE_DESCRIPTORS > 0
-#    ifndef CONFIG_NSH_DISABLE_WGET
-        int cmd_wget(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#    endif
+#endif
+#if defined(CONFIG_NET_TCP) && CONFIG_NFILE_DESCRIPTORS > 0
+#  ifndef CONFIG_NSH_DISABLE_WGET
+      int cmd_wget(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #  endif
-#endif /* CONFIG_NET */
+#endif
+#if defined(CONFIG_NET_ICMP) && defined(CONFIG_NET_ICMP_PING) && \
+   !defined(CONFIG_DISABLE_CLOCK) && !defined(CONFIG_DISABLE_SIGNALS)
+#  ifndef CONFIG_NSH_DISABLE_PING
+      int cmd_ping(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+#  endif
+#endif
+#if !defined(CONFIG_DISABLE_MOUNTPOINT) && CONFIG_NFILE_DESCRIPTORS > 0 && \
+    defined(CONFIG_FS_READABLE) && defined(CONFIG_NFS)
+#  ifndef CONFIG_NSH_DISABLE_NFSMOUNT
+      int cmd_nfsmount(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+#  endif
+#endif
+#endif
 
 #ifndef CONFIG_DISABLE_ENVIRON
 #  ifndef CONFIG_NSH_DISABLE_SET

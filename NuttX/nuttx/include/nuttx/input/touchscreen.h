@@ -64,7 +64,7 @@
 #define TSIOC_SETFREQUENCY   _TSIOC(0x0003)  /* arg: Pointer to uint32_t frequency value */
 #define TSIOC_GETFREQUENCY   _TSIOC(0x0004)  /* arg: Pointer to uint32_t frequency value */
 
-/* Specific touchscreen drivers may support additional, device specific ioctl
+/* Specific touchscreen drivers may support additional, device specific ioctal
  * commands, beginning with this value:
  */
 
@@ -128,8 +128,7 @@ struct touch_sample_s
 
 #ifdef __cplusplus
 #define EXTERN extern "C"
-extern "C"
-{
+extern "C" {
 #else
 #define EXTERN extern
 #endif
@@ -152,7 +151,7 @@ extern "C"
  *
  ****************************************************************************/
 
-int arch_tcinitialize(int minor);
+EXTERN int arch_tcinitialize(int minor);
 
 /****************************************************************************
  * Name: arch_tcuninitialize
@@ -170,7 +169,7 @@ int arch_tcinitialize(int minor);
  *
  ****************************************************************************/
 
-void arch_tcuninitialize(void);
+EXTERN void arch_tcuninitialize(void);
 
 #undef EXTERN
 #ifdef __cplusplus

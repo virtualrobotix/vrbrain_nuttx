@@ -1,6 +1,6 @@
 /************************************************************************************
  * drivers/mtd/at24xx.c
- * Driver for I2C-based at24cxx EEPROM(at24c32,at24c64,at24c128,at24c256,at24c512)
+ * Driver for I2C-based at24cxx EEPROM(at24c32,at24c64,at24c128,at24c256)
  *
  *   Copyright (C) 2011 Li Zhuoyi. All rights reserved.
  *   Author: Li Zhuoyi <lzyy.cn@gmail.com>
@@ -60,7 +60,7 @@
 #include <nuttx/kmalloc.h>
 #include <nuttx/fs/ioctl.h>
 #include <nuttx/i2c.h>
-#include <nuttx/mtd/mtd.h>
+#include <nuttx/mtd.h>
 
 #ifdef CONFIG_MTD_AT24XX
 
@@ -81,24 +81,21 @@
 
 /* Get the part configuration based on the size configuration */
 
-#if CONFIG_AT24XX_SIZE == 32      /* AT24C32: 32Kbits = 4KiB; 128 * 32 =  4096 */
+#if CONFIG_AT24XX_SIZE == 32
 #  define AT24XX_NPAGES     128
 #  define AT24XX_PAGESIZE   32
-#elif CONFIG_AT24XX_SIZE == 48    /* AT24C48: 48Kbits = 6KiB; 192 * 32 =  6144 */
+#elif CONFIG_AT24XX_SIZE == 48
 #  define AT24XX_NPAGES     192
 #  define AT24XX_PAGESIZE   32
-#elif CONFIG_AT24XX_SIZE == 64    /* AT24C64: 64Kbits = 8KiB; 256 * 32 = 8192 */
+#elif CONFIG_AT24XX_SIZE == 64
 #  define AT24XX_NPAGES     256
 #  define AT24XX_PAGESIZE   32
-#elif CONFIG_AT24XX_SIZE == 128   /* AT24C128: 128Kbits = 16KiB; 256 * 64 = 16384 */
+#elif CONFIG_AT24XX_SIZE == 128
 #  define AT24XX_NPAGES     256
 #  define AT24XX_PAGESIZE   64
-#elif CONFIG_AT24XX_SIZE == 256   /* AT24C256: 256Kbits = 32KiB; 512 * 64 = 32768 */
+#elif CONFIG_AT24XX_SIZE == 256
 #  define AT24XX_NPAGES     512
 #  define AT24XX_PAGESIZE   64
-#elif CONFIG_AT24XX_SIZE == 512   /* AT24C512: 512Kbits = 64KiB; 512 * 128 = 65536 */
-#  define AT24XX_NPAGES     512
-#  define AT24XX_PAGESIZE   128
 #endif
 
 /* For applications where a file system is used on the AT24, the tiny page sizes
@@ -142,10 +139,8 @@ static ssize_t at24c_bread(FAR struct mtd_dev_s *dev, off_t startblock,
                            size_t nblocks, FAR uint8_t *buf);
 static ssize_t at24c_bwrite(FAR struct mtd_dev_s *dev, off_t startblock,
                             size_t nblocks, FAR const uint8_t *buf);
-#if 0 /* Not implemented */
 static ssize_t at24c_read(FAR struct mtd_dev_s *dev, off_t offset,
                           size_t nbytes,FAR uint8_t *buffer);
-#endif
 static int at24c_ioctl(FAR struct mtd_dev_s *dev, int cmd, unsigned long arg);
 
 /************************************************************************************
@@ -235,12 +230,17 @@ static ssize_t at24c_bread(FAR struct mtd_dev_s *dev, off_t startblock,
       uint8_t buf[2];
       buf[1] = offset & 0xff;
       buf[0] = (offset >> 8) & 0xff;
+      uint8_t tries = 100;
 
-      while (I2C_WRITE(priv->dev, buf, 2) < 0)
+      while (I2C_WRITE(priv->dev, buf, 2) < 0 && tries-- > 0)
         {
           fvdbg("wait\n");
           usleep(1000);
         }
+      if (tries == 0) {
+          fdbg("timed out reading at offset %u\n", (unsigned)offset);
+          return 0;
+      }
 
       I2C_READ(priv->dev, buffer, priv->pagesize);
       startblock++;
@@ -291,11 +291,17 @@ static ssize_t at24c_bwrite(FAR struct mtd_dev_s *dev, off_t startblock, size_t 
   while (blocksleft-- > 0)
     {
       uint16_t offset = startblock * priv->pagesize;
-      while (I2C_WRITE(priv->dev, (uint8_t *)&offset, 2) < 0)
+      uint8_t tries = 100;
+
+      while (I2C_WRITE(priv->dev, (uint8_t *)&offset, 2) < 0 && tries-- > 0)
         {
           fvdbg("wait\n");
           usleep(1000);
         }
+      if (tries == 0) {
+          fdbg("timed out writing at offset %u\n", (unsigned)offset);
+          return 0;
+      }
 
       buf[1] = offset & 0xff;
       buf[0] = (offset >> 8) & 0xff;
@@ -428,12 +434,6 @@ FAR struct mtd_dev_s *at24c_initialize(FAR struct i2c_dev_s *dev)
       priv->mtd.ioctl  = at24c_ioctl;
       priv->dev        = dev;
     }
-
-  /* Register the MTD with the procfs system if enabled */
-
-#ifdef CONFIG_MTD_REGISTRATION
-  mtd_register(&priv->mtd, "at24xx");
-#endif
 
   /* Return the implementation-specific state structure as the MTD device */
 

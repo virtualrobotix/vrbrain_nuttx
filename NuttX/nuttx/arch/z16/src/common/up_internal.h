@@ -185,13 +185,13 @@ extern void up_maskack_irq(int irq);
 /* Defined in board/up_leds.c */
 
 #ifdef CONFIG_ARCH_LEDS
-extern void board_led_initialize(void);
-extern void board_led_on(int led);
-extern void board_led_off(int led);
+extern void up_ledinit(void);
+extern void up_ledon(int led);
+extern void up_ledoff(int led);
 #else
-# define board_led_initialize()
-# define board_led_on(led)
-# define board_led_off(led)
+# define up_ledinit()
+# define up_ledon(led)
+# define up_ledoff(led)
 #endif
 
 /* Defined in board/up_network.c */

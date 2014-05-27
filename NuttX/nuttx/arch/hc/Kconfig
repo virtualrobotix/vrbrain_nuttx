@@ -4,14 +4,12 @@
 #
 
 if ARCH_HC
-
 choice
 	prompt "HC chip selection"
 	default ARCH_CHIP_MCS92S12NEC64
 
 config ARCH_CHIP_MCS92S12NEC64
 	bool "MCS92S12NEC64"
-	select ARCH_HSC12
 	---help---
 		Motorola/Freescale MCS92S12NEC64 (M9S12)
 
@@ -19,7 +17,7 @@ endchoice
 
 config ARCH_HSC12
 	bool
-	default n
+	default y			if ARCH_CHIP_MCS92S12NEC64
 
 config ARCH_CHIP
 	string
@@ -27,4 +25,4 @@ config ARCH_CHIP
 
 source arch/hc/src/m9s12/Kconfig
 
-endif # ARCH_HC
+endif
