@@ -71,7 +71,7 @@ __EXPORT void weak_function stm32_spiinitialize(void)
 {
 	stm32_configgpio(GPIO_SPI_CS_DATAFLASH);
 	stm32_configgpio(GPIO_SPI_CS_MS5611);
-	stm32_configgpio(GPIO_SPI_CS_MPU6000);
+	stm32_configgpio(GPIO_SPI_CS_MPU6000_OB);
 	stm32_configgpio(GPIO_SPI_CS_SDCARD);
 	stm32_configgpio(GPIO_SPI_CS_WIFI);
 	stm32_configgpio(GPIO_WIFI_EN);
@@ -83,7 +83,7 @@ __EXPORT void weak_function stm32_spiinitialize(void)
 	 */
 	stm32_gpiowrite(GPIO_SPI_CS_DATAFLASH, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_MS5611, 1);
-	stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_MPU6000_OB, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_SDCARD, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_WIFI, 1);
 }
@@ -121,9 +121,9 @@ __EXPORT void stm32_spi2select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, 
 	/* SPI select is active low, so write !selected to select the device */
 
 	switch (devid) {
-	case SPIDEV_MPU6000:
+	case SPIDEV_MPU6000_OB:
 		/* Making sure the other peripherals are not selected */
-		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000_OB, !selected);
 		break;
 
 	default:

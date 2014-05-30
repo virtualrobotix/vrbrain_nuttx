@@ -293,7 +293,7 @@ __EXPORT int nsh_archinitialize(void)
 	SPI_SETFREQUENCY(spi2, 10000000);
 	SPI_SETBITS(spi2, 8);
 	SPI_SETMODE(spi2, SPIDEV_MODE3);
-	SPI_SELECT(spi2, GPIO_SPI_CS_MPU6000, false);
+	SPI_SELECT(spi2, GPIO_SPI_CS_MPU6000_OB, false);
 
 	message("[boot] Successfully initialized SPI port 2\n");
 

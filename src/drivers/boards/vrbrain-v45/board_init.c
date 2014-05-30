@@ -290,11 +290,11 @@ __EXPORT int nsh_archinitialize(void)
 	SPI_SETFREQUENCY(spi2, 10000000);
 	SPI_SETBITS(spi2, 8);
 	SPI_SETMODE(spi2, SPIDEV_MODE3);
-	SPI_SELECT(spi2, GPIO_SPI_CS_MPU6000, false);
+	SPI_SELECT(spi2, GPIO_SPI_CS_MPU6000_OB, false);
 
 	message("[boot] Successfully initialized SPI port 2\n");
 
-#ifndef CONFIG_WL_CC3000
+#ifndef MPU6000_EXTERNAL
 	/* Get the SPI port for the microSD slot */
 
 	message("[boot] Initializing SPI port 3\n");
@@ -319,8 +319,23 @@ __EXPORT int nsh_archinitialize(void)
 
 	message("[boot] Successfully bound SPI port 3 to the MMCSD driver\n");
 #else
-//	message("[boot] Initializing Wireless Module\n");
-//	wireless_archinitialize();
+	message("[boot] Initializing SPI port 3\n");
+	spi3 = up_spiinitialize(3);
+
+	if (!spi3) {
+		message("[boot] FAILED to initialize SPI port 3\r\n");
+		led_on(LED_AMBER);
+		return -ENODEV;
+	}
+
+	/* Default SPI2 to 1MHz and de-assert the known chip selects. */
+	SPI_SETFREQUENCY(spi3, 10000000);
+	SPI_SETBITS(spi3, 8);
+	SPI_SETMODE(spi3, SPIDEV_MODE3);
+	SPI_SELECT(spi3, GPIO_SPI_CS_MPU6000_EXT, false);
+
+	message("[boot] Successfully initialized SPI port 3\n");
+
 #endif
 
 	return OK;
