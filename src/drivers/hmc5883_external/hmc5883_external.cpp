@@ -1350,7 +1350,7 @@ test()
 	int fd = open(HMC5883L_DEVICE_PATH, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'hmc5883 start' if the driver is not running", HMC5883L_DEVICE_PATH);
+		err(1, "%s open failed (try 'hmc5883_external start' if the driver is not running", HMC5883L_DEVICE_PATH);
 
 	/* do a simple demand read */
 	sz = read(fd, &report, sizeof(report));
