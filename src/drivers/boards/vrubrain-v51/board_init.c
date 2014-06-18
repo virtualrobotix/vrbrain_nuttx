@@ -127,11 +127,6 @@ __EXPORT void stm32_boardinitialize(void)
 	/* configure SPI interfaces */
 	stm32_spiinitialize();
 
-	/* configure LEDs (empty call to NuttX' ledinit) */
-
-
-	/* configure BUZZERSs */
-	buzzer_init();
 }
 
 /****************************************************************************
@@ -252,9 +247,6 @@ __EXPORT int nsh_archinitialize(void)
 	led_off(LED_EXT1);
 	led_off(LED_EXT2);
 
-
-	message("[boot] Initializing USB detect\n");
-	stm32_usbinitialize();
 
 	/* Configure SPI-based devices */
 
