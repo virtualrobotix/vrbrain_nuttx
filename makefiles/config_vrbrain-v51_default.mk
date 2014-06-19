@@ -57,7 +57,7 @@ MODULES		+= drivers/ms5611
 # System commands
 #
 MODULES		+= systemcmds/mtd
-
+MODULES		+= systemcmds/bl_update
 
 
 
@@ -65,8 +65,8 @@ MODULES		+= systemcmds/mtd
 
 MODULES		+= systemcmds/pwm
 
-MODULES		+= systemcmds/top
 MODULES		+= systemcmds/reboot
+MODULES		+= systemcmds/top
 
 
 MODULES		+= systemcmds/tests
