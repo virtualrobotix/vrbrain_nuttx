@@ -32,12 +32,12 @@
 ############################################################################
 
 #
-# Makefile to build the MPU6000 external driver.
+# Makefile to build the MPU6000 onboard driver.
 #
 
-MODULE_COMMAND	= mpu6000e
+MODULE_COMMAND	= mpu6000_onboard
 
 # XXX seems excessive, check if 2048 is not sufficient
 MODULE_STACKSIZE	 = 4096
 
-SRCS		= mpu6000e.cpp
+SRCS		= mpu6000_onboard.cpp

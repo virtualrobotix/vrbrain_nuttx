@@ -26,14 +26,15 @@ MODULES		+= drivers/vrbrain/vrinput
 
 
 
-MODULES		+= drivers/mpu6000e
-MODULES		+= drivers/mpu6000i
+#MODULES		+= drivers/mpu6000
+MODULES		+= drivers/mpu6000_external
+MODULES		+= drivers/mpu6000_onboard
 
-MODULES		+= drivers/hmc5883e
-MODULES		+= drivers/hmc5883i
+#MODULES		+= drivers/hmc5883
+MODULES		+= drivers/hmc5883_external
+MODULES		+= drivers/hmc5883_onboard
 
-#MODULES		+= drivers/hmc5983e
-#MODULES		+= drivers/hmc5983i
+#MODULES		+= drivers/hmc5983_external
 
 MODULES		+= drivers/ms5611
 

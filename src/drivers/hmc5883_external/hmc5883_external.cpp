@@ -32,7 +32,7 @@
  ****************************************************************************/
 
 /**
- * @file hmc5883e.cpp
+ * @file hmc5883_external.cpp
  *
  * Driver for the HMC5883 magnetometer external connected via I2C.
  */
@@ -130,11 +130,11 @@ static const int ERROR = -1;
 # error This requires CONFIG_SCHED_WORKQUEUE.
 #endif
 
-class HMC5883E : public device::I2C
+class HMC5883EXTERNAL : public device::I2C
 {
 public:
-	HMC5883E(int bus);
-	virtual ~HMC5883E();
+	HMC5883EXTERNAL(int bus);
+	virtual ~HMC5883EXTERNAL();
 
 	virtual int		init();
 
@@ -318,20 +318,20 @@ private:
 /*
  * Driver 'main' command.
  */
-extern "C" __EXPORT int hmc5883e_main(int argc, char *argv[]);
+extern "C" __EXPORT int hmc5883_external_main(int argc, char *argv[]);
 
 
-HMC5883E::HMC5883E(int bus) :
-	I2C("HMC5883E", HMC5883L_DEVICE_PATH, bus, HMC5883L_ADDRESS, 400000),
+HMC5883EXTERNAL::HMC5883EXTERNAL(int bus) :
+	I2C("HMC5883EXTERNAL", HMC5883L_DEVICE_PATH, bus, HMC5883L_ADDRESS, 400000),
 	_measure_ticks(0),
 	_reports(nullptr),
 	_range_scale(0), /* default range scale from counts to gauss */
 	_range_ga(1.3f),
 	_mag_topic(-1),
 	_class_instance(-1),
-	_sample_perf(perf_alloc(PC_ELAPSED, "hmc5883e_read")),
-	_comms_errors(perf_alloc(PC_COUNT, "hmc5883e_comms_errors")),
-	_buffer_overflows(perf_alloc(PC_COUNT, "hmc5883e_buffer_overflows")),
+	_sample_perf(perf_alloc(PC_ELAPSED, "hmc5883_external_read")),
+	_comms_errors(perf_alloc(PC_COUNT, "hmc5883_external_comms_errors")),
+	_buffer_overflows(perf_alloc(PC_COUNT, "hmc5883_external_buffer_overflows")),
 	_sensor_ok(false),
 	_calibrated(false),
 	_bus(bus)
@@ -351,7 +351,7 @@ HMC5883E::HMC5883E(int bus) :
 	memset(&_work, 0, sizeof(_work));
 }
 
-HMC5883E::~HMC5883E()
+HMC5883EXTERNAL::~HMC5883EXTERNAL()
 {
 	/* make sure we are truly inactive */
 	stop();
@@ -369,7 +369,7 @@ HMC5883E::~HMC5883E()
 }
 
 int
-HMC5883E::init()
+HMC5883EXTERNAL::init()
 {
 	int ret = ERROR;
 
@@ -394,7 +394,7 @@ out:
 	return ret;
 }
 
-int HMC5883E::set_range(unsigned range)
+int HMC5883EXTERNAL::set_range(unsigned range)
 {
 	uint8_t range_bits;
 
@@ -459,7 +459,7 @@ int HMC5883E::set_range(unsigned range)
 }
 
 int
-HMC5883E::probe()
+HMC5883EXTERNAL::probe()
 {
 	uint8_t data[3] = {0, 0, 0};
 
@@ -483,7 +483,7 @@ HMC5883E::probe()
 }
 
 ssize_t
-HMC5883E::read(struct file *filp, char *buffer, size_t buflen)
+HMC5883EXTERNAL::read(struct file *filp, char *buffer, size_t buflen)
 {
 	unsigned count = buflen / sizeof(struct mag_report);
 	struct mag_report *mag_buf = reinterpret_cast<struct mag_report *>(buffer);
@@ -540,7 +540,7 @@ HMC5883E::read(struct file *filp, char *buffer, size_t buflen)
 }
 
 int
-HMC5883E::ioctl(struct file *filp, int cmd, unsigned long arg)
+HMC5883EXTERNAL::ioctl(struct file *filp, int cmd, unsigned long arg)
 {
 	switch (cmd) {
 	case SENSORIOCSPOLLRATE: {
@@ -676,39 +676,39 @@ HMC5883E::ioctl(struct file *filp, int cmd, unsigned long arg)
 }
 
 void
-HMC5883E::start()
+HMC5883EXTERNAL::start()
 {
 	/* reset the report ring and state machine */
 	_collect_phase = false;
 	_reports->flush();
 
 	/* schedule a cycle to start things */
-	work_queue(HPWORK, &_work, (worker_t)&HMC5883E::cycle_trampoline, this, 1);
+	work_queue(HPWORK, &_work, (worker_t)&HMC5883EXTERNAL::cycle_trampoline, this, 1);
 }
 
 void
-HMC5883E::stop()
+HMC5883EXTERNAL::stop()
 {
 	work_cancel(HPWORK, &_work);
 }
 
 int
-HMC5883E::reset()
+HMC5883EXTERNAL::reset()
 {
 	/* set range */
 	return set_range(_range_ga);
 }
 
 void
-HMC5883E::cycle_trampoline(void *arg)
+HMC5883EXTERNAL::cycle_trampoline(void *arg)
 {
-	HMC5883E *dev = (HMC5883E *)arg;
+	HMC5883EXTERNAL *dev = (HMC5883EXTERNAL *)arg;
 
 	dev->cycle();
 }
 
 void
-HMC5883E::cycle()
+HMC5883EXTERNAL::cycle()
 {
 	/* collection phase? */
 	if (_collect_phase) {
@@ -732,7 +732,7 @@ HMC5883E::cycle()
 			/* schedule a fresh cycle call when we are ready to measure again */
 			work_queue(HPWORK,
 				   &_work,
-				   (worker_t)&HMC5883E::cycle_trampoline,
+				   (worker_t)&HMC5883EXTERNAL::cycle_trampoline,
 				   this,
 				   _measure_ticks - USEC2TICK(HMC5883_CONVERSION_INTERVAL));
 
@@ -750,13 +750,13 @@ HMC5883E::cycle()
 	/* schedule a fresh cycle call when the measurement is done */
 	work_queue(HPWORK,
 		   &_work,
-		   (worker_t)&HMC5883E::cycle_trampoline,
+		   (worker_t)&HMC5883EXTERNAL::cycle_trampoline,
 		   this,
 		   USEC2TICK(HMC5883_CONVERSION_INTERVAL));
 }
 
 int
-HMC5883E::measure()
+HMC5883EXTERNAL::measure()
 {
 	int ret;
 
@@ -772,7 +772,7 @@ HMC5883E::measure()
 }
 
 int
-HMC5883E::collect()
+HMC5883EXTERNAL::collect()
 {
 #pragma pack(push, 1)
 	struct { /* status register and data as read back from the device */
@@ -931,7 +931,7 @@ out:
 	return ret;
 }
 
-int HMC5883E::calibrate(struct file *filp, unsigned enable)
+int HMC5883EXTERNAL::calibrate(struct file *filp, unsigned enable)
 {
 	struct mag_report report;
 	ssize_t sz;
@@ -1126,7 +1126,7 @@ out:
 	return ret;
 }
 
-int HMC5883E::check_scale()
+int HMC5883EXTERNAL::check_scale()
 {
 	bool scale_valid;
 
@@ -1143,7 +1143,7 @@ int HMC5883E::check_scale()
 	return !scale_valid;
 }
 
-int HMC5883E::check_offset()
+int HMC5883EXTERNAL::check_offset()
 {
 	bool offset_valid;
 
@@ -1160,7 +1160,7 @@ int HMC5883E::check_offset()
 	return !offset_valid;
 }
 
-int HMC5883E::check_calibration()
+int HMC5883EXTERNAL::check_calibration()
 {
 	bool offset_valid = (check_offset() == OK);
 	bool scale_valid  = (check_scale() == OK);
@@ -1194,7 +1194,7 @@ int HMC5883E::check_calibration()
 	return (!_calibrated);
 }
 
-int HMC5883E::set_excitement(unsigned enable)
+int HMC5883EXTERNAL::set_excitement(unsigned enable)
 {
 	int ret;
 	/* arm the excitement strap */
@@ -1230,7 +1230,7 @@ int HMC5883E::set_excitement(unsigned enable)
 }
 
 int
-HMC5883E::write_reg(uint8_t reg, uint8_t val)
+HMC5883EXTERNAL::write_reg(uint8_t reg, uint8_t val)
 {
 	uint8_t cmd[] = { reg, val };
 
@@ -1238,13 +1238,13 @@ HMC5883E::write_reg(uint8_t reg, uint8_t val)
 }
 
 int
-HMC5883E::read_reg(uint8_t reg, uint8_t &val)
+HMC5883EXTERNAL::read_reg(uint8_t reg, uint8_t &val)
 {
 	return transfer(&reg, 1, &val, 1);
 }
 
 float
-HMC5883E::meas_to_float(uint8_t in[2])
+HMC5883EXTERNAL::meas_to_float(uint8_t in[2])
 {
 	union {
 		uint8_t	b[2];
@@ -1258,7 +1258,7 @@ HMC5883E::meas_to_float(uint8_t in[2])
 }
 
 void
-HMC5883E::print_info()
+HMC5883EXTERNAL::print_info()
 {
 	perf_print_counter(_sample_perf);
 	perf_print_counter(_comms_errors);
@@ -1275,7 +1275,7 @@ HMC5883E::print_info()
 /**
  * Local functions in support of the shell command.
  */
-namespace hmc5883e
+namespace hmc5883_external
 {
 
 /* oddly, ERROR is not defined for c++ */
@@ -1284,7 +1284,7 @@ namespace hmc5883e
 #endif
 const int ERROR = -1;
 
-HMC5883E	*g_dev;
+HMC5883EXTERNAL	*g_dev;
 
 void	start();
 void	test();
@@ -1305,7 +1305,7 @@ start()
 		errx(0, "already started");
 
 	/* create the driver, attempt expansion bus first */
-	g_dev = new HMC5883E(I2C_BUS_EXTERNAL_HMC5883);
+	g_dev = new HMC5883EXTERNAL(I2C_BUS_EXTERNAL_HMC5883);
 	if (g_dev != nullptr && OK != g_dev->init()) {
 		delete g_dev;
 		g_dev = nullptr;
@@ -1350,7 +1350,7 @@ test()
 	int fd = open(HMC5883L_DEVICE_PATH, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'hmc5883e start' if the driver is not running", HMC5883L_DEVICE_PATH);
+		err(1, "%s open failed (try 'hmc5883_external start' if the driver is not running", HMC5883L_DEVICE_PATH);
 
 	/* do a simple demand read */
 	sz = read(fd, &report, sizeof(report));
@@ -1450,7 +1450,7 @@ int calibrate()
 	int fd = open(HMC5883L_DEVICE_PATH, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'hmc5883e start' if the driver is not running", HMC5883L_DEVICE_PATH);
+		err(1, "%s open failed (try 'hmc5883_external start' if the driver is not running", HMC5883L_DEVICE_PATH);
 
 	if (OK != (ret = ioctl(fd, MAGIOCCALIBRATE, fd))) {
 		warnx("failed to enable sensor calibration mode");
@@ -1504,37 +1504,37 @@ info()
 } // namespace
 
 int
-hmc5883e_main(int argc, char *argv[])
+hmc5883_external_main(int argc, char *argv[])
 {
 	/*
 	 * Start/load the driver.
 	 */
 	if (!strcmp(argv[1], "start"))
-		hmc5883e::start();
+		hmc5883_external::start();
 
 	/*
 	 * Test the driver/device.
 	 */
 	if (!strcmp(argv[1], "test"))
-		hmc5883e::test();
+		hmc5883_external::test();
 
 	/*
 	 * Reset the driver.
 	 */
 	if (!strcmp(argv[1], "reset"))
-		hmc5883e::reset();
+		hmc5883_external::reset();
 
 	/*
 	 * Print driver information.
 	 */
 	if (!strcmp(argv[1], "info") || !strcmp(argv[1], "status"))
-		hmc5883e::info();
+		hmc5883_external::info();
 
 	/*
 	 * Autocalibrate the scaling
 	 */
 	if (!strcmp(argv[1], "calibrate")) {
-		if (hmc5883e::calibrate() == 0) {
+		if (hmc5883_external::calibrate() == 0) {
 			errx(0, "calibration successful");
 
 		} else {

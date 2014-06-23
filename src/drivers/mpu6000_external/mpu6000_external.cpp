@@ -32,9 +32,9 @@
  ****************************************************************************/
 
 /**
- * @file mpu6000i.cpp
+ * @file mpu6000_external.cpp
  *
- * Driver for the Invensense MPU6000 onboard connected via SPI.
+ * Driver for the Invensense MPU6000 external connected via SPI.
  *
  * @author Andrew Tridgell
  * @author Pat Hickey
@@ -78,8 +78,8 @@
 #define DIR_READ			0x80
 #define DIR_WRITE			0x00
 
-#define MPU_DEVICE_PATH_ACCEL		"/dev/mpu6000i_accel"
-#define MPU_DEVICE_PATH_GYRO		"/dev/mpu6000i_gyro"
+#define MPU_DEVICE_PATH_ACCEL		"/dev/mpu6000_external_accel"
+#define MPU_DEVICE_PATH_GYRO		"/dev/mpu6000_external_gyro"
 
 // MPU 6000 registers
 #define MPUREG_WHOAMI			0x75
@@ -175,13 +175,13 @@
 #define MPU6000_LOW_BUS_SPEED				1000*1000
 #define MPU6000_HIGH_BUS_SPEED				10*1000*1000
 
-class MPU6000I_gyro;
+class MPU6000EXTERNAL_gyro;
 
-class MPU6000I : public device::SPI
+class MPU6000EXTERNAL : public device::SPI
 {
 public:
-	MPU6000I(int bus, spi_dev_e device);
-	virtual ~MPU6000I();
+	MPU6000EXTERNAL(int bus, spi_dev_e device);
+	virtual ~MPU6000EXTERNAL();
 
 	virtual int		init();
 
@@ -196,13 +196,13 @@ public:
 protected:
 	virtual int		probe();
 
-	friend class MPU6000I_gyro;
+	friend class MPU6000EXTERNAL_gyro;
 
 	virtual ssize_t		gyro_read(struct file *filp, char *buffer, size_t buflen);
 	virtual int		gyro_ioctl(struct file *filp, int cmd, unsigned long arg);
 
 private:
-	MPU6000I_gyro		*_gyro;
+	MPU6000EXTERNAL_gyro		*_gyro;
 	uint8_t			_product;	/** product code */
 
 	struct hrt_call		_call;
@@ -346,11 +346,11 @@ private:
 /**
  * Helper class implementing the gyro driver node.
  */
-class MPU6000I_gyro : public device::CDev
+class MPU6000EXTERNAL_gyro : public device::CDev
 {
 public:
-	MPU6000I_gyro(MPU6000I *parent);
-	~MPU6000I_gyro();
+	MPU6000EXTERNAL_gyro(MPU6000EXTERNAL *parent);
+	~MPU6000EXTERNAL_gyro();
 
 	virtual ssize_t		read(struct file *filp, char *buffer, size_t buflen);
 	virtual int		ioctl(struct file *filp, int cmd, unsigned long arg);
@@ -358,23 +358,23 @@ public:
 	virtual int		init();
 
 protected:
-	friend class MPU6000I;
+	friend class MPU6000EXTERNAL;
 
 	void			parent_poll_notify();
 
 private:
-	MPU6000I			*_parent;
+	MPU6000EXTERNAL			*_parent;
 	orb_advert_t		_gyro_topic;
 	int			_gyro_class_instance;
 
 };
 
 /** driver 'main' command */
-extern "C" { __EXPORT int mpu6000i_main(int argc, char *argv[]); }
+extern "C" { __EXPORT int mpu6000_external_main(int argc, char *argv[]); }
 
-MPU6000I::MPU6000I(int bus, spi_dev_e device) :
-	SPI("MPU6000I", MPU_DEVICE_PATH_ACCEL, bus, device, SPIDEV_MODE3, MPU6000_LOW_BUS_SPEED),
-	_gyro(new MPU6000I_gyro(this)),
+MPU6000EXTERNAL::MPU6000EXTERNAL(int bus, spi_dev_e device) :
+	SPI("MPU6000EXTERNAL", MPU_DEVICE_PATH_ACCEL, bus, device, SPIDEV_MODE3, MPU6000_LOW_BUS_SPEED),
+	_gyro(new MPU6000EXTERNAL_gyro(this)),
 	_product(0),
 	_call_interval(0),
 	_accel_reports(nullptr),
@@ -386,11 +386,11 @@ MPU6000I::MPU6000I(int bus, spi_dev_e device) :
 	_gyro_range_scale(0.0f),
 	_gyro_range_rad_s(0.0f),
 	_sample_rate(1000),
-	_accel_reads(perf_alloc(PC_COUNT, "mpu6000i_accel_read")),
-	_gyro_reads(perf_alloc(PC_COUNT, "mpu6000i_gyro_read")),
-	_sample_perf(perf_alloc(PC_ELAPSED, "mpu6000i_read")),
-	_bad_transfers(perf_alloc(PC_COUNT, "mpu6000i_bad_transfers")),
-	_good_transfers(perf_alloc(PC_COUNT, "mpu6000i_good_transfers")),
+	_accel_reads(perf_alloc(PC_COUNT, "mpu6000_external_accel_read")),
+	_gyro_reads(perf_alloc(PC_COUNT, "mpu6000_external_gyro_read")),
+	_sample_perf(perf_alloc(PC_ELAPSED, "mpu6000_external_read")),
+	_bad_transfers(perf_alloc(PC_COUNT, "mpu6000_external_bad_transfers")),
+	_good_transfers(perf_alloc(PC_COUNT, "mpu6000_external_good_transfers")),
 	_accel_filter_x(MPU6000_ACCEL_DEFAULT_RATE, MPU6000_ACCEL_DEFAULT_DRIVER_FILTER_FREQ),
 	_accel_filter_y(MPU6000_ACCEL_DEFAULT_RATE, MPU6000_ACCEL_DEFAULT_DRIVER_FILTER_FREQ),
 	_accel_filter_z(MPU6000_ACCEL_DEFAULT_RATE, MPU6000_ACCEL_DEFAULT_DRIVER_FILTER_FREQ),
@@ -420,7 +420,7 @@ MPU6000I::MPU6000I(int bus, spi_dev_e device) :
 	memset(&_call, 0, sizeof(_call));
 }
 
-MPU6000I::~MPU6000I()
+MPU6000EXTERNAL::~MPU6000EXTERNAL()
 {
 	/* make sure we are truly inactive */
 	stop();
@@ -446,7 +446,7 @@ MPU6000I::~MPU6000I()
 }
 
 int
-MPU6000I::init()
+MPU6000EXTERNAL::init()
 {
 	int ret;
 
@@ -528,7 +528,7 @@ out:
 	return ret;
 }
 
-void MPU6000I::reset()
+void MPU6000EXTERNAL::reset()
 {
 	// if the mpu6000 is initialised after the l3gd20 and lsm303d
 	// then if we don't do an irqsave/irqrestore here the mpu6000
@@ -620,7 +620,7 @@ void MPU6000I::reset()
 }
 
 int
-MPU6000I::probe()
+MPU6000EXTERNAL::probe()
 {
 
 	/* look for a product ID we recognise */
@@ -652,7 +652,7 @@ MPU6000I::probe()
   set sample rate (approximate) - 1kHz to 5Hz, for both accel and gyro
 */
 void
-MPU6000I::_set_sample_rate(uint16_t desired_sample_rate_hz)
+MPU6000EXTERNAL::_set_sample_rate(uint16_t desired_sample_rate_hz)
 {
   uint8_t div = 1000 / desired_sample_rate_hz;
   if(div>200) div=200;
@@ -665,7 +665,7 @@ MPU6000I::_set_sample_rate(uint16_t desired_sample_rate_hz)
   set the DLPF filter frequency. This affects both accel and gyro.
  */
 void
-MPU6000I::_set_dlpf_filter(uint16_t frequency_hz)
+MPU6000EXTERNAL::_set_dlpf_filter(uint16_t frequency_hz)
 {
 	uint8_t filter;
 
@@ -695,7 +695,7 @@ MPU6000I::_set_dlpf_filter(uint16_t frequency_hz)
 }
 
 ssize_t
-MPU6000I::read(struct file *filp, char *buffer, size_t buflen)
+MPU6000EXTERNAL::read(struct file *filp, char *buffer, size_t buflen)
 {
 	unsigned count = buflen / sizeof(accel_report);
 
@@ -730,7 +730,7 @@ MPU6000I::read(struct file *filp, char *buffer, size_t buflen)
 }
 
 int
-MPU6000I::self_test()
+MPU6000EXTERNAL::self_test()
 {
 	if (perf_event_count(_sample_perf) == 0) {
 		measure();
@@ -741,7 +741,7 @@ MPU6000I::self_test()
 }
 
 int
-MPU6000I::accel_self_test()
+MPU6000EXTERNAL::accel_self_test()
 {
 	if (self_test())
 		return 1;
@@ -766,7 +766,7 @@ MPU6000I::accel_self_test()
 }
 
 int
-MPU6000I::gyro_self_test()
+MPU6000EXTERNAL::gyro_self_test()
 {
 	if (self_test())
 		return 1;
@@ -791,7 +791,7 @@ MPU6000I::gyro_self_test()
 }
 
 ssize_t
-MPU6000I::gyro_read(struct file *filp, char *buffer, size_t buflen)
+MPU6000EXTERNAL::gyro_read(struct file *filp, char *buffer, size_t buflen)
 {
 	unsigned count = buflen / sizeof(gyro_report);
 
@@ -826,7 +826,7 @@ MPU6000I::gyro_read(struct file *filp, char *buffer, size_t buflen)
 }
 
 int
-MPU6000I::ioctl(struct file *filp, int cmd, unsigned long arg)
+MPU6000EXTERNAL::ioctl(struct file *filp, int cmd, unsigned long arg)
 {
 	switch (cmd) {
 
@@ -977,7 +977,7 @@ MPU6000I::ioctl(struct file *filp, int cmd, unsigned long arg)
 }
 
 int
-MPU6000I::gyro_ioctl(struct file *filp, int cmd, unsigned long arg)
+MPU6000EXTERNAL::gyro_ioctl(struct file *filp, int cmd, unsigned long arg)
 {
 	switch (cmd) {
 
@@ -1054,7 +1054,7 @@ MPU6000I::gyro_ioctl(struct file *filp, int cmd, unsigned long arg)
 }
 
 uint8_t
-MPU6000I::read_reg(unsigned reg)
+MPU6000EXTERNAL::read_reg(unsigned reg)
 {
 	uint8_t cmd[2] = { (uint8_t)(reg | DIR_READ), 0};
 
@@ -1067,7 +1067,7 @@ MPU6000I::read_reg(unsigned reg)
 }
 
 uint16_t
-MPU6000I::read_reg16(unsigned reg)
+MPU6000EXTERNAL::read_reg16(unsigned reg)
 {
 	uint8_t cmd[3] = { (uint8_t)(reg | DIR_READ), 0, 0 };
 
@@ -1080,7 +1080,7 @@ MPU6000I::read_reg16(unsigned reg)
 }
 
 void
-MPU6000I::write_reg(unsigned reg, uint8_t value)
+MPU6000EXTERNAL::write_reg(unsigned reg, uint8_t value)
 {
 	uint8_t	cmd[2];
 
@@ -1094,7 +1094,7 @@ MPU6000I::write_reg(unsigned reg, uint8_t value)
 }
 
 void
-MPU6000I::modify_reg(unsigned reg, uint8_t clearbits, uint8_t setbits)
+MPU6000EXTERNAL::modify_reg(unsigned reg, uint8_t clearbits, uint8_t setbits)
 {
 	uint8_t	val;
 
@@ -1105,7 +1105,7 @@ MPU6000I::modify_reg(unsigned reg, uint8_t clearbits, uint8_t setbits)
 }
 
 int
-MPU6000I::set_range(unsigned max_g)
+MPU6000EXTERNAL::set_range(unsigned max_g)
 {
 #if 0
 	uint8_t rangebits;
@@ -1147,7 +1147,7 @@ MPU6000I::set_range(unsigned max_g)
 }
 
 void
-MPU6000I::start()
+MPU6000EXTERNAL::start()
 {
 	/* make sure we are stopped first */
 	stop();
@@ -1157,26 +1157,26 @@ MPU6000I::start()
 	_gyro_reports->flush();
 
 	/* start polling at the specified rate */
-	hrt_call_every(&_call, 1000, _call_interval, (hrt_callout)&MPU6000I::measure_trampoline, this);
+	hrt_call_every(&_call, 1000, _call_interval, (hrt_callout)&MPU6000EXTERNAL::measure_trampoline, this);
 }
 
 void
-MPU6000I::stop()
+MPU6000EXTERNAL::stop()
 {
 	hrt_cancel(&_call);
 }
 
 void
-MPU6000I::measure_trampoline(void *arg)
+MPU6000EXTERNAL::measure_trampoline(void *arg)
 {
-	MPU6000I *dev = reinterpret_cast<MPU6000I *>(arg);
+	MPU6000EXTERNAL *dev = reinterpret_cast<MPU6000EXTERNAL *>(arg);
 
 	/* make another measurement */
 	dev->measure();
 }
 
 void
-MPU6000I::measure()
+MPU6000EXTERNAL::measure()
 {
 #pragma pack(push, 1)
 	/**
@@ -1412,7 +1412,7 @@ MPU6000I::measure()
 }
 
 void
-MPU6000I::print_info()
+MPU6000EXTERNAL::print_info()
 {
 	perf_print_counter(_sample_perf);
 	perf_print_counter(_accel_reads);
@@ -1423,22 +1423,22 @@ MPU6000I::print_info()
 	_gyro_reports->print_info("gyro queue");
 }
 
-MPU6000I_gyro::MPU6000I_gyro(MPU6000I *parent) :
-	CDev("MPU6000I_gyro", MPU_DEVICE_PATH_GYRO),
+MPU6000EXTERNAL_gyro::MPU6000EXTERNAL_gyro(MPU6000EXTERNAL *parent) :
+	CDev("MPU6000EXTERNAL_gyro", MPU_DEVICE_PATH_GYRO),
 	_parent(parent),
 	_gyro_topic(-1),
 	_gyro_class_instance(-1)
 {
 }
 
-MPU6000I_gyro::~MPU6000I_gyro()
+MPU6000EXTERNAL_gyro::~MPU6000EXTERNAL_gyro()
 {
 	if (_gyro_class_instance != -1)
 		unregister_class_devname(GYRO_DEVICE_PATH, _gyro_class_instance);
 }
 
 int
-MPU6000I_gyro::init()
+MPU6000EXTERNAL_gyro::init()
 {
 	int ret;
 
@@ -1458,19 +1458,19 @@ out:
 }
 
 void
-MPU6000I_gyro::parent_poll_notify()
+MPU6000EXTERNAL_gyro::parent_poll_notify()
 {
 	poll_notify(POLLIN);
 }
 
 ssize_t
-MPU6000I_gyro::read(struct file *filp, char *buffer, size_t buflen)
+MPU6000EXTERNAL_gyro::read(struct file *filp, char *buffer, size_t buflen)
 {
 	return _parent->gyro_read(filp, buffer, buflen);
 }
 
 int
-MPU6000I_gyro::ioctl(struct file *filp, int cmd, unsigned long arg)
+MPU6000EXTERNAL_gyro::ioctl(struct file *filp, int cmd, unsigned long arg)
 {
 	return _parent->gyro_ioctl(filp, cmd, arg);
 }
@@ -1478,10 +1478,10 @@ MPU6000I_gyro::ioctl(struct file *filp, int cmd, unsigned long arg)
 /**
  * Local functions in support of the shell command.
  */
-namespace mpu6000i
+namespace mpu6000_external
 {
 
-MPU6000I	*g_dev;
+MPU6000EXTERNAL	*g_dev;
 
 void	start();
 void	test();
@@ -1501,7 +1501,7 @@ start()
 		errx(0, "already started");
 
 	/* create the driver */
-	g_dev = new MPU6000I(SPI_BUS_MPU6000_OB, (spi_dev_e)SPIDEV_MPU6000_OB);
+	g_dev = new MPU6000EXTERNAL(SPI_BUS_MPU6000_EXT, (spi_dev_e)SPIDEV_MPU6000_EXT);
 
 	if (g_dev == nullptr)
 		goto fail;
@@ -1547,7 +1547,7 @@ test()
 	int fd = open(MPU_DEVICE_PATH_ACCEL, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'mpu6000i start' if the driver is not running)",
+		err(1, "%s open failed (try 'mpu6000_external start' if the driver is not running)",
 		    MPU_DEVICE_PATH_ACCEL);
 
 	/* get the driver */
@@ -1647,32 +1647,32 @@ info()
 } // namespace
 
 int
-mpu6000i_main(int argc, char *argv[])
+mpu6000_external_main(int argc, char *argv[])
 {
 	/*
 	 * Start/load the driver.
 
 	 */
 	if (!strcmp(argv[1], "start"))
-		mpu6000i::start();
+		mpu6000_external::start();
 
 	/*
 	 * Test the driver/device.
 	 */
 	if (!strcmp(argv[1], "test"))
-		mpu6000i::test();
+		mpu6000_external::test();
 
 	/*
 	 * Reset the driver.
 	 */
 	if (!strcmp(argv[1], "reset"))
-		mpu6000i::reset();
+		mpu6000_external::reset();
 
 	/*
 	 * Print driver information.
 	 */
 	if (!strcmp(argv[1], "info"))
-		mpu6000i::info();
+		mpu6000_external::info();
 
 	errx(1, "unrecognized command, try 'start', 'test', 'reset' or 'info'");
 }
