@@ -32,12 +32,12 @@
 ############################################################################
 
 #
-# HMC5883 onboard driver
+# HMC5883 external driver
 #
 
-MODULE_COMMAND	= hmc5883_onboard
+MODULE_COMMAND	= hmc5883e
 
 # XXX seems excessive, check if 2048 is sufficient
 MODULE_STACKSIZE	= 4096
 
-SRCS		= hmc5883_onboard.cpp
+SRCS		= hmc5883e.cpp
