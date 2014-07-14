@@ -278,29 +278,13 @@ mtd_start(char *partition_names[], unsigned n_partitions)
 		errx(1, "mtd already mounted");
 
 	if (!attached) {
-		#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
-			at24xxx_attach();
-		#elif defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
-			ramtron_attach();
-		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
-			at24xxx_attach();
-		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-			at24xxx_attach();
-		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
-			at24xxx_attach();
-		#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
 #if defined(CONFIG_MTD_RAMTRON)
-			ramtron_attach();
+		ramtron_attach();
 #elif defined(CONFIG_MTD_AT45DB)
-			at45db_attach();
+		at45db_attach();
 #else
-			at24xxx_attach();
+		at24xxx_attach();
 #endif
-		#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
-			at24xxx_attach();
-		#elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
-			at24xxx_attach();
-		#endif
 	}
 
 	if (!mtd_dev) {

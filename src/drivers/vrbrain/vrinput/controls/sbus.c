@@ -154,10 +154,8 @@ sbus_input(uint16_t *values, uint16_t *num_values, bool *sbus_failsafe, bool *sb
 	ret = read(sbus_fd, &frame[partial_frame_count], SBUS_FRAME_SIZE - partial_frame_count);
 
 	/* if the read failed for any reason, just give up here */
-	if (ret < 1) {
-//		debug("[sbus] read failed");
+	if (ret < 1)
 		return false;
-	}
 
 	last_rx_time = now;
 
@@ -166,15 +164,12 @@ sbus_input(uint16_t *values, uint16_t *num_values, bool *sbus_failsafe, bool *sb
 	 */
 	partial_frame_count += ret;
 
-	/*,
+	/*
 	 * If we don't have a full frame, return
 	 */
-	if (partial_frame_count < SBUS_FRAME_SIZE) {
-//		debug("[sbus] partial_frame_count < SBUS_FRAME_SIZE");
+	if (partial_frame_count < SBUS_FRAME_SIZE)
 		return false;
-	}
 
-//	debug("[sbus] %u: %s", partial_frame_count, frame);
 	/*
 	 * Great, it looks like we might have a frame.  Go ahead and
 	 * decode it.
