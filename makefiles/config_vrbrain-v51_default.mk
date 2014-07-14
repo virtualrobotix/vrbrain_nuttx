@@ -26,14 +26,10 @@ MODULES		+= drivers/vrbrain/vrinput
 
 
 
-MODULES		+= drivers/mpu6000e
-MODULES		+= drivers/mpu6000i
 
-MODULES		+= drivers/hmc5883e
-MODULES		+= drivers/hmc5883i
-
-#MODULES		+= drivers/hmc5983e
-#MODULES		+= drivers/hmc5983i
+MODULES		+= drivers/mpu6000
+MODULES		+= drivers/hmc5883
+MODULES		+= drivers/hmc5983
 
 MODULES		+= drivers/ms5611
 
@@ -129,7 +125,7 @@ MODULES		+= lib/mathlib/math/filter
 
 
 
-
+MODULES		+= lib/conversion
 
 
 
