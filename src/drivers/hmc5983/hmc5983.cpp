@@ -32,14 +32,14 @@
  ****************************************************************************/
 
 /**
- * @file hmc5883i.cpp
+ * @file hmc5983.cpp
  *
- * Driver for the HMC5883 magnetometer onboard connected via I2C.
+ * Driver for the HMC5983 magnetometer connected via SPI.
  */
 
 #include <nuttx/config.h>
 
-#include <drivers/device/i2c.h>
+#include <drivers/device/spi.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -71,19 +71,26 @@
 #include <uORB/topics/subsystem_info.h>
 
 #include <float.h>
+#include <getopt.h>
+#include <lib/conversion/rotation.h>
 
 //Define the type of orientation of the board
-//#define HMC5883_CHIP_FORWARD
+//#define HMC5983_CHIP_FORWARD
+
+#define DIR_READ			0x80
+#define DIR_READ_MULT       0xC0
+#define DIR_WRITE			0x00
 
 /*
- * HMC5883 internal constants and data structures.
+ * HMC5983 internal constants and data structures.
  */
 
-#define HMC5883L_ADDRESS			I2CDEV_HMC5883
-#define HMC5883L_DEVICE_PATH		"/dev/hmc5883onboard"
+#define HMC5983L_DEVICE_PATH_INT	"/dev/hmc5983_int"
+#define HMC5983L_DEVICE_PATH_EXP	"/dev/hmc5983_exp"
+#define HMC5983L_DEVICE_PATH_IMU	"/dev/hmc5983_imu"
 
 /* Max measurement rate is 160Hz, however with 160 it will be set to 166 Hz, therefore workaround using 150 */
-#define HMC5883_CONVERSION_INTERVAL	(1000000 / 150)	/* microseconds */
+#define HMC5983_CONVERSION_INTERVAL	(1000000 / 150)	/* microseconds */
 
 #define ADDR_CONF_A			0x00
 #define ADDR_CONF_B			0x01
@@ -100,14 +107,14 @@
 #define ADDR_ID_C			0x0c
 
 /* modes not changeable outside of driver */
-#define HMC5883L_MODE_NORMAL		(0 << 0)  /* default */
-#define HMC5883L_MODE_POSITIVE_BIAS	(1 << 0)  /* positive bias */
-#define HMC5883L_MODE_NEGATIVE_BIAS	(1 << 1)  /* negative bias */
+#define HMC5983L_MODE_NORMAL		(0 << 0)  /* default */
+#define HMC5983L_MODE_POSITIVE_BIAS	(1 << 0)  /* positive bias */
+#define HMC5983L_MODE_NEGATIVE_BIAS	(1 << 1)  /* negative bias */
 
-#define HMC5883L_AVERAGING_1		(0 << 5) /* conf a register */
-#define HMC5883L_AVERAGING_2		(1 << 5)
-#define HMC5883L_AVERAGING_4		(2 << 5)
-#define HMC5883L_AVERAGING_8		(3 << 5)
+#define HMC5983L_AVERAGING_1		(0 << 5) /* conf a register */
+#define HMC5983L_AVERAGING_2		(1 << 5)
+#define HMC5983L_AVERAGING_4		(2 << 5)
+#define HMC5983L_AVERAGING_8		(3 << 5)
 
 #define MODE_REG_CONTINOUS_MODE		(0 << 0)
 #define MODE_REG_SINGLE_MODE		(1 << 0) /* default */
@@ -119,6 +126,13 @@
 #define ID_B_WHO_AM_I			'4'
 #define ID_C_WHO_AM_I			'3'
 
+/*
+  the HMC5983 can only handle high SPI bus speeds on the sensor and
+  interrupt status registers. All other registers have a maximum 1MHz
+  SPI speed
+ */
+#define HMC5983_LOW_BUS_SPEED				1000*1000
+#define HMC5983_HIGH_BUS_SPEED				8*1000*1000
 
 /* oddly, ERROR is not defined for c++ */
 #ifdef ERROR
@@ -130,11 +144,11 @@ static const int ERROR = -1;
 # error This requires CONFIG_SCHED_WORKQUEUE.
 #endif
 
-class HMC5883I : public device::I2C
+class HMC5983 : public device::SPI
 {
 public:
-	HMC5883I(int bus);
-	virtual ~HMC5883I();
+	HMC5983(int bus, const char *path, spi_dev_e device, enum Rotation rotation, enum BusSensor bustype);
+	virtual ~HMC5983();
 
 	virtual int		init();
 
@@ -157,6 +171,8 @@ private:
 	mag_scale		_scale;
 	float 			_range_scale;
 	float 			_range_ga;
+	uint8_t			_range_bits;
+	uint8_t			_conf_reg;
 	bool			_collect_phase;
 	int			_class_instance;
 
@@ -165,12 +181,16 @@ private:
 	perf_counter_t		_sample_perf;
 	perf_counter_t		_comms_errors;
 	perf_counter_t		_buffer_overflows;
+	perf_counter_t		_range_errors;
+	perf_counter_t		_conf_errors;
 
 	/* status reporting */
 	bool			_sensor_ok;		/**< sensor was found and reports ok */
 	bool			_calibrated;		/**< the calibration is valid */
 
 	int			_bus;			/**< the bus the device is connected to */
+	enum Rotation		_rotation;
+	enum BusSensor 		_bustype;
 
 	struct mag_report	_last_report;           /**< used for info() */
 
@@ -230,6 +250,23 @@ private:
 	 * Sets the internal range to handle at least the argument in Gauss.
 	 */
 	int 			set_range(unsigned range);
+
+	/**
+	 * check the sensor range.
+	 *
+	 * checks that the range of the sensor is correctly set, to
+	 * cope with communication errors causing the range to change
+	 */
+	void 			check_range(void);
+
+	/**
+	 * check the sensor configuration.
+	 *
+	 * checks that the config of the sensor is correctly set, to
+	 * cope with communication errors causing the configuration to
+	 * change
+	 */
+	void 			check_conf(void);
 
 	/**
 	 * Perform a poll cycle; collect from the previous measurement
@@ -318,24 +355,32 @@ private:
 /*
  * Driver 'main' command.
  */
-extern "C" __EXPORT int hmc5883i_main(int argc, char *argv[]);
+extern "C" __EXPORT int hmc5983_main(int argc, char *argv[]);
 
 
-HMC5883I::HMC5883I(int bus) :
-	I2C("HMC5883I", HMC5883L_DEVICE_PATH, bus, HMC5883L_ADDRESS, 400000),
+HMC5983::HMC5983(int bus, const char *path, spi_dev_e device, enum Rotation rotation, enum BusSensor bustype) :
+	SPI("HMC5983", path, bus, device, SPIDEV_MODE3, HMC5983_LOW_BUS_SPEED),
 	_measure_ticks(0),
 	_reports(nullptr),
 	_range_scale(0), /* default range scale from counts to gauss */
 	_range_ga(1.3f),
-	_mag_topic(-1),
+	_range_bits(0),
+	_conf_reg(0),
 	_class_instance(-1),
-	_sample_perf(perf_alloc(PC_ELAPSED, "hmc5883i_read")),
-	_comms_errors(perf_alloc(PC_COUNT, "hmc5883i_comms_errors")),
-	_buffer_overflows(perf_alloc(PC_COUNT, "hmc5883i_buffer_overflows")),
+	_mag_topic(-1),
+	_sample_perf(perf_alloc(PC_ELAPSED, "hmc5983_read")),
+	_comms_errors(perf_alloc(PC_COUNT, "hmc5983_comms_errors")),
+	_buffer_overflows(perf_alloc(PC_COUNT, "hmc5983_buffer_overflows")),
+	_range_errors(perf_alloc(PC_COUNT, "hmc5983_range_errors")),
+	_conf_errors(perf_alloc(PC_COUNT, "hmc5983_conf_errors")),
 	_sensor_ok(false),
 	_calibrated(false),
-	_bus(bus)
+	_bus(bus),
+	_rotation(rotation),
+	_bustype(bustype)
 {
+	_device_id.devid_s.devtype = DRV_MAG_DEVTYPE_HMC5983;
+
 	// enable debug() calls
 	_debug_enabled = false;
 
@@ -351,7 +396,7 @@ HMC5883I::HMC5883I(int bus) :
 	memset(&_work, 0, sizeof(_work));
 }
 
-HMC5883I::~HMC5883I()
+HMC5983::~HMC5983()
 {
 	/* make sure we are truly inactive */
 	stop();
@@ -366,15 +411,17 @@ HMC5883I::~HMC5883I()
 	perf_free(_sample_perf);
 	perf_free(_comms_errors);
 	perf_free(_buffer_overflows);
+	perf_free(_range_errors);
+	perf_free(_conf_errors);
 }
 
 int
-HMC5883I::init()
+HMC5983::init()
 {
 	int ret = ERROR;
 
-	/* do I2C init (and probe) first */
-	if (I2C::init() != OK)
+	/* do SPI init (and probe) first */
+	if (SPI::init() != OK)
 		goto out;
 
 	/* allocate basic report buffers */
@@ -394,47 +441,45 @@ out:
 	return ret;
 }
 
-int HMC5883I::set_range(unsigned range)
+int HMC5983::set_range(unsigned range)
 {
-	uint8_t range_bits;
-
 	if (range < 1) {
-		range_bits = 0x00;
+		_range_bits = 0x00;
 		_range_scale = 1.0f / 1370.0f;
 		_range_ga = 0.88f;
 
 	} else if (range <= 1) {
-		range_bits = 0x01;
+		_range_bits = 0x01;
 		_range_scale = 1.0f / 1090.0f;
 		_range_ga = 1.3f;
 
 	} else if (range <= 2) {
-		range_bits = 0x02;
+		_range_bits = 0x02;
 		_range_scale = 1.0f / 820.0f;
 		_range_ga = 1.9f;
 
 	} else if (range <= 3) {
-		range_bits = 0x03;
+		_range_bits = 0x03;
 		_range_scale = 1.0f / 660.0f;
 		_range_ga = 2.5f;
 
 	} else if (range <= 4) {
-		range_bits = 0x04;
+		_range_bits = 0x04;
 		_range_scale = 1.0f / 440.0f;
 		_range_ga = 4.0f;
 
 	} else if (range <= 4.7f) {
-		range_bits = 0x05;
+		_range_bits = 0x05;
 		_range_scale = 1.0f / 390.0f;
 		_range_ga = 4.7f;
 
 	} else if (range <= 5.6f) {
-		range_bits = 0x06;
+		_range_bits = 0x06;
 		_range_scale = 1.0f / 330.0f;
 		_range_ga = 5.6f;
 
 	} else {
-		range_bits = 0x07;
+		_range_bits = 0x07;
 		_range_scale = 1.0f / 230.0f;
 		_range_ga = 8.1f;
 	}
@@ -444,7 +489,7 @@ int HMC5883I::set_range(unsigned range)
 	/*
 	 * Send the command to set the range
 	 */
-	ret = write_reg(ADDR_CONF_B, (range_bits << 5));
+	ret = write_reg(ADDR_CONF_B, (_range_bits << 5));
 
 	if (OK != ret)
 		perf_count(_comms_errors);
@@ -455,22 +500,68 @@ int HMC5883I::set_range(unsigned range)
 	if (OK != ret)
 		perf_count(_comms_errors);
 
-	return !(range_bits_in == (range_bits << 5));
+	return !(range_bits_in == (_range_bits << 5));
+}
+
+/**
+   check that the range register has the right value. This is done
+   periodically to cope with I2C bus noise causing the range of the
+   compass changing.
+ */
+void HMC5983::check_range(void)
+{
+	int ret;
+
+	uint8_t range_bits_in;
+	ret = read_reg(ADDR_CONF_B, range_bits_in);
+	if (OK != ret) {
+		perf_count(_comms_errors);
+		return;
+	}
+	if (range_bits_in != (_range_bits<<5)) {
+		perf_count(_range_errors);
+		ret = write_reg(ADDR_CONF_B, (_range_bits << 5));
+		if (OK != ret)
+			perf_count(_comms_errors);
+	}
+}
+
+/**
+   check that the configuration register has the right value. This is
+   done periodically to cope with I2C bus noise causing the
+   configuration of the compass to change.
+ */
+void HMC5983::check_conf(void)
+{
+	int ret;
+
+	uint8_t conf_reg_in;
+	ret = read_reg(ADDR_CONF_A, conf_reg_in);
+	if (OK != ret) {
+		perf_count(_comms_errors);
+		return;
+	}
+	if (conf_reg_in != _conf_reg) {
+		perf_count(_conf_errors);
+		ret = write_reg(ADDR_CONF_A, _conf_reg);
+		if (OK != ret)
+			perf_count(_comms_errors);
+	}
 }
 
 int
-HMC5883I::probe()
+HMC5983::probe()
 {
 	uint8_t data[3] = {0, 0, 0};
 
-	_retries = 10;
+
 
 	if (read_reg(ADDR_ID_A, data[0]) ||
 	    read_reg(ADDR_ID_B, data[1]) ||
 	    read_reg(ADDR_ID_C, data[2]))
 		debug("read_reg fail");
 
-	_retries = 2;
+
 
 	if ((data[0] != ID_A_WHO_AM_I) ||
 	    (data[1] != ID_B_WHO_AM_I) ||
@@ -483,7 +574,7 @@ HMC5883I::probe()
 }
 
 ssize_t
-HMC5883I::read(struct file *filp, char *buffer, size_t buflen)
+HMC5983::read(struct file *filp, char *buffer, size_t buflen)
 {
 	unsigned count = buflen / sizeof(struct mag_report);
 	struct mag_report *mag_buf = reinterpret_cast<struct mag_report *>(buffer);
@@ -523,7 +614,7 @@ HMC5883I::read(struct file *filp, char *buffer, size_t buflen)
 		}
 
 		/* wait for it to complete */
-		usleep(HMC5883_CONVERSION_INTERVAL);
+		usleep(HMC5983_CONVERSION_INTERVAL);
 
 		/* run the collection phase */
 		if (OK != collect()) {
@@ -540,7 +631,7 @@ HMC5883I::read(struct file *filp, char *buffer, size_t buflen)
 }
 
 int
-HMC5883I::ioctl(struct file *filp, int cmd, unsigned long arg)
+HMC5983::ioctl(struct file *filp, int cmd, unsigned long arg)
 {
 	switch (cmd) {
 	case SENSORIOCSPOLLRATE: {
@@ -566,7 +657,7 @@ HMC5883I::ioctl(struct file *filp, int cmd, unsigned long arg)
 				bool want_start = (_measure_ticks == 0);
 
 				/* set interval for next measurement to minimum legal value */
-				_measure_ticks = USEC2TICK(HMC5883_CONVERSION_INTERVAL);
+				_measure_ticks = USEC2TICK(HMC5983_CONVERSION_INTERVAL);
 
 				/* if we need to start the poll state machine, do it */
 				if (want_start)
@@ -584,7 +675,7 @@ HMC5883I::ioctl(struct file *filp, int cmd, unsigned long arg)
 				unsigned ticks = USEC2TICK(1000000 / arg);
 
 				/* check against maximum rate */
-				if (ticks < USEC2TICK(HMC5883_CONVERSION_INTERVAL))
+				if (ticks < USEC2TICK(HMC5983_CONVERSION_INTERVAL))
 					return -EINVAL;
 
 				/* update interval for next measurement */
@@ -667,48 +758,48 @@ HMC5883I::ioctl(struct file *filp, int cmd, unsigned long arg)
 		return check_calibration();
 
 	case MAGIOCGEXTERNAL:
-		return 0;
+		return (_bustype != TYPE_BUS_SENSOR_INTERNAL);
 
 	default:
 		/* give it to the superclass */
-		return I2C::ioctl(filp, cmd, arg);
+		return SPI::ioctl(filp, cmd, arg);
 	}
 }
 
 void
-HMC5883I::start()
+HMC5983::start()
 {
 	/* reset the report ring and state machine */
 	_collect_phase = false;
 	_reports->flush();
 
 	/* schedule a cycle to start things */
-	work_queue(HPWORK, &_work, (worker_t)&HMC5883I::cycle_trampoline, this, 1);
+	work_queue(HPWORK, &_work, (worker_t)&HMC5983::cycle_trampoline, this, 1);
 }
 
 void
-HMC5883I::stop()
+HMC5983::stop()
 {
 	work_cancel(HPWORK, &_work);
 }
 
 int
-HMC5883I::reset()
+HMC5983::reset()
 {
 	/* set range */
 	return set_range(_range_ga);
 }
 
 void
-HMC5883I::cycle_trampoline(void *arg)
+HMC5983::cycle_trampoline(void *arg)
 {
-	HMC5883I *dev = (HMC5883I *)arg;
+	HMC5983 *dev = (HMC5983 *)arg;
 
 	dev->cycle();
 }
 
 void
-HMC5883I::cycle()
+HMC5983::cycle()
 {
 	/* collection phase? */
 	if (_collect_phase) {
@@ -727,14 +818,14 @@ HMC5883I::cycle()
 		/*
 		 * Is there a collect->measure gap?
 		 */
-		if (_measure_ticks > USEC2TICK(HMC5883_CONVERSION_INTERVAL)) {
+		if (_measure_ticks > USEC2TICK(HMC5983_CONVERSION_INTERVAL)) {
 
 			/* schedule a fresh cycle call when we are ready to measure again */
 			work_queue(HPWORK,
 				   &_work,
-				   (worker_t)&HMC5883I::cycle_trampoline,
+				   (worker_t)&HMC5983::cycle_trampoline,
 				   this,
-				   _measure_ticks - USEC2TICK(HMC5883_CONVERSION_INTERVAL));
+				   _measure_ticks - USEC2TICK(HMC5983_CONVERSION_INTERVAL));
 
 			return;
 		}
@@ -750,13 +841,13 @@ HMC5883I::cycle()
 	/* schedule a fresh cycle call when the measurement is done */
 	work_queue(HPWORK,
 		   &_work,
-		   (worker_t)&HMC5883I::cycle_trampoline,
+		   (worker_t)&HMC5983::cycle_trampoline,
 		   this,
-		   USEC2TICK(HMC5883_CONVERSION_INTERVAL));
+		   USEC2TICK(HMC5983_CONVERSION_INTERVAL));
 }
 
 int
-HMC5883I::measure()
+HMC5983::measure()
 {
 	int ret;
 
@@ -772,10 +863,11 @@ HMC5883I::measure()
 }
 
 int
-HMC5883I::collect()
+HMC5983::collect()
 {
 #pragma pack(push, 1)
 	struct { /* status register and data as read back from the device */
+		uint8_t		cmd;
 		uint8_t		x[2];
 		uint8_t		z[2];
 		uint8_t		y[2];
@@ -785,8 +877,7 @@ HMC5883I::collect()
 		int16_t		x, y, z;
 	} report;
 	int	ret = -EIO;
-	uint8_t	cmd;
-
+	uint8_t check_counter;
 
 	perf_begin(_sample_perf);
 	struct mag_report new_report;
@@ -803,8 +894,12 @@ HMC5883I::collect()
 	 */
 
 	/* get measurements from the device */
-	cmd = ADDR_DATA_OUT_X_MSB;
-	ret = transfer(&cmd, 1, (uint8_t *)&hmc_report, sizeof(hmc_report));
+    hmc_report.cmd = DIR_READ_MULT | ADDR_DATA_OUT_X_MSB;
+
+    // sensor transfer at high clock speed
+    set_frequency(HMC5983_HIGH_BUS_SPEED);
+
+    ret = transfer((uint8_t *)&hmc_report, (uint8_t *)&hmc_report, sizeof(hmc_report));
 
 	if (ret != OK) {
 		perf_count(_comms_errors);
@@ -834,28 +929,48 @@ HMC5883I::collect()
 	 * to align the sensor axes with the board, x and y need to be flipped
 	 * and y needs to be negated
 	 */
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	new_report.x_raw = report.y;
-	new_report.y_raw = report.x;
-	new_report.z_raw = -report.z;
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-	new_report.x_raw = report.y;
-	new_report.y_raw = report.x;
-	new_report.z_raw = -report.z;
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
-	new_report.x_raw = report.y;
-	new_report.y_raw = report.x;
-	new_report.z_raw = -report.z;
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
-	new_report.x_raw = report.y;
-	new_report.y_raw = report.x;
-	new_report.z_raw = -report.z;
-#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
-	new_report.x_raw = report.y;
-	new_report.y_raw = report.x;
-	new_report.z_raw = -report.z;
+	new_report.y_raw = -report.x;
+	/* z remains z */
+	new_report.z_raw = report.z;
+
+	/* scale values for output */
+
+#ifdef PX4_I2C_BUS_ONBOARD
+	if (_bus == PX4_I2C_BUS_ONBOARD) {
+		// convert onboard so it matches offboard for the
+		// scaling below
+		report.y = -report.y;
+		report.x = -report.x;
+        }
+#endif
+
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+
+	if (_bustype == TYPE_BUS_SENSOR_INTERNAL) {
+
+		new_report.x_raw = report.y;
+		new_report.y_raw = report.x;
+		new_report.z_raw = -report.z;
+
+	} else if (_bustype == TYPE_BUS_SENSOR_EXTERNAL) {
+
+		new_report.x_raw = report.y;
+		new_report.y_raw = report.x;
+		new_report.z_raw = -report.z;
+
+	} else if (_bustype == TYPE_BUS_SENSOR_IMU) {
+
+		new_report.x_raw = -report.y;
+		new_report.y_raw = report.x;
+		new_report.z_raw = report.z;
+
+	}
+
 #elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
-#ifdef	HMC5883_CHIP_FORWARD
+
+#ifdef	HMC5983_CHIP_FORWARD
 	new_report.x_raw = -report.z;
 	new_report.y_raw = -report.x;
 	new_report.z_raw = report.y;
@@ -864,33 +979,44 @@ HMC5883I::collect()
 	new_report.y_raw = report.x;
 	new_report.z_raw = report.y;
 #endif
+
 #endif
 
 	/* the standard external mag by 3DR has x pointing to the
 	 * right, y pointing backwards, and z down, therefore switch x
 	 * and y and invert y */
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
-	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+	new_report.x = ((-report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+	/* flip axes and negate value for y */
 	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
-	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
-	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
-	new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-	new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+	/* z remains z */
+	new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+
+	if (_bustype == TYPE_BUS_SENSOR_INTERNAL) {
+
+		new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
+		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+
+	} else if (_bustype == TYPE_BUS_SENSOR_EXTERNAL) {
+
+		new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
+		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+
+	} else if (_bustype == TYPE_BUS_SENSOR_IMU) {
+
+		new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
+		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+
+	}
+
 #elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
-#ifdef	HMC5883_CHIP_FORWARD
+
+#ifdef	HMC5983_CHIP_FORWARD
 	new_report.x = - ((report.z * _range_scale) - _scale.x_offset) * _scale.x_scale;
 	new_report.y = - ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
 	new_report.z = ((report.y * _range_scale) - _scale.z_offset) * _scale.z_scale;
@@ -899,7 +1025,11 @@ HMC5883I::collect()
 	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
 	new_report.z = ((report.y * _range_scale) - _scale.z_offset) * _scale.z_scale;
 #endif
+
 #endif
+
+	// apply user specified rotation
+	rotate_3f(_rotation, new_report.x, new_report.y, new_report.z);
 
 	if (_class_instance == CLASS_DEVICE_PRIMARY && !(_pub_blocked)) {
 
@@ -924,6 +1054,21 @@ HMC5883I::collect()
 	/* notify anyone waiting for data */
 	poll_notify(POLLIN);
 
+	/*
+	  periodically check the range register and configuration
+	  registers. With a bad I2C cable it is possible for the
+	  registers to become corrupt, leading to bad readings. It
+	  doesn't happen often, but given the poor cables some
+	  vehicles have it is worth checking for.
+	 */
+	check_counter = perf_event_count(_sample_perf) % 256;
+	if (check_counter == 0) {
+		check_range();
+	}
+	if (check_counter == 128) {
+		check_conf();
+	}
+
 	ret = OK;
 
 out:
@@ -931,7 +1076,7 @@ out:
 	return ret;
 }
 
-int HMC5883I::calibrate(struct file *filp, unsigned enable)
+int HMC5983::calibrate(struct file *filp, unsigned enable)
 {
 	struct mag_report report;
 	ssize_t sz;
@@ -1126,7 +1271,7 @@ out:
 	return ret;
 }
 
-int HMC5883I::check_scale()
+int HMC5983::check_scale()
 {
 	bool scale_valid;
 
@@ -1143,7 +1288,7 @@ int HMC5883I::check_scale()
 	return !scale_valid;
 }
 
-int HMC5883I::check_offset()
+int HMC5983::check_offset()
 {
 	bool offset_valid;
 
@@ -1160,7 +1305,7 @@ int HMC5883I::check_offset()
 	return !offset_valid;
 }
 
-int HMC5883I::check_calibration()
+int HMC5983::check_calibration()
 {
 	bool offset_valid = (check_offset() == OK);
 	bool scale_valid  = (check_scale() == OK);
@@ -1194,29 +1339,28 @@ int HMC5883I::check_calibration()
 	return (!_calibrated);
 }
 
-int HMC5883I::set_excitement(unsigned enable)
+int HMC5983::set_excitement(unsigned enable)
 {
 	int ret;
 	/* arm the excitement strap */
-	uint8_t conf_reg;
-	ret = read_reg(ADDR_CONF_A, conf_reg);
+	ret = read_reg(ADDR_CONF_A, _conf_reg);
 
 	if (OK != ret)
 		perf_count(_comms_errors);
 
 	if (((int)enable) < 0) {
-		conf_reg |= 0x01;
+		_conf_reg |= 0x01;
 
 	} else if (enable > 0) {
-		conf_reg |= 0x02;
+		_conf_reg |= 0x02;
 
 	} else {
-		conf_reg &= ~0x03;
+		_conf_reg &= ~0x03;
 	}
 
-        // ::printf("set_excitement enable=%d regA=0x%x\n", (int)enable, (unsigned)conf_reg);
+        // ::printf("set_excitement enable=%d regA=0x%x\n", (int)enable, (unsigned)_conf_reg);
 
-	ret = write_reg(ADDR_CONF_A, conf_reg);
+	ret = write_reg(ADDR_CONF_A, _conf_reg);
 
 	if (OK != ret)
 		perf_count(_comms_errors);
@@ -1226,25 +1370,39 @@ int HMC5883I::set_excitement(unsigned enable)
 
 	//print_info();
 
-	return !(conf_reg == conf_reg_ret);
+	return !(_conf_reg == conf_reg_ret);
 }
 
 int
-HMC5883I::write_reg(uint8_t reg, uint8_t val)
+HMC5983::write_reg(uint8_t reg, uint8_t val)
 {
-	uint8_t cmd[] = { reg, val };
+	uint8_t	cmd[2];
 
-	return transfer(&cmd[0], 2, nullptr, 0);
+	cmd[0] = reg | DIR_WRITE;
+	cmd[1] = val;
+
+	// general register transfer at low clock speed
+	set_frequency(HMC5983_LOW_BUS_SPEED);
+
+	return transfer(cmd, nullptr, sizeof(cmd));
 }
 
 int
-HMC5883I::read_reg(uint8_t reg, uint8_t &val)
+HMC5983::read_reg(uint8_t reg, uint8_t &val)
 {
-	return transfer(&reg, 1, &val, 1);
+	uint8_t cmd[2] = { (uint8_t)(reg | DIR_READ), 0};
+
+	// general register transfer at low clock speed
+	set_frequency(HMC5983_LOW_BUS_SPEED);
+
+	int ret = transfer(cmd, cmd, sizeof(cmd));
+	val = cmd[1];
+
+	return ret;
 }
 
 float
-HMC5883I::meas_to_float(uint8_t in[2])
+HMC5983::meas_to_float(uint8_t in[2])
 {
 	union {
 		uint8_t	b[2];
@@ -1258,7 +1416,7 @@ HMC5883I::meas_to_float(uint8_t in[2])
 }
 
 void
-HMC5883I::print_info()
+HMC5983::print_info()
 {
 	perf_print_counter(_sample_perf);
 	perf_print_counter(_comms_errors);
@@ -1275,7 +1433,7 @@ HMC5883I::print_info()
 /**
  * Local functions in support of the shell command.
  */
-namespace hmc5883i
+namespace hmc5983
 {
 
 /* oddly, ERROR is not defined for c++ */
@@ -1284,52 +1442,109 @@ namespace hmc5883i
 #endif
 const int ERROR = -1;
 
-HMC5883I	*g_dev;
+HMC5983	*g_dev_int;
+HMC5983	*g_dev_exp;
+HMC5983	*g_dev_imu;
 
-void	start();
-void	test();
-void	reset();
-void	info();
-int	calibrate();
+void	hmc5983_usage();
+void	start(enum Rotation rotation, enum BusSensor bustype);
+void	test(enum BusSensor bustype);
+void	reset(enum BusSensor bustype);
+void	info(enum BusSensor bustype);
+int	calibrate(enum BusSensor bustype);
 
 /**
  * Start the driver.
  */
 void
-start()
+start(enum Rotation rotation, enum BusSensor bustype)
 {
 	int fd;
 
-	if (g_dev != nullptr)
-		/* if already started, the still command succeeded */
-		errx(0, "already started");
-
-	/* create the driver, attempt expansion bus first */
-	g_dev = new HMC5883I(I2C_BUS_ONBOARD_HMC5883);
-	if (g_dev != nullptr && OK != g_dev->init()) {
-		delete g_dev;
-		g_dev = nullptr;
+	switch (bustype) {
+	case TYPE_BUS_SENSOR_INTERNAL:
+#ifdef SPI_BUS_HMC5983
+		if (g_dev_int != nullptr)
+			errx(0, "already started internal");
+		g_dev_int = new HMC5983(SPI_BUS_HMC5983, HMC5983L_DEVICE_PATH_INT, (spi_dev_e)SPIDEV_HMC5983, rotation, bustype);
+		if (g_dev_int != nullptr && OK != g_dev_int->init()) {
+			delete g_dev_int;
+			g_dev_int = nullptr;
+		}
+#endif
+		break;
+	case TYPE_BUS_SENSOR_IMU:
+#ifdef SPI_BUS_IMU_HMC5983
+		if (g_dev_imu != nullptr)
+			errx(0, "already started external IMU");
+		g_dev_imu = new HMC5983(SPI_BUS_IMU_HMC5983, HMC5983L_DEVICE_PATH_IMU, (spi_dev_e)SPIDEV_IMU_HMC5983, rotation, bustype);
+		if (g_dev_imu != nullptr && OK != g_dev_imu->init()) {
+			delete g_dev_imu;
+			g_dev_imu = nullptr;
+		}
+#endif
+		break;
+	case TYPE_BUS_SENSOR_EXTERNAL:
+#ifdef SPI_BUS_EXP_HMC5983
+		if (g_dev_exp != nullptr)
+			errx(0, "already started external EXP");
+		g_dev_exp = new HMC5983(SPI_BUS_EXP_HMC5983, HMC5983L_DEVICE_PATH_EXP, (spi_dev_e)SPIDEV_EXP_HMC5983, rotation, bustype);
+		if (g_dev_exp != nullptr && OK != g_dev_exp->init()) {
+			delete g_dev_exp;
+			g_dev_exp = nullptr;
+		}
+#endif
+		break;
 	}
 
-	if (g_dev == nullptr)
+	if (g_dev_int == nullptr && g_dev_exp == nullptr && g_dev_imu == nullptr)
 		goto fail;
 
 	/* set the poll rate to default, starts automatic data collection */
-	fd = open(HMC5883L_DEVICE_PATH, O_RDONLY);
+	if (g_dev_int != nullptr) {
+		fd = open(HMC5983L_DEVICE_PATH_INT, O_RDONLY);
+		if (fd < 0)
+			goto fail;
 
-	if (fd < 0)
-		goto fail;
+		if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
+			goto fail;
+		close(fd);
+	}
 
-	if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
-		goto fail;
+	if (g_dev_exp != nullptr) {
+		fd = open(HMC5983L_DEVICE_PATH_EXP, O_RDONLY);
+		if (fd < 0)
+			goto fail;
+
+		if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
+			goto fail;
+		close(fd);
+	}
+
+	if (g_dev_imu != nullptr) {
+		fd = open(HMC5983L_DEVICE_PATH_IMU, O_RDONLY);
+		if (fd < 0)
+			goto fail;
+
+		if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
+			goto fail;
+		close(fd);
+	}
 
 	exit(0);
 
 fail:
-
-	if (g_dev != nullptr) {
-		delete g_dev;
-		g_dev = nullptr;
+	if (g_dev_int != nullptr) {
+		delete g_dev_int;
+		g_dev_int = nullptr;
+	}
+	if (g_dev_exp != nullptr) {
+		delete g_dev_exp;
+		g_dev_exp = nullptr;
+	}
+	if (g_dev_imu != nullptr) {
+		delete g_dev_imu;
+		g_dev_imu = nullptr;
 	}
 
 	errx(1, "driver start failed");
@@ -1341,16 +1556,29 @@ fail:
  * and automatic modes.
  */
 void
-test()
+test(enum BusSensor bustype)
 {
 	struct mag_report report;
 	ssize_t sz;
 	int ret;
+	const char *path;
 
-	int fd = open(HMC5883L_DEVICE_PATH, O_RDONLY);
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+    	path = HMC5983L_DEVICE_PATH_INT;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+    	path = HMC5983L_DEVICE_PATH_IMU;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+    	path = HMC5983L_DEVICE_PATH_EXP;
+    	break;
+    }
+
+	int fd = open(path, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'hmc5883i start' if the driver is not running", HMC5883L_DEVICE_PATH);
+		err(1, "%s open failed (try 'hmc5983 start' if the driver is not running", path);
 
 	/* do a simple demand read */
 	sz = read(fd, &report, sizeof(report));
@@ -1421,7 +1649,7 @@ test()
  * can be extracted and the sensitivity of all axes can be matched.
  *
  * SELF TEST OPERATION
- * To check the HMC5883L for proper operation, a self test feature in incorporated
+ * To check the HMC5983L for proper operation, a self test feature in incorporated
  * in which the sensor offset straps are excited to create a nominal field strength
  * (bias field) to be measured. To implement self test, the least significant bits
  * (MS1 and MS0) of configuration register A are changed from 00 to 01 (positive bias)
@@ -1443,14 +1671,27 @@ test()
  * configuration register A back to 00 (Normal Measurement Mode), e.g. 0x10.
  * Using the self test method described above, the user can scale sensor
  */
-int calibrate()
+int calibrate(enum BusSensor bustype)
 {
 	int ret;
+	const char *path;
 
-	int fd = open(HMC5883L_DEVICE_PATH, O_RDONLY);
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+    	path = HMC5983L_DEVICE_PATH_INT;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+    	path = HMC5983L_DEVICE_PATH_IMU;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+    	path = HMC5983L_DEVICE_PATH_EXP;
+    	break;
+    }
+
+	int fd = open(path, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'hmc5883i start' if the driver is not running", HMC5883L_DEVICE_PATH);
+		err(1, "%s open failed (try 'hmc5983 start' if the driver is not running", path);
 
 	if (OK != (ret = ioctl(fd, MAGIOCCALIBRATE, fd))) {
 		warnx("failed to enable sensor calibration mode");
@@ -1470,9 +1711,23 @@ int calibrate()
  * Reset the driver.
  */
 void
-reset()
+reset(enum BusSensor bustype)
 {
-	int fd = open(HMC5883L_DEVICE_PATH, O_RDONLY);
+	const char *path;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+    	path = HMC5983L_DEVICE_PATH_INT;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+    	path = HMC5983L_DEVICE_PATH_IMU;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+    	path = HMC5983L_DEVICE_PATH_EXP;
+    	break;
+    }
+
+	int fd = open(path, O_RDONLY);
 
 	if (fd < 0)
 		err(1, "failed ");
@@ -1483,6 +1738,8 @@ reset()
 	if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
 		err(1, "driver poll restart failed");
 
+        close(fd);
+
 	exit(0);
 }
 
@@ -1490,8 +1747,22 @@ reset()
  * Print a little info about the driver.
  */
 void
-info()
+info(enum BusSensor bustype)
 {
+	HMC5983 *g_dev = nullptr;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+    	break;
+    }
+
 	if (g_dev == nullptr)
 		errx(1, "driver not running");
 
@@ -1503,38 +1774,90 @@ info()
 
 } // namespace
 
-int
-hmc5883i_main(int argc, char *argv[])
+void
+hmc5983_usage()
 {
+	warnx("missing command: try 'start', 'info', 'test', 'reset', 'status', 'calibrate'");
+	warnx("options:");
+	warnx("    -R rotation");
+	warnx("    -X only external bus");
+	warnx("    -U only external IMU");
+	warnx("    -I only internal bus");
+	warnx("    -C calibrate on start");
+}
+
+int
+hmc5983_main(int argc, char *argv[])
+{
+	int ch;
+	enum Rotation rotation = ROTATION_NONE;
+	enum BusSensor bustype = TYPE_BUS_SENSOR_NONE;
+    bool calibrate = false;
+
+	/* jump over start/off/etc and look at options first */
+	while ((ch = getopt(argc, argv, "XIUR:C")) != EOF) {
+		switch (ch) {
+		case 'R':
+			rotation = (enum Rotation)atoi(optarg);
+			break;
+		case 'I':
+			bustype = TYPE_BUS_SENSOR_INTERNAL;
+			break;
+		case 'X':
+			bustype = TYPE_BUS_SENSOR_EXTERNAL;
+			break;
+		case 'U':
+			bustype = TYPE_BUS_SENSOR_IMU;
+			break;
+		case 'C':
+			calibrate = true;
+			break;
+		default:
+			hmc5983_usage();
+			exit(0);
+		}
+	}
+
+	const char *verb = argv[optind];	
+
 	/*
 	 * Start/load the driver.
 	 */
-	if (!strcmp(argv[1], "start"))
-		hmc5883i::start();
+	if (!strcmp(verb, "start")) {
+		hmc5983::start(rotation, bustype);
+		if (calibrate) {
+			if (hmc5983::calibrate(bustype) == 0) {
+				errx(0, "calibration successful");
+				
+			} else {
+				errx(1, "calibration failed");
+			}
+		}
+	}
 
 	/*
 	 * Test the driver/device.
 	 */
-	if (!strcmp(argv[1], "test"))
-		hmc5883i::test();
+	if (!strcmp(verb, "test"))
+		hmc5983::test(bustype);
 
 	/*
 	 * Reset the driver.
 	 */
-	if (!strcmp(argv[1], "reset"))
-		hmc5883i::reset();
+	if (!strcmp(verb, "reset"))
+		hmc5983::reset(bustype);
 
 	/*
 	 * Print driver information.
 	 */
-	if (!strcmp(argv[1], "info") || !strcmp(argv[1], "status"))
-		hmc5883i::info();
+	if (!strcmp(verb, "info") || !strcmp(verb, "status"))
+		hmc5983::info(bustype);
 
 	/*
 	 * Autocalibrate the scaling
 	 */
-	if (!strcmp(argv[1], "calibrate")) {
-		if (hmc5883i::calibrate() == 0) {
+	if (!strcmp(verb, "calibrate")) {
+		if (hmc5983::calibrate(bustype) == 0) {
 			errx(0, "calibration successful");
 
 		} else {

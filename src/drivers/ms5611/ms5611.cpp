@@ -50,12 +50,15 @@
 #include <stdio.h>
 #include <math.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include <nuttx/arch.h>
 #include <nuttx/wqueue.h>
 #include <nuttx/clock.h>
 
 #include <arch/board/board.h>
+
+#include <board_config.h>
 
 #include <drivers/device/device.h>
 #include <drivers/drv_baro.h>
@@ -90,12 +93,15 @@ static const int ERROR = -1;
 /* internal conversion time: 9.17 ms, so should not be read at rates higher than 100 Hz */
 #define MS5611_CONVERSION_INTERVAL	10000	/* microseconds */
 #define MS5611_MEASUREMENT_RATIO	3	/* pressure measurements per temperature measurement */
-#define MS5611_BARO_DEVICE_PATH		"/dev/ms5611"
+
+#define MS5611_BARO_DEVICE_PATH_INT		"/dev/ms5611_int"
+#define MS5611_BARO_DEVICE_PATH_EXP		"/dev/ms5611_exp"
+#define MS5611_BARO_DEVICE_PATH_IMU		"/dev/ms5611_imu"
 
 class MS5611 : public device::CDev
 {
 public:
-	MS5611(device::Device *interface, ms5611::prom_u &prom_buf);
+	MS5611(device::Device *interface, const char *path, ms5611::prom_u &prom_buf);
 	~MS5611();
 
 	virtual int		init();
@@ -197,8 +203,8 @@ protected:
  */
 extern "C" __EXPORT int ms5611_main(int argc, char *argv[]);
 
-MS5611::MS5611(device::Device *interface, ms5611::prom_u &prom_buf) :
-	CDev("MS5611", MS5611_BARO_DEVICE_PATH),
+MS5611::MS5611(device::Device *interface, const char *path, ms5611::prom_u &prom_buf) :
+	CDev("MS5611", path),
 	_interface(interface),
 	_prom(prom_buf.s),
 	_measure_ticks(0),
@@ -229,7 +235,7 @@ MS5611::~MS5611()
 	stop_cycle();
 
 	if (_class_instance != -1)
-		unregister_class_devname(MS5611_BARO_DEVICE_PATH, _class_instance);
+		unregister_class_devname(BARO_DEVICE_PATH, _class_instance);
 
 	/* free any existing reports */
 	if (_reports != nullptr)
@@ -787,14 +793,16 @@ MS5611::print_info()
 namespace ms5611
 {
 
-MS5611	*g_dev;
+MS5611	*g_dev_int;
+MS5611	*g_dev_exp;
+MS5611	*g_dev_imu;
 
-void	start();
-void	test();
-void	test2();
-void	reset();
-void	info();
-void	calibrate(unsigned altitude);
+void	start(enum BusSensor bustype);
+void	test(enum BusSensor bustype);
+void	test2(enum BusSensor bustype);
+void	reset(enum BusSensor bustype);
+void	info(enum BusSensor bustype);
+void	calibrate(enum BusSensor bustype, unsigned altitude);
 
 /**
  * MS5611 crc4 cribbed from the datasheet
@@ -847,10 +855,33 @@ crc4(uint16_t *n_prom)
  * Start the driver.
  */
 void
-start()
+start(enum BusSensor bustype)
 {
 	int fd;
 	prom_u prom_buf;
+	MS5611 *g_dev = nullptr;
+	const char *path;
+
+	switch (bustype) {
+	case TYPE_BUS_SENSOR_INTERNAL:
+#ifdef SPI_BUS_MS5611
+		g_dev = g_dev_int;
+		path = MS5611_BARO_DEVICE_PATH_INT;
+#endif
+		break;
+	case TYPE_BUS_SENSOR_IMU:
+#ifdef SPI_BUS_IMU_MS5611
+		g_dev = g_dev_imu;
+		path = MS5611_BARO_DEVICE_PATH_IMU;
+#endif
+		break;
+	case TYPE_BUS_SENSOR_EXTERNAL:
+#ifdef SPI_BUS_EXP_MS5611
+		g_dev = g_dev_exp;
+		path = MS5611_BARO_DEVICE_PATH_EXP;
+#endif
+		break;
+	}
 
 	if (g_dev != nullptr)
 		/* if already started, the still command succeeded */
@@ -860,7 +891,7 @@ start()
 
 	/* create the driver, try SPI first, fall back to I2C if unsuccessful */
 	if (MS5611_spi_interface != nullptr)
-		interface = MS5611_spi_interface(prom_buf);
+		interface = MS5611_spi_interface(prom_buf, bustype);
 	if (interface == nullptr && (MS5611_i2c_interface != nullptr))
 		interface = MS5611_i2c_interface(prom_buf);
 
@@ -872,16 +903,17 @@ start()
 		errx(1, "interface init failed");
 	}
 
-	g_dev = new MS5611(interface, prom_buf);
-	if (g_dev == nullptr) {
-		delete interface;
-		errx(1, "failed to allocate driver");
-	}
-	if (g_dev->init() != OK)
+	g_dev = new MS5611(interface, path, prom_buf);
+
+	if (g_dev == nullptr)
+		goto fail;
+
+	if (OK != g_dev->init())
 		goto fail;
 
 	/* set the poll rate to default, starts automatic data collection */
-	fd = open(MS5611_BARO_DEVICE_PATH, O_RDONLY);
+	fd = open(path, O_RDONLY);
+
 	if (fd < 0) {
 		warnx("can't open baro device");
 		goto fail;
@@ -896,6 +928,7 @@ start()
 fail:
 
 	if (g_dev != nullptr) {
+		delete interface;
 		delete g_dev;
 		g_dev = nullptr;
 	}
@@ -909,16 +942,35 @@ fail:
  * and automatic modes.
  */
 void
-test()
+test(enum BusSensor bustype)
 {
 	struct baro_report report;
 	ssize_t sz;
 	int ret;
+	const char *path;
 
-	int fd = open(MS5611_BARO_DEVICE_PATH, O_RDONLY);
+	switch (bustype) {
+	case TYPE_BUS_SENSOR_INTERNAL:
+#ifdef SPI_BUS_MS5611
+		path = MS5611_BARO_DEVICE_PATH_INT;
+#endif
+		break;
+	case TYPE_BUS_SENSOR_IMU:
+#ifdef SPI_BUS_IMU_MS5611
+		path = MS5611_BARO_DEVICE_PATH_IMU;
+#endif
+		break;
+	case TYPE_BUS_SENSOR_EXTERNAL:
+#ifdef SPI_BUS_EXP_MS5611
+		path = MS5611_BARO_DEVICE_PATH_EXP;
+#endif
+		break;
+	}
+
+	int fd = open(path, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'ms5611 start' if the driver is not running)", MS5611_BARO_DEVICE_PATH);
+		err(1, "%s open failed (try 'ms5611 start' if the driver is not running)", path);
 
 	/* do a simple demand read */
 	sz = read(fd, &report, sizeof(report));
@@ -974,7 +1026,7 @@ test()
  * and automatic modes.
  */
 void
-test2()
+test2(enum BusSensor bustype)
 {
 	struct baro_report report;
 	ssize_t sz;
@@ -1048,9 +1100,29 @@ test2()
  * Reset the driver.
  */
 void
-reset()
+reset(enum BusSensor bustype)
 {
-	int fd = open(MS5611_BARO_DEVICE_PATH, O_RDONLY);
+	const char *path;
+
+	switch (bustype) {
+	case TYPE_BUS_SENSOR_INTERNAL:
+#ifdef SPI_BUS_MS5611
+		path = MS5611_BARO_DEVICE_PATH_INT;
+#endif
+		break;
+	case TYPE_BUS_SENSOR_IMU:
+#ifdef SPI_BUS_IMU_MS5611
+		path = MS5611_BARO_DEVICE_PATH_IMU;
+#endif
+		break;
+	case TYPE_BUS_SENSOR_EXTERNAL:
+#ifdef SPI_BUS_EXP_MS5611
+		path = MS5611_BARO_DEVICE_PATH_EXP;
+#endif
+		break;
+	}
+
+	int fd = open(path, O_RDONLY);
 
 	if (fd < 0)
 		err(1, "failed ");
@@ -1068,8 +1140,22 @@ reset()
  * Print a little info about the driver.
  */
 void
-info()
+info(enum BusSensor bustype)
 {
+	MS5611 *g_dev = nullptr;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+    	break;
+    }
+
 	if (g_dev == nullptr)
 		errx(1, "driver not running");
 
@@ -1083,16 +1169,35 @@ info()
  * Calculate actual MSL pressure given current altitude
  */
 void
-calibrate(unsigned altitude)
+calibrate(enum BusSensor bustype, unsigned altitude)
 {
 	struct baro_report report;
 	float	pressure;
 	float	p1;
+	const char *path;
 
-	int fd = open(MS5611_BARO_DEVICE_PATH, O_RDONLY);
+	switch (bustype) {
+	case TYPE_BUS_SENSOR_INTERNAL:
+#ifdef SPI_BUS_MS5611
+		path = MS5611_BARO_DEVICE_PATH_INT;
+#endif
+		break;
+	case TYPE_BUS_SENSOR_IMU:
+#ifdef SPI_BUS_IMU_MS5611
+		path = MS5611_BARO_DEVICE_PATH_IMU;
+#endif
+		break;
+	case TYPE_BUS_SENSOR_EXTERNAL:
+#ifdef SPI_BUS_EXP_MS5611
+		path = MS5611_BARO_DEVICE_PATH_EXP;
+#endif
+		break;
+	}
+
+	int fd = open(path, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'ms5611 start' if the driver is not running)", MS5611_BARO_DEVICE_PATH);
+		err(1, "%s open failed (try 'ms5611 start' if the driver is not running)", path);
 
 	/* start the sensor polling at max */
 	if (OK != ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_MAX))
@@ -1149,49 +1254,82 @@ calibrate(unsigned altitude)
 
 } // namespace
 
+void
+ms5611_usage()
+{
+	warnx("missing command: try 'start', 'info', 'test', 'test2', 'reset', 'calibrate'");
+	warnx("options:");
+	warnx("    -X only external bus");
+	warnx("    -U only external IMU");
+	warnx("    -I only internal bus");
+}
+
 int
 ms5611_main(int argc, char *argv[])
 {
+	int ch;
+	enum BusSensor bustype = TYPE_BUS_SENSOR_NONE;
+
+	/* jump over start/off/etc and look at options first */
+	while ((ch = getopt(argc, argv, "XIU")) != EOF) {
+		switch (ch) {
+		case 'I':
+			bustype = TYPE_BUS_SENSOR_INTERNAL;
+			break;
+		case 'X':
+			bustype = TYPE_BUS_SENSOR_EXTERNAL;
+			break;
+		case 'U':
+			bustype = TYPE_BUS_SENSOR_IMU;
+			break;
+		default:
+			ms5611_usage();
+			exit(0);
+		}
+	}
+
+	const char *verb = argv[optind];
+
 	/*
 	 * Start/load the driver.
 	 */
-	if (!strcmp(argv[1], "start"))
-		ms5611::start();
+	if (!strcmp(verb, "start"))
+		ms5611::start(bustype);
 
 	/*
 	 * Test the driver/device.
 	 */
-	if (!strcmp(argv[1], "test"))
-		ms5611::test();
+	if (!strcmp(verb, "test"))
+		ms5611::test(bustype);
 
 	/*
 	 * Test the driver/device for 300 seconds
 	 */
-	if (!strcmp(argv[1], "test2"))
-		ms5611::test2();
+	if (!strcmp(verb, "test2"))
+		ms5611::test2(bustype);
 
 	/*
 	 * Reset the driver.
 	 */
-	if (!strcmp(argv[1], "reset"))
-		ms5611::reset();
+	if (!strcmp(verb, "reset"))
+		ms5611::reset(bustype);
 
 	/*
 	 * Print driver information.
 	 */
-	if (!strcmp(argv[1], "info"))
-		ms5611::info();
+	if (!strcmp(verb, "info"))
+		ms5611::info(bustype);
 
 	/*
 	 * Perform MSL pressure calibration given an altitude in metres
 	 */
-	if (!strcmp(argv[1], "calibrate")) {
+	if (!strcmp(verb, "calibrate")) {
 		if (argc < 2)
 			errx(1, "missing altitude");
 
-		long altitude = strtol(argv[2], nullptr, 10);
+		long altitude = strtol(argv[optind+1], nullptr, 10);
 
-		ms5611::calibrate(altitude);
+		ms5611::calibrate(bustype, altitude);
 	}
 
 	errx(1, "unrecognised command, try 'start', 'test', 'reset' or 'info'");
