@@ -79,23 +79,18 @@ const struct {
 #define OPT_NOALLTEST	(1<<1)
 #define OPT_NOJIGTEST	(1<<2)
 } tests[] = {
-	{"led",			test_led,	0},
 #if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+
+	{"led",			test_led,	0},
 	{"int",			test_int,	0},
 	{"float",		test_float,	0},
-#endif
 	{"sensors",		test_sensors,	0},
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"gpio",		test_gpio,	OPT_NOJIGTEST | OPT_NOALLTEST},
-#endif
 	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"ppm",			test_ppm,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"servo",		test_servo,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"ppm_loopback",	test_ppm_loopback,	OPT_NOALLTEST},
-#endif
 	{"adc",			test_adc,	OPT_NOJIGTEST},
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"jig_voltages",	test_jig_voltages,	OPT_NOALLTEST},
 	{"uart_loopback",	test_uart_loopback,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"uart_baudchange",	test_uart_baudchange,	OPT_NOJIGTEST | OPT_NOALLTEST},
@@ -113,23 +108,66 @@ const struct {
 	{"file",		test_file,	0},
 	{"file2",		test_file2,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mixer",		test_mixer,	OPT_NOJIGTEST | OPT_NOALLTEST},
-#endif
-#if !defined(CONFIG_ARCH_BOARD_VRHERO_V10)
 	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
-#endif
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"conv",		test_conv,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mount",		test_mount,	OPT_NOJIGTEST | OPT_NOALLTEST},
-#endif
 	{"mtd",			test_mtd,	0},
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 #ifndef ARDUPILOT_BUILD
 	{"mathlib",		test_mathlib,	0},
 #endif
-#endif
-#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
+
+	{"led",			test_led,	0},
+	{"sensors",		test_sensors,	0},
+	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"adc",			test_adc,	OPT_NOJIGTEST},
+	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"mtd",			test_mtd,	0},
 	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
+
+	{"led",			test_led,	0},
+	{"sensors",		test_sensors,	0},
+	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"adc",			test_adc,	OPT_NOJIGTEST},
+	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"mtd",			test_mtd,	0},
+	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
+
+	{"led",			test_led,	0},
+	{"sensors",		test_sensors,	0},
+	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"adc",			test_adc,	OPT_NOJIGTEST},
+	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"mtd",			test_mtd,	0},
+	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
+
+	{"led",			test_led,	0},
+	{"sensors",		test_sensors,	0},
+	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"adc",			test_adc,	OPT_NOJIGTEST},
+	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"mtd",			test_mtd,	0},
+	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+
+#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+
+	{"led",			test_led,	0},
+	{"sensors",		test_sensors,	0},
+	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"adc",			test_adc,	OPT_NOJIGTEST},
+	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"mtd",			test_mtd,	0},
+	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+
 #endif
+
 	{"help",		test_help,	OPT_NOALLTEST | OPT_NOHELP | OPT_NOJIGTEST},
 	{NULL,			NULL, 		0}
 };

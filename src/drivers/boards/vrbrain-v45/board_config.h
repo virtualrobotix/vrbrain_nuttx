@@ -64,7 +64,7 @@ __BEGIN_DECLS
 
 
 
-#define MPU6000_EXTERNAL
+//#define MPU6000_EXTERNAL
 
 
 
@@ -94,20 +94,20 @@ __BEGIN_DECLS
 /* SPI chip selects */
 #define GPIO_SPI_CS_DATAFLASH	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN12)
 #define GPIO_SPI_CS_MS5611  	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN0)
-#define GPIO_SPI_CS_MPU6000_OB	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN10)
+#define GPIO_SPI_CS_MPU6000  	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN10)
 #ifndef MPU6000_EXTERNAL
 #define GPIO_SPI_CS_SDCARD	    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN8)
 #else
-#define GPIO_SPI_CS_MPU6000_EXT	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN8)
+#define GPIO_SPI_CS_EXP_MPU6000	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN8)
 #endif
 
 #define SPI_BUS_AT45BD		 1
 #define SPI_BUS_MS5611		 1
-#define SPI_BUS_MPU6000_OB	 2
+#define SPI_BUS_MPU6000 	 2
 #ifndef MPU6000_EXTERNAL
 #define SPI_BUS_SDCARD		 3
 #else
-#define SPI_BUS_MPU6000_EXT	 3
+#define SPI_BUS_EXP_MPU6000	 3
 #endif
 
 /*
@@ -124,7 +124,7 @@ __BEGIN_DECLS
 /*
  * Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI2
  */
-#define SPIDEV_MPU6000_OB	51
+#define SPIDEV_MPU6000  	51
 
 
 
@@ -132,15 +132,16 @@ __BEGIN_DECLS
 /*
  * Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI3
  */
-#define SPIDEV_MPU6000_EXT	52
+#define SPIDEV_EXP_MPU6000	52
 
 
 /*
  * I2C busses
  */
-#define I2C_BUS_ONBOARD_HMC5883		2
-#define I2C_BUS_EXTERNAL_HMC5883	1
-#define I2C_BUS_EEPROM				2
+#define I2C_BUS_HMC5883		2
+#define I2C_BUS_EXT_HMC5883	1
+
+#define I2C_BUS_EEPROM		2
 
 
 
@@ -277,6 +278,16 @@ __BEGIN_DECLS
 /****************************************************************************************************
  * Public Types
  ****************************************************************************************************/
+
+/**
+ * Enum for sensors bus.
+ */
+enum BusSensor {
+	TYPE_BUS_SENSOR_NONE         = 0,
+	TYPE_BUS_SENSOR_INTERNAL     = 1,
+	TYPE_BUS_SENSOR_IMU          = 2,
+	TYPE_BUS_SENSOR_EXTERNAL     = 3
+};
 
 /****************************************************************************************************
  * Public data

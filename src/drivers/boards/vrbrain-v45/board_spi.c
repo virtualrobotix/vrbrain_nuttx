@@ -73,11 +73,11 @@ __EXPORT void weak_function stm32_spiinitialize(void)
 
 
 	stm32_configgpio(GPIO_SPI_CS_MS5611);
-	stm32_configgpio(GPIO_SPI_CS_MPU6000_OB);
+	stm32_configgpio(GPIO_SPI_CS_MPU6000);
 #ifndef MPU6000_EXTERNAL
 	stm32_configgpio(GPIO_SPI_CS_SDCARD);
 #else
-	stm32_configgpio(GPIO_SPI_CS_MPU6000_EXT);
+	stm32_configgpio(GPIO_SPI_CS_EXP_MPU6000);
 #endif
 
 	/* De-activate all peripherals,
@@ -86,11 +86,11 @@ __EXPORT void weak_function stm32_spiinitialize(void)
 	 */
 	stm32_gpiowrite(GPIO_SPI_CS_DATAFLASH, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_MS5611, 1);
-	stm32_gpiowrite(GPIO_SPI_CS_MPU6000_OB, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
 #ifndef MPU6000_EXTERNAL
 	stm32_gpiowrite(GPIO_SPI_CS_SDCARD, 1);
 #else
-	stm32_gpiowrite(GPIO_SPI_CS_MPU6000_EXT, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_EXP_MPU6000, 1);
 #endif
 }
 
@@ -127,9 +127,9 @@ __EXPORT void stm32_spi2select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, 
 	/* SPI select is active low, so write !selected to select the device */
 
 	switch (devid) {
-	case SPIDEV_MPU6000_OB:
+	case SPIDEV_MPU6000:
 		/* Making sure the other peripherals are not selected */
-		stm32_gpiowrite(GPIO_SPI_CS_MPU6000_OB, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, !selected);
 		break;
 
 	default:
@@ -155,9 +155,9 @@ __EXPORT void stm32_spi3select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, 
 		stm32_gpiowrite(GPIO_SPI_CS_SDCARD, !selected);
 		break;
 #else
-	case SPIDEV_MPU6000_EXT:
+	case SPIDEV_EXP_MPU6000:
 		/* Making sure the other peripherals are not selected */
-		stm32_gpiowrite(GPIO_SPI_CS_MPU6000_EXT, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_EXP_MPU6000, !selected);
 		break;
 #endif
 

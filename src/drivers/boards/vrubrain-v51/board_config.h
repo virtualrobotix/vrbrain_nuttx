@@ -87,16 +87,16 @@ __BEGIN_DECLS
 /* SPI chip selects */
 #define GPIO_SPI_CS_DATAFLASH   (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN15)
 #define GPIO_SPI_CS_MS5611  	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN0)
-#define GPIO_SPI_CS_MPU6000_OB	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN10)
+#define GPIO_SPI_CS_MPU6000  	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN10)
 #define GPIO_SPI_CS_SDCARD	    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN4)
-#define GPIO_SPI_CS_WIFI		(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN1)
+#define GPIO_SPI_CS_EXP_WIFI	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN1)
 
 
 #define SPI_BUS_AT45BD		 3
 #define SPI_BUS_MS5611		 1
-#define SPI_BUS_MPU6000_OB	 2
+#define SPI_BUS_MPU6000 	 2
 #define SPI_BUS_SDCARD		 3
-#define SPI_BUS_WIFI		 1
+#define SPI_BUS_EXP_WIFI	 1
 
 /*
  * Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI1
@@ -112,7 +112,7 @@ __BEGIN_DECLS
 /*
  * Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI2
  */
-#define SPIDEV_MPU6000_OB	51
+#define SPIDEV_MPU6000  	51
 
 /*
  * Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI3
@@ -121,9 +121,9 @@ __BEGIN_DECLS
 /*
  * I2C busses
  */
-#define I2C_BUS_EXTERNAL_HMC5883	1
+#define I2C_BUS_EXT_HMC5883	1
 
-#define I2C_BUS_EEPROM		 		2
+#define I2C_BUS_EEPROM		2
 
 /*
  * Devices on the onboard bus.
@@ -140,8 +140,8 @@ __BEGIN_DECLS
 
 /* WIFI **************************/
 
-#define GPIO_WIFI_EN  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN7)
-#define GPIO_WIFI_INT (GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTE|GPIO_PIN8)
+#define GPIO_EXP_WIFI_EN  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN7)
+#define GPIO_EXP_WIFI_INT (GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTE|GPIO_PIN8)
 
 /* SBUS **************************/
 
@@ -183,7 +183,7 @@ __BEGIN_DECLS
 
 /* High-resolution timer
  */
-//#define PWM_INPUT
+#define PWM_INPUT
 #ifdef PWM_INPUT
 #define HRT_TIMER		    8	/* use timer8 for the HRT */
 #define HRT_TIMER_CHANNEL	1	/* use capture/compare channel 1 */
@@ -200,6 +200,16 @@ __BEGIN_DECLS
 /****************************************************************************************************
  * Public Types
  ****************************************************************************************************/
+
+/**
+ * Enum for sensors bus.
+ */
+enum BusSensor {
+	TYPE_BUS_SENSOR_NONE         = 0,
+	TYPE_BUS_SENSOR_INTERNAL     = 1,
+	TYPE_BUS_SENSOR_IMU          = 2,
+	TYPE_BUS_SENSOR_EXTERNAL     = 3
+};
 
 /****************************************************************************************************
  * Public data

@@ -127,11 +127,6 @@ __EXPORT void stm32_boardinitialize(void)
 	/* configure SPI interfaces */
 	stm32_spiinitialize();
 
-	/* configure LEDs (empty call to NuttX' ledinit) */
-
-
-	/* configure BUZZERSs */
-	buzzer_init();
 }
 
 /****************************************************************************
@@ -271,8 +266,11 @@ __EXPORT int nsh_archinitialize(void)
 	SPI_SETFREQUENCY(spi1, 10000000);
 	SPI_SETBITS(spi1, 8);
 	SPI_SETMODE(spi1, SPIDEV_MODE3);
-	SPI_SELECT(spi1, GPIO_SPI_CS_WIFI, false);
 	SPI_SELECT(spi1, GPIO_SPI_CS_MS5611, false);
+	SPI_SELECT(spi1, GPIO_SPI_CS_EXP_MS5611, false);
+	SPI_SELECT(spi1, GPIO_SPI_CS_EXP_MPU6000, false);
+	SPI_SELECT(spi1, GPIO_SPI_CS_EXP_HMC5983, false);
+	SPI_SELECT(spi1, GPIO_SPI_CS_EXP_WIFI_EEPROM, false);
 	up_udelay(20);
 
 	message("[boot] Successfully initialized SPI port 1\r\n");
@@ -293,10 +291,11 @@ __EXPORT int nsh_archinitialize(void)
 	SPI_SETFREQUENCY(spi2, 10000000);
 	SPI_SETBITS(spi2, 8);
 	SPI_SETMODE(spi2, SPIDEV_MODE3);
-	SPI_SELECT(spi2, GPIO_SPI_CS_MPU6000_OB, false);
-	SPI_SELECT(spi2, GPIO_SPI_CS_MPU6000_EXT, false);
-	SPI_SELECT(spi2, GPIO_SPI_CS_HMC5983_EXT, false);
-	SPI_SELECT(spi2, GPIO_SPI_CS_EEPROM_EXT, false);
+	SPI_SELECT(spi2, GPIO_SPI_CS_MPU6000, false);
+	SPI_SELECT(spi2, GPIO_SPI_CS_IMU_MS5611, false);
+	SPI_SELECT(spi2, GPIO_SPI_CS_IMU_MPU6000, false);
+	SPI_SELECT(spi2, GPIO_SPI_CS_IMU_HMC5983, false);
+	SPI_SELECT(spi2, GPIO_SPI_CS_IMU_EEPROM, false);
 
 	message("[boot] Successfully initialized SPI port 2\n");
 

@@ -50,6 +50,17 @@
 
 #include "board_config.h"
 
+/* PWM Output
+* RC1 PA1  Timer 2 Channel 2 (AF1)
+* RC2 PA2  Timer 2 Channel 3 (AF1)
+* RC3 PA3  Timer 2 Channel 4 (AF1)
+* RC4 PB5  Timer 3 Channel 2 (AF2)
+* RC5 PB0  Timer 3 Channel 3 (AF2)
+* RC6 PB1  Timer 3 Channel 4 (AF2)
+* RC7 PD13 Timer 4 Channel 2 (AF2)
+* RC8 PD14 Timer 4 Channel 1 (AF2)
+*/
+
 __EXPORT const struct pwm_servo_timer pwm_timers[PWM_SERVO_MAX_TIMERS] = {
 	{
 		.base = STM32_TIM2_BASE,
