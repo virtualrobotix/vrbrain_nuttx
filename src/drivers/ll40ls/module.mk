@@ -1,6 +1,6 @@
 ############################################################################
 #
-#   Copyright (c) 2012, 2013 PX4 Development Team. All rights reserved.
+#   Copyright (c) 2013 PX4 Development Team. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -32,12 +32,9 @@
 ############################################################################
 
 #
-# HMC5883 onboard driver
+# Makefile to build the PulsedLight Lidar-Lite driver.
 #
 
-MODULE_COMMAND	= hmc5883i
+MODULE_COMMAND	= ll40ls
 
-# XXX seems excessive, check if 2048 is sufficient
-MODULE_STACKSIZE	= 4096
-
-SRCS		= hmc5883i.cpp
+SRCS		= ll40ls.cpp

@@ -37,6 +37,8 @@
  * Shared defines for the ms5611 driver.
  */
 
+#include <board_config.h>
+
 #define ADDR_RESET_CMD			0x1E	/* write to this address to reset chip */
 #define ADDR_CMD_CONVERT_D1		0x48	/* write to this address to start temperature conversion */
 #define ADDR_CMD_CONVERT_D2		0x58	/* write to this address to start pressure conversion */
@@ -80,6 +82,6 @@ extern bool crc4(uint16_t *n_prom);
 } /* namespace */
 
 /* interface factories */
-extern device::Device *MS5611_spi_interface(ms5611::prom_u &prom_buf) weak_function;
+extern device::Device *MS5611_spi_interface(ms5611::prom_u &prom_buf, enum BusSensor bustype) weak_function;
 extern device::Device *MS5611_i2c_interface(ms5611::prom_u &prom_buf) weak_function;
 

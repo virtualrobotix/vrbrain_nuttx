@@ -49,7 +49,7 @@
 #include <unistd.h>
 
 #include <arch/board/board.h>
-
+#include <systemlib/err.h>
 #include <drivers/device/spi.h>
 
 #include "ms5611.h"
@@ -60,9 +60,9 @@
 #define DIR_WRITE			(0<<7)
 #define ADDR_INCREMENT			(1<<6)
 
-#ifdef SPIDEV_MS5611
+#if defined(SPIDEV_MS5611) || defined(SPIDEV_EXP_MS5611) || defined(SPIDEV_IMU_MS5611)
 
-device::Device *MS5611_spi_interface(ms5611::prom_u &prom_buf);
+device::Device *MS5611_spi_interface(ms5611::prom_u &prom_buf, enum BusSensor bustype);
 
 class MS5611_SPI : public device::SPI
 {
@@ -115,9 +115,31 @@ private:
 };
 
 device::Device *
-MS5611_spi_interface(ms5611::prom_u &prom_buf)
+MS5611_spi_interface(ms5611::prom_u &prom_buf, enum BusSensor bustype)
 {
-	return new MS5611_SPI(SPI_BUS_MS5611, (spi_dev_e)SPIDEV_MS5611, prom_buf);
+	switch (bustype) {
+	case TYPE_BUS_SENSOR_INTERNAL:
+#ifdef SPI_BUS_MS5611
+		return new MS5611_SPI(SPI_BUS_MS5611, (spi_dev_e)SPIDEV_MS5611, prom_buf);
+#else
+		errx(0, "Internal SPI not available");
+#endif
+		break;
+	case TYPE_BUS_SENSOR_IMU:
+#ifdef SPI_BUS_IMU_MS5611
+		return new MS5611_SPI(SPI_BUS_IMU_MS5611, (spi_dev_e)SPIDEV_IMU_MS5611, prom_buf);
+#else
+		errx(0, "External IMU SPI not available");
+#endif
+		break;
+	case TYPE_BUS_SENSOR_EXTERNAL:
+#ifdef SPI_BUS_EXP_MS5611
+		return new MS5611_SPI(SPI_BUS_EXP_MS5611, (spi_dev_e)SPIDEV_EXP_MS5611, prom_buf);
+#else
+		errx(0, "External EXP SPI not available");
+#endif
+		break;
+	}
 }
 
 MS5611_SPI::MS5611_SPI(int bus, spi_dev_e device, ms5611::prom_u &prom_buf) :
@@ -275,4 +297,4 @@ MS5611_SPI::_transfer(uint8_t *send, uint8_t *recv, unsigned len)
 	return transfer(send, recv, len);
 }
 
-#endif /* SPIDEV_MS5611 */
+#endif /* SPIDEV_MS5611 or SPIDEV_EXP_MS5611 or SPIDEV_IMU_MS5611 */

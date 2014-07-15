@@ -4,6 +4,7 @@
 
 SRCS		 = board_can.c \
 		   board_init.c \
+		   board_pwm_input.c \
 		   board_pwm_servo.c \
 		   board_spi.c \
 		   board_usb.c \

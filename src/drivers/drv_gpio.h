@@ -42,7 +42,7 @@
 
 #include <sys/ioctl.h>
 
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+#ifdef CONFIG_ARCH_BOARD_PX4FMU_V1
 /*
  * PX4FMU GPIO numbers.
  *
@@ -64,7 +64,9 @@
 # define PX4FMU_DEVICE_PATH	"/dev/px4fmu"
 # define PX4IO_DEVICE_PATH	"/dev/px4io"
 
-#elif defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
 /*
  * PX4FMUv2 GPIO numbers.
  *
@@ -90,7 +92,9 @@
 # define PX4FMU_DEVICE_PATH	"/dev/px4fmu"
 # define PX4IO_DEVICE_PATH	"/dev/px4io"
 
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V40
 
 /**
  * Device paths for things that support the GPIO ioctl protocol.
@@ -98,7 +102,9 @@
 # define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
 # define VRINPUT_DEVICE_PATH	"/dev/vrinput"
 
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V45
 
 /**
  * Device paths for things that support the GPIO ioctl protocol.
@@ -106,7 +112,9 @@
 # define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
 # define VRINPUT_DEVICE_PATH	"/dev/vrinput"
 
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V50
 
 /**
  * Device paths for things that support the GPIO ioctl protocol.
@@ -114,7 +122,9 @@
 # define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
 # define VRINPUT_DEVICE_PATH	"/dev/vrinput"
 
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V51
 
 /**
  * Device paths for things that support the GPIO ioctl protocol.
@@ -122,7 +132,9 @@
 # define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
 # define VRINPUT_DEVICE_PATH	"/dev/vrinput"
 
-#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRUBRAIN_V51
 
 /**
  * Device paths for things that support the GPIO ioctl protocol.
@@ -130,7 +142,9 @@
 # define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
 # define VRINPUT_DEVICE_PATH	"/dev/vrinput"
 
-#elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRHERO_V10
 
 # define GPIO_EXT_SHUTDOWN_INT		(1<<0)		/**< shutdown interrupt signal */
 # define GPIO_EXT_SHUTDOWN_OUT		(1<<1)		/**< shutdown output consensus */

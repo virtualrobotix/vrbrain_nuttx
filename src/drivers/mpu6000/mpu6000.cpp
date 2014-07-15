@@ -55,6 +55,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include <systemlib/perf_counter.h>
 #include <systemlib/err.h>
@@ -71,6 +72,7 @@
 #include <drivers/drv_accel.h>
 #include <drivers/drv_gyro.h>
 #include <mathlib/math/filter/LowPassFilter2p.hpp>
+#include <lib/conversion/rotation.h>
 
 //Define the type of orientation of the board
 //#define MPU6000_CHIP_FORWARD
@@ -78,8 +80,12 @@
 #define DIR_READ			0x80
 #define DIR_WRITE			0x00
 
-#define MPU_DEVICE_PATH_ACCEL		"/dev/mpu6000_accel"
-#define MPU_DEVICE_PATH_GYRO		"/dev/mpu6000_gyro"
+#define MPU_DEVICE_PATH_ACCEL_INT	"/dev/mpu6000_accel_int"
+#define MPU_DEVICE_PATH_GYRO_INT	"/dev/mpu6000_gyro_int"
+#define MPU_DEVICE_PATH_ACCEL_EXP	"/dev/mpu6000_accel_exp"
+#define MPU_DEVICE_PATH_GYRO_EXP	"/dev/mpu6000_gyro_exp"
+#define MPU_DEVICE_PATH_ACCEL_IMU	"/dev/mpu6000_accel_imu"
+#define MPU_DEVICE_PATH_GYRO_IMU	"/dev/mpu6000_gyro_imu"
 
 // MPU 6000 registers
 #define MPUREG_WHOAMI			0x75
@@ -180,7 +186,7 @@ class MPU6000_gyro;
 class MPU6000 : public device::SPI
 {
 public:
-	MPU6000(int bus, spi_dev_e device);
+	MPU6000(int bus, const char *path_accel, const char *path_gyro, spi_dev_e device, enum Rotation rotation, enum BusSensor bustype);
 	virtual ~MPU6000();
 
 	virtual int		init();
@@ -235,6 +241,10 @@ private:
 	math::LowPassFilter2p	_gyro_filter_x;
 	math::LowPassFilter2p	_gyro_filter_y;
 	math::LowPassFilter2p	_gyro_filter_z;
+
+	enum Rotation		_rotation;
+
+	enum BusSensor 		_bustype;
 
 	/**
 	 * Start automatic measurement.
@@ -349,7 +359,7 @@ private:
 class MPU6000_gyro : public device::CDev
 {
 public:
-	MPU6000_gyro(MPU6000 *parent);
+	MPU6000_gyro(MPU6000 *parent, const char *path);
 	~MPU6000_gyro();
 
 	virtual ssize_t		read(struct file *filp, char *buffer, size_t buflen);
@@ -372,9 +382,9 @@ private:
 /** driver 'main' command */
 extern "C" { __EXPORT int mpu6000_main(int argc, char *argv[]); }
 
-MPU6000::MPU6000(int bus, spi_dev_e device) :
-	SPI("MPU6000", MPU_DEVICE_PATH_ACCEL, bus, device, SPIDEV_MODE3, MPU6000_LOW_BUS_SPEED),
-	_gyro(new MPU6000_gyro(this)),
+MPU6000::MPU6000(int bus, const char *path_accel, const char *path_gyro, spi_dev_e device, enum Rotation rotation, enum BusSensor bustype) :
+	SPI("MPU6000", path_accel, bus, device, SPIDEV_MODE3, MPU6000_LOW_BUS_SPEED),
+	_gyro(new MPU6000_gyro(this, path_gyro)),
 	_product(0),
 	_call_interval(0),
 	_accel_reports(nullptr),
@@ -396,7 +406,9 @@ MPU6000::MPU6000(int bus, spi_dev_e device) :
 	_accel_filter_z(MPU6000_ACCEL_DEFAULT_RATE, MPU6000_ACCEL_DEFAULT_DRIVER_FILTER_FREQ),
 	_gyro_filter_x(MPU6000_GYRO_DEFAULT_RATE, MPU6000_GYRO_DEFAULT_DRIVER_FILTER_FREQ),
 	_gyro_filter_y(MPU6000_GYRO_DEFAULT_RATE, MPU6000_GYRO_DEFAULT_DRIVER_FILTER_FREQ),
-	_gyro_filter_z(MPU6000_GYRO_DEFAULT_RATE, MPU6000_GYRO_DEFAULT_DRIVER_FILTER_FREQ)
+	_gyro_filter_z(MPU6000_GYRO_DEFAULT_RATE, MPU6000_GYRO_DEFAULT_DRIVER_FILTER_FREQ),
+	_rotation(rotation),
+	_bustype(bustype)
 {
 	// disable debug() calls
 	_debug_enabled = true;
@@ -672,9 +684,9 @@ MPU6000::_set_dlpf_filter(uint16_t frequency_hz)
 	/* 
 	   choose next highest filter frequency available
 	 */
-	if (frequency_hz == 0) {
+        if (frequency_hz == 0) {
 		filter = BITS_DLPF_CFG_2100HZ_NOLPF;
-	} else if (frequency_hz <= 5) {
+        } else if (frequency_hz <= 5) {
 		filter = BITS_DLPF_CFG_5HZ;
 	} else if (frequency_hz <= 10) {
 		filter = BITS_DLPF_CFG_10HZ;
@@ -1254,70 +1266,76 @@ MPU6000::measure()
 	/*
 	 * Swap axes and negate y
 	 */
+	int16_t accel_xt;
+	int16_t accel_yt;
+	int16_t accel_zt;
+	int16_t gyro_xt;
+	int16_t gyro_yt;
+	int16_t gyro_zt;
+
 #if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
-	int16_t accel_xt = report.accel_y;
-	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+	accel_xt = report.accel_y;
+	accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+	accel_zt = report.accel_z;
 
-	int16_t gyro_xt = report.gyro_y;
-	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
-	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
-	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
-	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+	gyro_xt = report.gyro_y;
+	gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+	gyro_zt = report.gyro_z;
 
-	int16_t gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
-	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
-	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
-	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
-	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
 
-	int16_t gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
-	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
-	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
-	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
-	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
-	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+	if (_bustype == TYPE_BUS_SENSOR_INTERNAL) {
 
-	int16_t gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
-	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
-	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
-	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
-	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
-	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+		accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+		accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+		accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
 
-	int16_t gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
-	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
-	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
-#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
-	int16_t accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
-	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
-	int16_t accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+		gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+		gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+		gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
 
-	int16_t gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
-	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
-	int16_t gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+	} else if (_bustype == TYPE_BUS_SENSOR_EXTERNAL) {
+
+		accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+		accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+		accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+
+		gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+		gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+		gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+
+	} else if (_bustype == TYPE_BUS_SENSOR_IMU) {
+
+		accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+		accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+		accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+
+		gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+		gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+		gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+
+	}
+
 #elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
+
 #ifdef	MPU6000_CHIP_FORWARD
-	int16_t accel_xt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
-	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : report.accel_x);
-	int16_t accel_zt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+	accel_xt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+	accel_yt = ((report.accel_x == -32768) ? 32767 : report.accel_x);
+	accel_zt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
 
-	int16_t gyro_xt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
-	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : report.gyro_x);
-	int16_t gyro_zt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+	gyro_xt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+	gyro_yt = ((report.gyro_x == -32768) ? 32767 : report.gyro_x);
+	gyro_zt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
 #else
-	int16_t accel_xt = ((report.accel_z == -32768) ? 32767 : report.accel_z);
-	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
-	int16_t accel_zt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+	accel_xt = ((report.accel_z == -32768) ? 32767 : report.accel_z);
+	accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+	accel_zt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
 
-	int16_t gyro_xt = ((report.gyro_z == -32768) ? 32767 : report.gyro_z);
-	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
-	int16_t gyro_zt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+	gyro_xt = ((report.gyro_z == -32768) ? 32767 : report.gyro_z);
+	gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+	gyro_zt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
 #endif
+
 #endif
 
 	/*
@@ -1372,6 +1390,9 @@ MPU6000::measure()
 	arb.y = _accel_filter_y.apply(y_in_new);
 	arb.z = _accel_filter_z.apply(z_in_new);
 
+	// apply user specified rotation
+	rotate_3f(_rotation, arb.x, arb.y, arb.z);
+
 	arb.scaling = _accel_range_scale;
 	arb.range_m_s2 = _accel_range_m_s2;
 
@@ -1389,6 +1410,9 @@ MPU6000::measure()
 	grb.x = _gyro_filter_x.apply(x_gyro_in_new);
 	grb.y = _gyro_filter_y.apply(y_gyro_in_new);
 	grb.z = _gyro_filter_z.apply(z_gyro_in_new);
+
+	// apply user specified rotation
+	rotate_3f(_rotation, grb.x, grb.y, grb.z);
 
 	grb.scaling = _gyro_range_scale;
 	grb.range_rad_s = _gyro_range_rad_s;
@@ -1429,8 +1453,8 @@ MPU6000::print_info()
 	_gyro_reports->print_info("gyro queue");
 }
 
-MPU6000_gyro::MPU6000_gyro(MPU6000 *parent) :
-	CDev("MPU6000_gyro", MPU_DEVICE_PATH_GYRO),
+MPU6000_gyro::MPU6000_gyro(MPU6000 *parent, const char *path) :
+	CDev("MPU6000_gyro", path),
 	_parent(parent),
 	_gyro_topic(-1),
 	_gyro_class_instance(-1)
@@ -1459,7 +1483,6 @@ MPU6000_gyro::init()
 
 	_gyro_class_instance = register_class_devname(GYRO_DEVICE_PATH);
 
-out:
 	return ret;
 }
 
@@ -1487,27 +1510,72 @@ MPU6000_gyro::ioctl(struct file *filp, int cmd, unsigned long arg)
 namespace mpu6000
 {
 
-MPU6000	*g_dev;
+MPU6000	*g_dev_int;
+MPU6000	*g_dev_exp;
+MPU6000	*g_dev_imu;
 
-void	start();
-void	test();
-void	reset();
-void	info();
+void	start(enum Rotation rotation, enum BusSensor bustype);
+void	test(enum BusSensor bustype);
+void	reset(enum BusSensor bustype);
+void	info(enum BusSensor bustype);
 
 /**
  * Start the driver.
  */
 void
-start()
+start(enum Rotation rotation, enum BusSensor bustype)
 {
 	int fd;
+    MPU6000 *g_dev = nullptr;
+	const char *path_accel;
+	const char *path_gyro;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+		path_accel = MPU_DEVICE_PATH_ACCEL_INT;
+		path_gyro = MPU_DEVICE_PATH_GYRO_INT;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+		path_accel = MPU_DEVICE_PATH_ACCEL_IMU;
+		path_gyro = MPU_DEVICE_PATH_GYRO_IMU;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+		path_accel = MPU_DEVICE_PATH_ACCEL_EXP;
+		path_gyro = MPU_DEVICE_PATH_GYRO_EXP;
+    	break;
+    }
 
 	if (g_dev != nullptr)
 		/* if already started, the still command succeeded */
 		errx(0, "already started");
 
 	/* create the driver */
-	g_dev = new MPU6000(SPI_BUS_MPU6000, (spi_dev_e)SPIDEV_MPU6000);
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+#ifdef SPI_BUS_MPU6000
+		g_dev = new MPU6000(SPI_BUS_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_MPU6000, rotation, bustype);
+#else
+		errx(0, "Internal SPI not available");
+#endif
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+#ifdef SPI_BUS_IMU_MPU6000
+		g_dev = new MPU6000(SPI_BUS_IMU_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_IMU_MPU6000, rotation, bustype);
+#else
+		errx(0, "External IMU SPI not available");
+#endif
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+#ifdef SPI_BUS_EXP_MPU6000
+		g_dev = new MPU6000(SPI_BUS_EXP_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_EXP_MPU6000, rotation, bustype);
+#else
+		errx(0, "External EXP SPI not available");
+#endif
+    	break;
+    }
 
 	if (g_dev == nullptr)
 		goto fail;
@@ -1516,7 +1584,7 @@ start()
 		goto fail;
 
 	/* set the poll rate to default, starts automatic data collection */
-	fd = open(MPU_DEVICE_PATH_ACCEL, O_RDONLY);
+	fd = open(path_accel, O_RDONLY);
 
 	if (fd < 0)
 		goto fail;
@@ -1527,11 +1595,12 @@ start()
         close(fd);
 
 	exit(0);
+
 fail:
 
 	if (g_dev != nullptr) {
-		delete g_dev;
-		g_dev = nullptr;
+            delete (g_dev);
+            g_dev = nullptr;
 	}
 
 	errx(1, "driver start failed");
@@ -1543,24 +1612,41 @@ fail:
  * and automatic modes.
  */
 void
-test()
+test(enum BusSensor bustype)
 {
+	const char *path_accel;
+	const char *path_gyro;
 	accel_report a_report;
 	gyro_report g_report;
 	ssize_t sz;
 
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+		path_accel = MPU_DEVICE_PATH_ACCEL_INT;
+		path_gyro = MPU_DEVICE_PATH_GYRO_INT;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		path_accel = MPU_DEVICE_PATH_ACCEL_IMU;
+		path_gyro = MPU_DEVICE_PATH_GYRO_IMU;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		path_accel = MPU_DEVICE_PATH_ACCEL_EXP;
+		path_gyro = MPU_DEVICE_PATH_GYRO_EXP;
+    	break;
+    }
+
 	/* get the driver */
-	int fd = open(MPU_DEVICE_PATH_ACCEL, O_RDONLY);
+	int fd = open(path_accel, O_RDONLY);
 
 	if (fd < 0)
 		err(1, "%s open failed (try 'mpu6000 start' if the driver is not running)",
-		    MPU_DEVICE_PATH_ACCEL);
+		    path_accel);
 
 	/* get the driver */
-	int fd_gyro = open(MPU_DEVICE_PATH_GYRO, O_RDONLY);
+	int fd_gyro = open(path_gyro, O_RDONLY);
 
 	if (fd_gyro < 0)
-		err(1, "%s open failed", MPU_DEVICE_PATH_GYRO);
+		err(1, "%s open failed", path_gyro);
 
 	/* reset to manual polling */
 	if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_MANUAL) < 0)
@@ -1608,7 +1694,7 @@ test()
 
 	/* XXX add poll-rate tests here too */
 
-	reset();
+	reset(bustype);
 	errx(0, "PASS");
 }
 
@@ -1616,9 +1702,23 @@ test()
  * Reset the driver.
  */
 void
-reset()
+reset(enum BusSensor bustype)
 {
-	int fd = open(MPU_DEVICE_PATH_ACCEL, O_RDONLY);
+	const char *path_accel;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+		path_accel = MPU_DEVICE_PATH_ACCEL_INT;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		path_accel = MPU_DEVICE_PATH_ACCEL_IMU;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		path_accel = MPU_DEVICE_PATH_ACCEL_EXP;
+    	break;
+    }
+
+	int fd = open(path_accel, O_RDONLY);
 
 	if (fd < 0)
 		err(1, "failed ");
@@ -1638,8 +1738,22 @@ reset()
  * Print a little info about the driver.
  */
 void
-info()
+info(enum BusSensor bustype)
 {
+    MPU6000 *g_dev = nullptr;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+    	break;
+    }
+
 	if (g_dev == nullptr)
 		errx(1, "driver not running");
 
@@ -1652,33 +1766,70 @@ info()
 
 } // namespace
 
+void
+mpu6000_usage()
+{
+	warnx("missing command: try 'start', 'info', 'test', 'reset', 'status'");
+	warnx("options:");
+	warnx("    -R rotation");
+	warnx("    -X only external bus");
+	warnx("    -U only external IMU");
+	warnx("    -I only internal bus");
+}
+
 int
 mpu6000_main(int argc, char *argv[])
 {
+	int ch;
+	enum Rotation rotation = ROTATION_NONE;
+	enum BusSensor bustype = TYPE_BUS_SENSOR_NONE;
+
+	/* jump over start/off/etc and look at options first */
+	while ((ch = getopt(argc, argv, "XIUR:")) != EOF) {
+		switch (ch) {
+		case 'R':
+			rotation = (enum Rotation)atoi(optarg);
+			break;
+		case 'I':
+			bustype = TYPE_BUS_SENSOR_INTERNAL;
+			break;
+		case 'X':
+			bustype = TYPE_BUS_SENSOR_EXTERNAL;
+			break;
+		case 'U':
+			bustype = TYPE_BUS_SENSOR_IMU;
+			break;
+		default:
+			mpu6000_usage();
+			exit(0);
+		}
+	}
+
+	const char *verb = argv[optind];	
+
 	/*
 	 * Start/load the driver.
-
 	 */
-	if (!strcmp(argv[1], "start"))
-		mpu6000::start();
+	if (!strcmp(verb, "start"))
+		mpu6000::start(rotation, bustype);
 
 	/*
 	 * Test the driver/device.
 	 */
-	if (!strcmp(argv[1], "test"))
-		mpu6000::test();
+	if (!strcmp(verb, "test"))
+		mpu6000::test(bustype);
 
 	/*
 	 * Reset the driver.
 	 */
-	if (!strcmp(argv[1], "reset"))
-		mpu6000::reset();
+	if (!strcmp(verb, "reset"))
+		mpu6000::reset(bustype);
 
 	/*
 	 * Print driver information.
 	 */
-	if (!strcmp(argv[1], "info"))
-		mpu6000::info();
+	if (!strcmp(verb, "info") || !strcmp(verb, "status"))
+		mpu6000::info(bustype);
 
 	errx(1, "unrecognized command, try 'start', 'test', 'reset' or 'info'");
 }

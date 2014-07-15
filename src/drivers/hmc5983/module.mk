@@ -32,12 +32,12 @@
 ############################################################################
 
 #
-# Makefile to build the MPU6000 external driver.
+# HMC5983 driver
 #
 
-MODULE_COMMAND	= mpu6000e
+MODULE_COMMAND	= hmc5983
 
-# XXX seems excessive, check if 2048 is not sufficient
-MODULE_STACKSIZE	 = 4096
+# XXX seems excessive, check if 2048 is sufficient
+MODULE_STACKSIZE	= 4096
 
-SRCS		= mpu6000e.cpp
+SRCS		= hmc5983.cpp
