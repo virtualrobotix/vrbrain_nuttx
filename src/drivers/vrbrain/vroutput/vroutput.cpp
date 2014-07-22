@@ -109,16 +109,11 @@ public:
 
 private:
 
-
-
-
-
-
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
 	static const unsigned _max_actuators = 8;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-	static const unsigned _max_actuators = 8;
+	static const unsigned _max_actuators = 12;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
 	static const unsigned _max_actuators = 8;
@@ -191,30 +186,6 @@ private:
 };
 
 const VROUTPUT::GPIOConfig VROUTPUT::_gpio_tab[] = {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
 #endif
@@ -619,61 +590,6 @@ VROUTPUT::task_main()
 				/* get controls - must always do this to avoid spinning */
 				orb_copy(_primary_pwm_device ? ORB_ID_VEHICLE_ATTITUDE_CONTROLS : ORB_ID(actuator_controls_1), _t_actuators, &_controls);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 			}
 
 			/* how about an arming update? */
@@ -698,42 +614,6 @@ VROUTPUT::task_main()
 				}
 			}
 		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	}
 
@@ -1149,60 +1029,6 @@ VROUTPUT::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 		break;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	default:
 		ret = -ENOTTY;
 		break;
@@ -1241,80 +1067,6 @@ VROUTPUT::write(file *filp, const char *buffer, size_t len)
 void
 VROUTPUT::sensor_reset(int ms)
 {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
 

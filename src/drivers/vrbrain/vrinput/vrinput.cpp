@@ -72,38 +72,9 @@
 #include <systemlib/systemlib.h>
 #include <systemlib/scheduling_priorities.h>
 
-
 #include <drivers/vrbrain/vrinput/controls/controls.h>
 
-
-
-
-
-
-
 #include <uORB/topics/rc_channels.h>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #ifndef ARDUPILOT_BUILD
 # define RC_HANDLING_DEFAULT false
@@ -213,26 +184,6 @@ public:
 	 * Fetch and print debug console output.
 	 */
 	int			print_debug();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	inline uint16_t		system_status() const {return _status;}
 
@@ -623,125 +574,6 @@ VRINPUT::init()
 	if (_max_rc_input > RC_INPUT_MAX_CHANNELS)
 		_max_rc_input = RC_INPUT_MAX_CHANNELS;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		if (_rc_handling_disabled) {
 			ret = io_disable_rc_handling();
 
@@ -755,16 +587,6 @@ VRINPUT::init()
 				return ret;
 			}
 		}
-
-
-
-
-
-
-
-
-
-
 
 	/* start the IO interface task */
 	_task = task_create("vrinput", SCHED_PRIORITY_ACTUATOR_OUTPUTS, 2048, (main_t)&VRINPUT::task_main_trampoline, nullptr);
@@ -793,39 +615,6 @@ VRINPUT::task_main()
 
 	log("controls_init");
 	controls_init();
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	/* lock against the ioctl handler */
 	lock();
@@ -836,132 +625,11 @@ VRINPUT::task_main()
 		controls_tick();
 
 		usleep(1000);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-			/* pull status and alarms from IO */
+		/* pull status and alarms from IO */
 			io_get_status();
 
 			/* get raw R/C input from IO */
 			io_publish_raw_rc();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	}
 
 	unlock();
@@ -981,13 +649,6 @@ out:
 int
 VRINPUT::io_set_control_groups()
 {
-
-
-
-
-
-
-
 	return 0;
 }
 

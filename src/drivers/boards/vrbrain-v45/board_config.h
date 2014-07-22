@@ -179,9 +179,9 @@ __BEGIN_DECLS
 #define SBUS_INPUT
 //#define DSM_INPUT
 #define HRT_TIMER			8	/* use timer8 for the HRT */
-#define HRT_TIMER_CHANNEL	4	/* use capture/compare channel 4*/
-#define HRT_PPM_CHANNEL		1	/* use capture/compare channel 1 */
-#define GPIO_PPM_IN			(GPIO_ALT|GPIO_AF1|GPIO_SPEED_50MHz|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN9)
+#define HRT_TIMER_CHANNEL	1	/* use capture/compare channel 4*/
+#define HRT_PPM_CHANNEL		4	/* use capture/compare channel 1 */
+#define GPIO_PPM_IN			(GPIO_ALT|GPIO_AF3|GPIO_SPEED_50MHz|GPIO_PULLUP|GPIO_PORTC|GPIO_PIN9)
 #endif
 
 /****************************************************************************************************
