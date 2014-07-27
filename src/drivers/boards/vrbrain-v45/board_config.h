@@ -176,7 +176,7 @@ __BEGIN_DECLS
 #define HRT_TIMER_CHANNEL	1	/* use capture/compare channel 1 */
 #else
 #define PPMSUM_INPUT
-//#define SBUS_INPUT
+#define SBUS_INPUT
 //#define DSM_INPUT
 #define HRT_TIMER			8	/* use timer8 for the HRT */
 #define HRT_TIMER_CHANNEL	4	/* use capture/compare channel 4*/
