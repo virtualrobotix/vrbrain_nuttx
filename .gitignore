@@ -12,6 +12,9 @@
 *.bin
 *.hex
 *.vrx
+.cproject
+.project
+.settings/
 /NuttX/nuttx/Make.defs
 /NuttX/nuttx/tools/mkconfig
 /NuttX/nuttx/tools/mkdeps
