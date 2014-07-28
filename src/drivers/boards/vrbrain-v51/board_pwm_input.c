@@ -76,13 +76,13 @@ __EXPORT const struct pwm_input_timer pwm_input_timers[PWM_INPUT_MAX_TIMERS] = {
 		.vector	= STM32_IRQ_TIM9,
 		.clock_freq = STM32_APB2_TIM9_CLKIN
 	},
-//	{
+	{
 //		.base = STM32_TIM8_BASE,
 //		.clock_register = STM32_RCC_APB2ENR,
 //		.clock_bit = RCC_APB2ENR_TIM8EN,
 //		.vector	= STM32_IRQ_TIM8CC,
 //		.clock_freq = STM32_APB2_TIM8_CLKIN
-//	}
+	}
 };
 
 __EXPORT const struct pwm_input_channel pwm_input_channels[PWM_INPUT_MAX_CHANNELS] = {
@@ -90,48 +90,40 @@ __EXPORT const struct pwm_input_channel pwm_input_channels[PWM_INPUT_MAX_CHANNEL
 		.gpio = GPIO_TIM1_CH1IN,
 		.timer_index = 0,
 		.timer_channel = 1,
-
 	},
 	{
 		.gpio = GPIO_TIM1_CH2IN,
 		.timer_index = 0,
 		.timer_channel = 2,
-
 	},
 	{
 		.gpio = GPIO_TIM1_CH4IN,
 		.timer_index = 0,
 		.timer_channel = 4,
-
 	},
 	{
 		.gpio = GPIO_TIM1_CH3IN,
 		.timer_index = 0,
 		.timer_channel = 3,
-
 	},
 	{
 		.gpio = GPIO_TIM9_CH1IN,
 		.timer_index = 1,
 		.timer_channel = 1,
-
 	},
 	{
 		.gpio = GPIO_TIM9_CH2IN,
 		.timer_index = 1,
 		.timer_channel = 2,
-
 	},
-//	{
+	{
 //		.gpio = GPIO_TIM8_CH3IN,
 //		.timer_index = 2,
 //		.timer_channel = 3,
-//
-//	},
-//	{
+	},
+	{
 //		.gpio = GPIO_TIM8_CH4IN,
 //		.timer_index = 2,
 //		.timer_channel = 4,
-//
-//	}
+	}
 };

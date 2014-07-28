@@ -210,6 +210,15 @@ __EXPORT int nsh_archinitialize(void)
 	stm32_configgpio(GPIO_ADC1_IN10);
 	stm32_configgpio(GPIO_ADC1_IN11);
 
+	stm32_configgpio(GPIO_SBUS_ENABLE);
+#ifdef SBUS_INPUT
+	stm32_gpiowrite(GPIO_SBUS_ENABLE, 0);
+	stm32_configgpio(GPIO_TIM9_CH1IN);
+	stm32_configgpio(GPIO_TIM9_CH2IN);
+#else
+	stm32_gpiowrite(GPIO_SBUS_ENABLE, 1);
+#endif
+
 	/* configure the high-resolution time/callout interface */
 	hrt_init();
 
@@ -248,8 +257,6 @@ __EXPORT int nsh_archinitialize(void)
 	led_off(LED_EXT2);
 	led_off(LED_EXT3);
 
-	message("[boot] Initializing USB detect\n");
-	stm32_usbinitialize();
 
 	/* Configure SPI-based devices */
 

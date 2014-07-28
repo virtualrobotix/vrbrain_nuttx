@@ -62,7 +62,19 @@ __BEGIN_DECLS
 
 #define UDID_START		0x1FFF7A10
 
+
+
 //#define MPU6000_EXTERNAL
+
+
+
+
+
+
+
+
+
+
 
 /* VRBRAIN GPIOs ***********************************************************************************/
 
@@ -103,15 +115,25 @@ __BEGIN_DECLS
  */
 #define SPIDEV_MS5611		50
 
+
+
+
+
+
+
 /*
  * Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI2
  */
 #define SPIDEV_MPU6000  	51
 
+
+
+
 /*
  * Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI3
  */
 #define SPIDEV_EXP_MPU6000	52
+
 
 /*
  * I2C busses
@@ -121,6 +143,8 @@ __BEGIN_DECLS
 
 #define I2C_BUS_EEPROM		2
 
+
+
 /*
  * Devices on the onboard bus.
  *
@@ -128,15 +152,87 @@ __BEGIN_DECLS
  */
 #define I2CDEV_HMC5883    0x1E
 
+
+
 /* User GPIOs ********************/
+
+
 
 /* USB Present */
 
+
 /* Shutdown */
+
+
+
+
+
+
 
 /* AUX */
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* WIFI **************************/
+
+
+
+
+
 
 /* SBUS **************************/
 
