@@ -1635,7 +1635,7 @@ VRINPUT::print_debug()
 	int io_fd = -1;
 
 	if (io_fd < 0) {
-		io_fd = ::open("/dev/ttyS0", O_RDONLY | O_NONBLOCK | O_NOCTTY);
+		io_fd = ::open("/dev/ttyS2", O_RDONLY | O_NONBLOCK | O_NOCTTY);
 	}
 
 	/* read IO's output */
