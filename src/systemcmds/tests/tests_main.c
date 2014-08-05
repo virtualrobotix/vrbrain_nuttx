@@ -135,6 +135,7 @@ const struct {
 	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mtd",			test_mtd,	0},
 	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
 
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
 
@@ -155,6 +156,7 @@ const struct {
 	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mtd",			test_mtd,	0},
 	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
 
 #elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
 
@@ -165,6 +167,7 @@ const struct {
 	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mtd",			test_mtd,	0},
 	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
 
 #endif
 
