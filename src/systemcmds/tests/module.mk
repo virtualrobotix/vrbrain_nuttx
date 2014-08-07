@@ -45,7 +45,8 @@ SRCS			 = test_adc.c \
 			   tests_main.c \
 			   test_rc.c \
 			   test_mtd.c \
-			   test_buzzer.c
+			   test_buzzer.c \
+			   test_uart_bridge.c
 endif
 
 ifneq ($(findstring VRBRAIN_V5, $(CONFIG_BOARD)),)
@@ -56,7 +57,8 @@ SRCS			 = test_adc.c \
 			   tests_main.c \
 			   test_rc.c \
 			   test_mtd.c \
-			   test_buzzer.c
+			   test_buzzer.c \
+			   test_uart_bridge.c
 endif
 
 ifneq ($(findstring VRUBRAIN_V5, $(CONFIG_BOARD)),)
@@ -67,7 +69,8 @@ SRCS			 = test_adc.c \
 			   tests_main.c \
 			   test_rc.c \
 			   test_mtd.c \
-			   test_buzzer.c
+			   test_buzzer.c \
+			   test_uart_bridge.c
 endif
 
 ifneq ($(findstring VRHERO_V1, $(CONFIG_BOARD)),)

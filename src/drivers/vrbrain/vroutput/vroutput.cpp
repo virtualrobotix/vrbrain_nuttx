@@ -93,6 +93,8 @@ public:
 		MODE_4PWM,
 		MODE_6PWM,
 		MODE_8PWM,
+		MODE_10PWM,
+		MODE_12PWM
 	};
 	VROUTPUT();
 	virtual ~VROUTPUT();
@@ -118,7 +120,7 @@ private:
 	static const unsigned _max_actuators = 8;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-	static const unsigned _max_actuators = 8;
+	static const unsigned _max_actuators = 12;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
 	static const unsigned _max_actuators = 8;
@@ -440,7 +442,32 @@ VROUTPUT::set_mode(Mode mode)
 		set_pwm_rate(_pwm_alt_rate_channels, _pwm_default_rate, _pwm_alt_rate);
 
 		break;
+	case MODE_10PWM: // v2 PWMs as 8 PWM outs
+		debug("MODE_12PWM");
 
+		/* default output rates */
+		_pwm_default_rate = 50;
+		_pwm_alt_rate = 50;
+		_pwm_alt_rate_channels = 0;
+
+		/* XXX magic numbers */
+		up_pwm_servo_init(0x3ff);
+		set_pwm_rate(_pwm_alt_rate_channels, _pwm_default_rate, _pwm_alt_rate);
+
+		break;
+	case MODE_12PWM: // v2 PWMs as 8 PWM outs
+		debug("MODE_12PWM");
+
+		/* default output rates */
+		_pwm_default_rate = 50;
+		_pwm_alt_rate = 50;
+		_pwm_alt_rate_channels = 0;
+
+		/* XXX magic numbers */
+		up_pwm_servo_init(0xfff);
+		set_pwm_rate(_pwm_alt_rate_channels, _pwm_default_rate, _pwm_alt_rate);
+
+		break;
 	case MODE_NONE:
 		debug("MODE_NONE");
 
@@ -784,6 +811,8 @@ VROUTPUT::ioctl(file *filp, int cmd, unsigned long arg)
 	case MODE_4PWM:
 	case MODE_6PWM:
 	case MODE_8PWM:
+	case MODE_10PWM:
+	case MODE_12PWM:
 		ret = pwm_ioctl(filp, cmd, arg);
 		break;
 
@@ -1012,6 +1041,19 @@ VROUTPUT::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 			arg = (unsigned long)&pwm;
 			break;
 		}
+	case PWM_SERVO_SET(11):
+	case PWM_SERVO_SET(10):
+		if (_mode < MODE_12PWM) {
+			ret = -EINVAL;
+			break;
+		}
+
+	case PWM_SERVO_SET(9):
+	case PWM_SERVO_SET(8):
+		if (_mode < MODE_10PWM) {
+			ret = -EINVAL;
+			break;
+		}
 
 	case PWM_SERVO_SET(7):
 	case PWM_SERVO_SET(6):
@@ -1046,6 +1088,19 @@ VROUTPUT::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 		}
 
 		break;
+	case PWM_SERVO_GET(11):
+	case PWM_SERVO_GET(10):
+		if (_mode < MODE_12PWM) {
+			ret = -EINVAL;
+			break;
+		}
+
+	case PWM_SERVO_GET(9):
+	case PWM_SERVO_GET(8):
+		if (_mode < MODE_10PWM) {
+			ret = -EINVAL;
+			break;
+		}
 
 	case PWM_SERVO_GET(7):
 	case PWM_SERVO_GET(6):
@@ -1087,6 +1142,12 @@ VROUTPUT::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 	case PWM_SERVO_GET_COUNT:
 
 		switch (_mode) {
+		case MODE_12PWM:
+			*(unsigned *)arg = 12;
+			break;
+		case MODE_10PWM:
+			*(unsigned *)arg = 10;
+			break;
 		case MODE_8PWM:
 			*(unsigned *)arg = 8;
 			break;
@@ -1140,6 +1201,14 @@ VROUTPUT::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 
 		case 8:
 			set_mode(MODE_8PWM);
+			break;
+
+		case 10:
+			set_mode(MODE_10PWM);
+			break;
+
+		case 12:
+			set_mode(MODE_12PWM);
 			break;
 
 		default:
@@ -1506,8 +1575,8 @@ vroutput_new_mode(PortMode new_mode)
 		servo_mode = VROUTPUT::MODE_8PWM;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-		/* select 8-pin PWM mode */
-		servo_mode = VROUTPUT::MODE_8PWM;
+		/* select 12-pin PWM mode */
+		servo_mode = VROUTPUT::MODE_12PWM;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
 		/* select 8-pin PWM mode */
