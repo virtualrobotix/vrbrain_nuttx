@@ -1599,7 +1599,7 @@ start(enum Rotation rotation, enum BusSensor bustype)
 fail:
 
 	if (g_dev != nullptr) {
-            delete (g_dev);
+            delete g_dev;
             g_dev = nullptr;
 	}
 

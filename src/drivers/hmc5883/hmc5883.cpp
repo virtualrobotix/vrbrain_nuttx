@@ -136,7 +136,7 @@ static const int ERROR = -1;
 class HMC5883 : public device::I2C
 {
 public:
-	HMC5883(int bus, const char *path, enum Rotation rotation, bool external_bus);
+	HMC5883(int bus, const char *path, enum Rotation rotation, enum BusSensor bustype);
 	virtual ~HMC5883();
 
 	virtual int		init();
@@ -164,7 +164,6 @@ private:
 	uint8_t			_conf_reg;
 	bool			_collect_phase;
 	int			_class_instance;
-	bool 			_external_bus;
 
 	orb_advert_t		_mag_topic;
 
@@ -180,6 +179,7 @@ private:
 
 	int			_bus;			/**< the bus the device is connected to */
 	enum Rotation		_rotation;
+	enum BusSensor 		_bustype;
 
 	struct mag_report	_last_report;           /**< used for info() */
 
@@ -347,7 +347,7 @@ private:
 extern "C" __EXPORT int hmc5883_main(int argc, char *argv[]);
 
 
-HMC5883::HMC5883(int bus, const char *path, enum Rotation rotation, bool external_bus) :
+HMC5883::HMC5883(int bus, const char *path, enum Rotation rotation, enum BusSensor bustype) :
 	I2C("HMC5883", path, bus, HMC5883L_ADDRESS, 400000),
 	_measure_ticks(0),
 	_reports(nullptr),
@@ -365,8 +365,8 @@ HMC5883::HMC5883(int bus, const char *path, enum Rotation rotation, bool externa
 	_sensor_ok(false),
 	_calibrated(false),
 	_bus(bus),
-	_external_bus(external_bus),
-	_rotation(rotation)
+	_rotation(rotation),
+	_bustype(bustype)
 {
 	_device_id.devid_s.devtype = DRV_MAG_DEVTYPE_HMC5883;
 
@@ -747,7 +747,7 @@ HMC5883::ioctl(struct file *filp, int cmd, unsigned long arg)
 		return check_calibration();
 
 	case MAGIOCGEXTERNAL:
-		return _external_bus;
+		return (_bustype != TYPE_BUS_SENSOR_INTERNAL);
 
 	default:
 		/* give it to the superclass */
@@ -930,56 +930,23 @@ HMC5883::collect()
 		report.x = -report.x;
         }
 #endif
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
-	if (_external_bus) {
-		new_report.x_raw = -report.y;
-		new_report.y_raw = report.x;
-		new_report.z_raw = report.z;
-	} else {
+
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+
+	if (_bustype == TYPE_BUS_SENSOR_INTERNAL) {
+
 		new_report.x_raw = report.y;
 		new_report.y_raw = report.x;
 		new_report.z_raw = -report.z;
-	}
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-	if (_external_bus) {
+
+	} else if (_bustype == TYPE_BUS_SENSOR_EXTERNAL) {
+
 		new_report.x_raw = -report.y;
 		new_report.y_raw = report.x;
 		new_report.z_raw = report.z;
-	} else {
-		new_report.x_raw = report.y;
-		new_report.y_raw = report.x;
-		new_report.z_raw = -report.z;
+
 	}
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
-	if (_external_bus) {
-		new_report.x_raw = -report.y;
-		new_report.y_raw = report.x;
-		new_report.z_raw = report.z;
-	} else {
-		new_report.x_raw = report.y;
-		new_report.y_raw = report.x;
-		new_report.z_raw = -report.z;
-	}
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
-	if (_external_bus) {
-		new_report.x_raw = -report.y;
-		new_report.y_raw = report.x;
-		new_report.z_raw = report.z;
-	} else {
-		new_report.x_raw = report.y;
-		new_report.y_raw = report.x;
-		new_report.z_raw = -report.z;
-	}
-#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
-	if (_external_bus) {
-		new_report.x_raw = -report.y;
-		new_report.y_raw = report.x;
-		new_report.z_raw = report.z;
-	} else {
-		new_report.x_raw = report.y;
-		new_report.y_raw = report.x;
-		new_report.z_raw = -report.z;
-	}
+
 #elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
 
 #ifdef	HMC5883_CHIP_FORWARD
@@ -1003,55 +970,21 @@ HMC5883::collect()
 	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
 	/* z remains z */
 	new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
-	if (_external_bus) {
-		new_report.x = ((-report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-		new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-	} else {
+
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+
+	if (_bustype == TYPE_BUS_SENSOR_INTERNAL) {
+
 		new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
 		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
 		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-	}
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-	if (_external_bus) {
+
+	} else if (_bustype == TYPE_BUS_SENSOR_EXTERNAL) {
+
 		new_report.x = ((-report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
 		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
 		new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-	} else {
-		new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-	}
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
-	if (_external_bus) {
-		new_report.x = ((-report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-		new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-	} else {
-		new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-	}
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
-	if (_external_bus) {
-		new_report.x = ((-report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-		new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-	} else {
-		new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-	}
-#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
-	if (_external_bus) {
-		new_report.x = ((-report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-		new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
-	} else {
-		new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
-		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+
 	}
 
 #elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
@@ -1468,89 +1401,83 @@ namespace hmc5883
 #endif
 const int ERROR = -1;
 
-HMC5883	*g_dev_int;
-HMC5883	*g_dev_ext;
+HMC5883	*g_dev_int = nullptr;
+HMC5883	*g_dev_ext = nullptr;
 
 void	hmc5883_usage();
-void	start(int bus, enum Rotation rotation, bool external_bus);
-void	test(int bus, bool external_bus);
-void	reset(int bus, bool external_bus);
-void	info(int bus, bool external_bus);
-int	calibrate(int bus, bool external_bus);
+void	start(enum Rotation rotation, enum BusSensor bustype);
+void	test(enum BusSensor bustype);
+void	reset(enum BusSensor bustype);
+void	info(enum BusSensor bustype);
+int	calibrate(enum BusSensor bustype);
 
 /**
  * Start the driver.
  */
 void
-start(int bus, enum Rotation rotation, bool external_bus)
+start(enum Rotation rotation, enum BusSensor bustype)
 {
 	int fd;
+    HMC5883 *g_dev = nullptr;
+	const char *path;
 
-#ifdef I2C_BUS_EXT_HMC5883
-	/* create the driver, attempt expansion bus first */
-	if (bus == -1 || bus == I2C_BUS_EXT_HMC5883) {
-		if (g_dev_ext != nullptr)
-			errx(0, "already started external");
-		g_dev_ext = new HMC5883(I2C_BUS_EXT_HMC5883, HMC5883L_DEVICE_PATH_EXT, rotation, external_bus);
-		if (g_dev_ext != nullptr && OK != g_dev_ext->init()) {
-			delete g_dev_ext;
-			g_dev_ext = nullptr;
-		}
-	}
-#endif
-			
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+		path = HMC5883L_DEVICE_PATH_INT;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_ext;
+		path = HMC5883L_DEVICE_PATH_EXT;
+    	break;
+    }
 
+	if (g_dev != nullptr)
+		/* if already started, the still command succeeded */
+		errx(0, "already started");
+
+	/* create the driver */
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
 #ifdef I2C_BUS_HMC5883
-	/* if this failed, attempt onboard sensor */
-	if (bus == -1 || bus == I2C_BUS_HMC5883) {
-		if (g_dev_int != nullptr)
-			errx(0, "already started internal");
-		g_dev_int = new HMC5883(I2C_BUS_HMC5883, HMC5883L_DEVICE_PATH_INT, rotation, external_bus);
-		if (g_dev_int != nullptr && OK != g_dev_int->init()) {
-			if (bus == I2C_BUS_HMC5883) {
-				goto fail;
-			}
-		}
-		if (g_dev_int == nullptr && bus == I2C_BUS_HMC5883) {
-			goto fail;
-		}
-	}
+		g_dev = new HMC5883(I2C_BUS_HMC5883, path, rotation, bustype);
+#else
+		errx(0, "Internal I2C not available");
 #endif
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+#ifdef I2C_BUS_EXT_HMC5883
+		g_dev = new HMC5883(I2C_BUS_EXT_HMC5883, path, rotation, bustype);
+#else
+		errx(0, "External EXT I2C not available");
+#endif
+    	break;
+    }
 
-	if (g_dev_int == nullptr && g_dev_ext == nullptr)
+	if (g_dev == nullptr)
+		goto fail;
+
+	if (OK != g_dev->init())
 		goto fail;
 
 	/* set the poll rate to default, starts automatic data collection */
-	if (g_dev_int != nullptr) {
-		fd = open(HMC5883L_DEVICE_PATH_INT, O_RDONLY);
-		if (fd < 0)
-			goto fail;
+	fd = open(path, O_RDONLY);
 
-		if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
-			goto fail;
-		close(fd);
-	}
+	if (fd < 0)
+		goto fail;
 
-	if (g_dev_ext != nullptr) {
-		fd = open(HMC5883L_DEVICE_PATH_EXT, O_RDONLY);
-		if (fd < 0)
-			goto fail;
+	if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
+		goto fail;
 
-		if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
-			goto fail;
-		close(fd);
-	}
+        close(fd);
 
 	exit(0);
 
 fail:
-	if (g_dev_int != nullptr) {
-		delete g_dev_int;
-		g_dev_int = nullptr;
-	}
-	if (g_dev_ext != nullptr) {
-		delete g_dev_ext;
-		g_dev_ext = nullptr;
+
+	if (g_dev != nullptr) {
+            delete g_dev;
+            g_dev = nullptr;
 	}
 
 	errx(1, "driver start failed");
@@ -1562,12 +1489,21 @@ fail:
  * and automatic modes.
  */
 void
-test(int bus, bool external_bus)
+test(enum BusSensor bustype)
 {
 	struct mag_report report;
 	ssize_t sz;
 	int ret;
-	const char *path = (external_bus==false?HMC5883L_DEVICE_PATH_INT:HMC5883L_DEVICE_PATH_EXT);
+	const char *path;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+    	path = HMC5883L_DEVICE_PATH_INT;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+    	path = HMC5883L_DEVICE_PATH_EXT;
+    	break;
+    }
 
 	int fd = open(path, O_RDONLY);
 
@@ -1665,10 +1601,19 @@ test(int bus, bool external_bus)
  * configuration register A back to 00 (Normal Measurement Mode), e.g. 0x10.
  * Using the self test method described above, the user can scale sensor
  */
-int calibrate(int bus, bool external_bus)
+int calibrate(enum BusSensor bustype)
 {
 	int ret;
-	const char *path = (external_bus==false?HMC5883L_DEVICE_PATH_INT:HMC5883L_DEVICE_PATH_EXT);
+	const char *path;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+    	path = HMC5883L_DEVICE_PATH_INT;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+    	path = HMC5883L_DEVICE_PATH_EXT;
+    	break;
+    }
 
 	int fd = open(path, O_RDONLY);
 
@@ -1693,9 +1638,18 @@ int calibrate(int bus, bool external_bus)
  * Reset the driver.
  */
 void
-reset(int bus, bool external_bus)
+reset(enum BusSensor bustype)
 {
-	const char *path = (external_bus==false?HMC5883L_DEVICE_PATH_INT:HMC5883L_DEVICE_PATH_EXT);
+	const char *path;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+    	path = HMC5883L_DEVICE_PATH_INT;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+    	path = HMC5883L_DEVICE_PATH_EXT;
+    	break;
+    }
 
 	int fd = open(path, O_RDONLY);
 
@@ -1708,6 +1662,8 @@ reset(int bus, bool external_bus)
 	if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
 		err(1, "driver poll restart failed");
 
+        close(fd);
+
 	exit(0);
 }
 
@@ -1715,9 +1671,19 @@ reset(int bus, bool external_bus)
  * Print a little info about the driver.
  */
 void
-info(int bus, bool external_bus)
+info(enum BusSensor bustype)
 {
-	HMC5883 *g_dev = (external_bus==false?g_dev_int:g_dev_ext);
+	HMC5883 *g_dev = nullptr;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_ext;
+    	break;
+    }
+
 	if (g_dev == nullptr)
 		errx(1, "driver not running");
 
@@ -1732,44 +1698,33 @@ info(int bus, bool external_bus)
 void
 hmc5883_usage()
 {
-	warnx("missing command: try 'start', 'info', 'test', 'reset', 'info', 'calibrate'");
+	warnx("missing command: try 'start', 'info', 'test', 'reset', 'status', 'calibrate'");
 	warnx("options:");
 	warnx("    -R rotation");
-	warnx("    -C calibrate on start");
-#ifdef I2C_BUS_EXT_HMC5883
 	warnx("    -X only external bus");
-#endif
-#ifdef I2C_BUS_HMC5883
 	warnx("    -I only internal bus");
-#endif
+	warnx("    -C calibrate on start");
 }
 
 int
 hmc5883_main(int argc, char *argv[])
 {
 	int ch;
-	int bus = -1;
 	enum Rotation rotation = ROTATION_NONE;
+	enum BusSensor bustype = TYPE_BUS_SENSOR_NONE;
     bool calibrate = false;
-	bool external_bus = false;
 
 	while ((ch = getopt(argc, argv, "XIR:C")) != EOF) {
 		switch (ch) {
 		case 'R':
 			rotation = (enum Rotation)atoi(optarg);
 			break;
-#ifdef I2C_BUS_HMC5883
 		case 'I':
-			bus = I2C_BUS_HMC5883;
-			external_bus = false;
+			bustype = TYPE_BUS_SENSOR_INTERNAL;
 			break;
-#endif
-#ifdef I2C_BUS_EXT_HMC5883
 		case 'X':
-			bus = I2C_BUS_EXT_HMC5883;
-			external_bus = true;
+			bustype = TYPE_BUS_SENSOR_EXTERNAL;
 			break;
-#endif
 		case 'C':
 			calibrate = true;
 			break;
@@ -1785,9 +1740,9 @@ hmc5883_main(int argc, char *argv[])
 	 * Start/load the driver.
 	 */
 	if (!strcmp(verb, "start")) {
-		hmc5883::start(bus, rotation, external_bus);
+		hmc5883::start(rotation, bustype);
 		if (calibrate) {
-			if (hmc5883::calibrate(bus, external_bus) == 0) {
+			if (hmc5883::calibrate(bustype) == 0) {
 				errx(0, "calibration successful");
 				
 			} else {
@@ -1800,25 +1755,25 @@ hmc5883_main(int argc, char *argv[])
 	 * Test the driver/device.
 	 */
 	if (!strcmp(verb, "test"))
-		hmc5883::test(bus, external_bus);
+		hmc5883::test(bustype);
 
 	/*
 	 * Reset the driver.
 	 */
 	if (!strcmp(verb, "reset"))
-		hmc5883::reset(bus, external_bus);
+		hmc5883::reset(bustype);
 
 	/*
 	 * Print driver information.
 	 */
 	if (!strcmp(verb, "info") || !strcmp(verb, "status"))
-		hmc5883::info(bus, external_bus);
+		hmc5883::info(bustype);
 
 	/*
 	 * Autocalibrate the scaling
 	 */
 	if (!strcmp(verb, "calibrate")) {
-		if (hmc5883::calibrate(bus, external_bus) == 0) {
+		if (hmc5883::calibrate(bustype) == 0) {
 			errx(0, "calibration successful");
 
 		} else {

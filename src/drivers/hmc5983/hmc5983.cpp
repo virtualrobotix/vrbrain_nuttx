@@ -1442,9 +1442,9 @@ namespace hmc5983
 #endif
 const int ERROR = -1;
 
-HMC5983	*g_dev_int;
-HMC5983	*g_dev_exp;
-HMC5983	*g_dev_imu;
+HMC5983	*g_dev_int = nullptr;
+HMC5983	*g_dev_exp = nullptr;
+HMC5983	*g_dev_imu = nullptr;
 
 void	hmc5983_usage();
 void	start(enum Rotation rotation, enum BusSensor bustype);
@@ -1460,91 +1460,77 @@ void
 start(enum Rotation rotation, enum BusSensor bustype)
 {
 	int fd;
+    HMC5983 *g_dev = nullptr;
+	const char *path;
 
-	switch (bustype) {
-	case TYPE_BUS_SENSOR_INTERNAL:
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+		path = HMC5983L_DEVICE_PATH_INT;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+		path = HMC5983L_DEVICE_PATH_IMU;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+		path = HMC5983L_DEVICE_PATH_EXP;
+    	break;
+    }
+
+	if (g_dev != nullptr)
+		/* if already started, the still command succeeded */
+		errx(0, "already started");
+
+	/* create the driver */
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_INTERNAL:
 #ifdef SPI_BUS_HMC5983
-		if (g_dev_int != nullptr)
-			errx(0, "already started internal");
-		g_dev_int = new HMC5983(SPI_BUS_HMC5983, HMC5983L_DEVICE_PATH_INT, (spi_dev_e)SPIDEV_HMC5983, rotation, bustype);
-		if (g_dev_int != nullptr && OK != g_dev_int->init()) {
-			delete g_dev_int;
-			g_dev_int = nullptr;
-		}
+		g_dev = new HMC5983(SPI_BUS_HMC5983, path, (spi_dev_e)SPIDEV_HMC5983, rotation, bustype);
+#else
+		errx(0, "Internal SPI not available");
 #endif
-		break;
+    	break;
 	case TYPE_BUS_SENSOR_IMU:
 #ifdef SPI_BUS_IMU_HMC5983
-		if (g_dev_imu != nullptr)
-			errx(0, "already started external IMU");
-		g_dev_imu = new HMC5983(SPI_BUS_IMU_HMC5983, HMC5983L_DEVICE_PATH_IMU, (spi_dev_e)SPIDEV_IMU_HMC5983, rotation, bustype);
-		if (g_dev_imu != nullptr && OK != g_dev_imu->init()) {
-			delete g_dev_imu;
-			g_dev_imu = nullptr;
-		}
+		g_dev = new HMC5983(SPI_BUS_IMU_HMC5983, path, (spi_dev_e)SPIDEV_IMU_HMC5983, rotation, bustype);
+#else
+		errx(0, "External IMU SPI not available");
 #endif
 		break;
-	case TYPE_BUS_SENSOR_EXTERNAL:
+    case TYPE_BUS_SENSOR_EXTERNAL:
 #ifdef SPI_BUS_EXP_HMC5983
-		if (g_dev_exp != nullptr)
-			errx(0, "already started external EXP");
-		g_dev_exp = new HMC5983(SPI_BUS_EXP_HMC5983, HMC5983L_DEVICE_PATH_EXP, (spi_dev_e)SPIDEV_EXP_HMC5983, rotation, bustype);
-		if (g_dev_exp != nullptr && OK != g_dev_exp->init()) {
-			delete g_dev_exp;
-			g_dev_exp = nullptr;
-		}
+		g_dev = new HMC5983(SPI_BUS_EXP_HMC5983, path, (spi_dev_e)SPIDEV_EXP_HMC5983, rotation, bustype);
+#else
+		errx(0, "External EXT SPI not available");
 #endif
-		break;
-	}
+    	break;
+    }
 
-	if (g_dev_int == nullptr && g_dev_exp == nullptr && g_dev_imu == nullptr)
+	if (g_dev == nullptr)
+		goto fail;
+
+	if (OK != g_dev->init())
 		goto fail;
 
 	/* set the poll rate to default, starts automatic data collection */
-	if (g_dev_int != nullptr) {
-		fd = open(HMC5983L_DEVICE_PATH_INT, O_RDONLY);
-		if (fd < 0)
-			goto fail;
+	fd = open(path, O_RDONLY);
 
-		if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
-			goto fail;
-		close(fd);
-	}
+	if (fd < 0)
+		goto fail;
 
-	if (g_dev_exp != nullptr) {
-		fd = open(HMC5983L_DEVICE_PATH_EXP, O_RDONLY);
-		if (fd < 0)
-			goto fail;
+	if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
+		goto fail;
 
-		if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
-			goto fail;
-		close(fd);
-	}
-
-	if (g_dev_imu != nullptr) {
-		fd = open(HMC5983L_DEVICE_PATH_IMU, O_RDONLY);
-		if (fd < 0)
-			goto fail;
-
-		if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
-			goto fail;
-		close(fd);
-	}
+        close(fd);
 
 	exit(0);
 
 fail:
-	if (g_dev_int != nullptr) {
-		delete g_dev_int;
-		g_dev_int = nullptr;
-	}
-	if (g_dev_exp != nullptr) {
-		delete g_dev_exp;
-		g_dev_exp = nullptr;
-	}
-	if (g_dev_imu != nullptr) {
-		delete g_dev_imu;
-		g_dev_imu = nullptr;
+
+	if (g_dev != nullptr) {
+            delete g_dev;
+            g_dev = nullptr;
 	}
 
 	errx(1, "driver start failed");
@@ -1794,7 +1780,6 @@ hmc5983_main(int argc, char *argv[])
 	enum BusSensor bustype = TYPE_BUS_SENSOR_NONE;
     bool calibrate = false;
 
-	/* jump over start/off/etc and look at options first */
 	while ((ch = getopt(argc, argv, "XIUR:C")) != EOF) {
 		switch (ch) {
 		case 'R':
