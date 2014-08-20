@@ -195,6 +195,12 @@ __BEGIN_DECLS
 #define GPIO_TIM3_CH4OUT	GPIO_TIM3_CH4OUT_1
 #define GPIO_TIM4_CH1OUT	GPIO_TIM4_CH1OUT_2
 #define GPIO_TIM4_CH2OUT	GPIO_TIM4_CH2OUT_2
+#ifndef PWM_INPUT
+#define GPIO_TIM1_CH1OUT	GPIO_TIM1_CH1OUT_2
+#define GPIO_TIM1_CH2OUT	GPIO_TIM1_CH2OUT_2
+#define GPIO_TIM1_CH3OUT	GPIO_TIM1_CH3OUT_2
+#define GPIO_TIM1_CH4OUT	GPIO_TIM1_CH4OUT_2
+#endif
 
 /*
  * PWM INPUT
@@ -236,10 +242,10 @@ __BEGIN_DECLS
 #define PPMSUM_INPUT
 #define SBUS_INPUT
 //#define DSM_INPUT
-#define HRT_TIMER			1	/* use timer1 for the HRT */
+#define HRT_TIMER			8	/* use timer1 for the HRT */
 #define HRT_TIMER_CHANNEL	4	/* use capture/compare channel 4 */
-#define HRT_PPM_CHANNEL		1	/* use capture/compare channel 1 */
-#define GPIO_PPM_IN			(GPIO_ALT|GPIO_AF1|GPIO_SPEED_50MHz|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN9)
+#define HRT_PPM_CHANNEL		3	/* use capture/compare channel 1 */
+#define GPIO_PPM_IN			(GPIO_ALT|GPIO_AF3|GPIO_SPEED_50MHz|GPIO_PULLUP|GPIO_PORTC|GPIO_PIN8)
 #endif
 
 /****************************************************************************************************
