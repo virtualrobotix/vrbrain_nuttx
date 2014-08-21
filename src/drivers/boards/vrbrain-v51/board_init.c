@@ -213,8 +213,8 @@ __EXPORT int nsh_archinitialize(void)
 	stm32_configgpio(GPIO_SBUS_ENABLE);
 #ifdef SBUS_INPUT
 	stm32_gpiowrite(GPIO_SBUS_ENABLE, 0);
-	stm32_configgpio(GPIO_TIM9_CH1IN);
-	stm32_configgpio(GPIO_TIM9_CH2IN);
+	stm32_configgpio(GPIO_GPIO4_INPUT);
+	stm32_configgpio(GPIO_GPIO5_INPUT);
 #else
 	stm32_gpiowrite(GPIO_SBUS_ENABLE, 1);
 #endif
