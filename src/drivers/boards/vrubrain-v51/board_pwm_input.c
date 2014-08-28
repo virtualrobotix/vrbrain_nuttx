@@ -50,6 +50,8 @@
 
 #include "board_config.h"
 
+#ifdef PWM_INPUT
+
 /* PWM Input
 * RC1 PE9  Timer 1 Channel 1 (AF1)
 * RC2 PE11 Timer 1 Channel 2 (AF1)
@@ -127,3 +129,5 @@ __EXPORT const struct pwm_input_channel pwm_input_channels[PWM_INPUT_MAX_CHANNEL
 //		.timer_channel = 4,
 	}
 };
+
+#endif
