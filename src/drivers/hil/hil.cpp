@@ -170,7 +170,7 @@ HIL::HIL() :
 	_armed(false),
 	_mixers(nullptr)
 {
-	_debug_enabled = true;
+	_debug_enabled = false;
 }
 
 HIL::~HIL()
