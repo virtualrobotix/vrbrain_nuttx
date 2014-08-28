@@ -123,7 +123,7 @@ private:
 	static const unsigned _max_actuators = 12;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
-	static const unsigned _max_actuators = 12;
+	static const unsigned _max_actuators = 8;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
 	static const unsigned _max_actuators = 12;
@@ -299,7 +299,7 @@ VROUTPUT::VROUTPUT() :
 		_max_pwm[i] = PWM_DEFAULT_MAX;
 	}
 
-	_debug_enabled = true;
+	_debug_enabled = false;
 }
 
 VROUTPUT::~VROUTPUT()
@@ -1580,7 +1580,7 @@ vroutput_new_mode(PortMode new_mode)
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
 		/* select 8-pin PWM mode */
-		servo_mode = VROUTPUT::MODE_12PWM;
+		servo_mode = VROUTPUT::MODE_8PWM;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
 		/* select 8-pin PWM mode */
