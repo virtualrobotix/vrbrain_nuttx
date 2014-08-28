@@ -255,7 +255,7 @@ __EXPORT int nsh_archinitialize(void)
 	led_off(LED_GREEN);
 	led_off(LED_EXT1);
 	led_off(LED_EXT2);
-	led_off(LED_EXT3);
+
 
 
 	/* Configure SPI-based devices */
