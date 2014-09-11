@@ -206,9 +206,13 @@ __EXPORT int nsh_archinitialize(void)
 	message("\n");
 
 	/* configure always-on ADC pins */
-	stm32_configgpio(GPIO_ADC1_IN0);
+#if APM_BUILD_TYPE(APM_BUILD_ArduPlane)
+	stm32_configgpio(GPIO_ADC1_IN1);
+	stm32_configgpio(GPIO_ADC1_IN2);
+	stm32_configgpio(GPIO_ADC1_IN3);
+#endif
 	stm32_configgpio(GPIO_ADC1_IN10);
-	stm32_configgpio(GPIO_ADC1_IN11);
+
 
 	/* configure the high-resolution time/callout interface */
 	hrt_init();
