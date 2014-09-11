@@ -1510,9 +1510,9 @@ MPU6000_gyro::ioctl(struct file *filp, int cmd, unsigned long arg)
 namespace mpu6000
 {
 
-MPU6000	*g_dev_int;
-MPU6000	*g_dev_exp;
-MPU6000	*g_dev_imu;
+MPU6000	*g_dev_int = nullptr;
+MPU6000	*g_dev_exp = nullptr;
+MPU6000	*g_dev_imu = nullptr;
 
 void	start(enum Rotation rotation, enum BusSensor bustype);
 void	test(enum BusSensor bustype);
@@ -1556,21 +1556,21 @@ start(enum Rotation rotation, enum BusSensor bustype)
     switch (bustype) {
     case TYPE_BUS_SENSOR_INTERNAL:
 #ifdef SPI_BUS_MPU6000
-		g_dev = new MPU6000(SPI_BUS_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_MPU6000, rotation, bustype);
+		g_dev = g_dev_int = new MPU6000(SPI_BUS_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_MPU6000, rotation, bustype);
 #else
 		errx(0, "Internal SPI not available");
 #endif
     	break;
     case TYPE_BUS_SENSOR_IMU:
 #ifdef SPI_BUS_IMU_MPU6000
-		g_dev = new MPU6000(SPI_BUS_IMU_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_IMU_MPU6000, rotation, bustype);
+		g_dev = g_dev_imu = new MPU6000(SPI_BUS_IMU_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_IMU_MPU6000, rotation, bustype);
 #else
 		errx(0, "External IMU SPI not available");
 #endif
     	break;
     case TYPE_BUS_SENSOR_EXTERNAL:
 #ifdef SPI_BUS_EXP_MPU6000
-		g_dev = new MPU6000(SPI_BUS_EXP_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_EXP_MPU6000, rotation, bustype);
+		g_dev = g_dev_exp = new MPU6000(SPI_BUS_EXP_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_EXP_MPU6000, rotation, bustype);
 #else
 		errx(0, "External EXP SPI not available");
 #endif
@@ -1592,7 +1592,7 @@ start(enum Rotation rotation, enum BusSensor bustype)
 	if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
 		goto fail;
 
-        close(fd);
+    close(fd);
 
 	exit(0);
 
@@ -1729,7 +1729,7 @@ reset(enum BusSensor bustype)
 	if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0)
 		err(1, "driver poll restart failed");
 
-        close(fd);
+    close(fd);
 
 	exit(0);
 }
