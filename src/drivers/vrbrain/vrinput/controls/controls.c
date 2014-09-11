@@ -44,7 +44,9 @@
 #include <systemlib/perf_counter.h>
 #include <systemlib/ppm_decode.h>
 
-#ifdef PWM_INPUT
+#include <board_config.h>
+
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 #include <drivers/stm32/drv_pwm_input.h>
 #endif
 
@@ -54,10 +56,10 @@
 #define RC_CHANNEL_HIGH_THRESH		5000
 #define RC_CHANNEL_LOW_THRESH		-5000
 
-#ifdef PPMSUM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)
 static bool	ppm_input(uint16_t *values, uint16_t *num_values, uint16_t *frame_len);
 #endif
-#ifdef PWM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 static bool	pwm_input(uint16_t *values, uint16_t *num_values);
 #endif
 
@@ -76,17 +78,17 @@ controls_init(void)
 	system_state.rc_channels_timestamp_received = 0;
 	system_state.rc_channels_timestamp_valid = 0;
 
-#ifdef DSM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_DSM)
 	/* DSM input (USART1) */
 	dsm_init("/dev/ttyS0");
 #endif
 
-#ifdef SBUS_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
 	/* S.bus input (USART6) */
 	sbus_init("/dev/ttyS3");
 #endif
 
-#ifdef PWM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 	/* PWM input */
 	up_pwm_input_init(0xff);
 #endif
@@ -137,7 +139,7 @@ controls_tick() {
 #endif
 
 	bool dsm_updated = 0;
-#ifdef DSM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_DSM)
 	perf_begin(c_gather_dsm);
 	uint16_t temp_count = r_raw_rc_count;
 	dsm_updated = dsm_input(r_raw_rc_values, &temp_count);
@@ -157,7 +159,7 @@ controls_tick() {
 #endif
 
 	bool sbus_updated = 0;
-#ifdef SBUS_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
 	perf_begin(c_gather_sbus);
 
 	bool sbus_status = (r_status_flags & PX4IO_P_STATUS_FLAGS_RC_SBUS);
@@ -190,7 +192,7 @@ controls_tick() {
 #endif
 
 	bool ppm_updated = 0;
-#ifdef PPMSUM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)
 	/*
 	 * XXX each S.bus frame will cause a PPM decoder interrupt
 	 * storm (lots of edges).  It might be sensible to actually
@@ -208,7 +210,7 @@ controls_tick() {
 #endif
 
 	bool pwm_updated = 0;
-#ifdef PWM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 	perf_begin(c_gather_pwm);
 	pwm_updated = pwm_input(r_raw_rc_values, &r_raw_rc_count);
 	if (pwm_updated) {
@@ -419,7 +421,7 @@ controls_tick() {
 	}
 }
 
-#ifdef PPMSUM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)
 static bool
 ppm_input(uint16_t *values, uint16_t *num_values, uint16_t *frame_len)
 {
@@ -461,7 +463,7 @@ ppm_input(uint16_t *values, uint16_t *num_values, uint16_t *frame_len)
 }
 #endif
 
-#ifdef PWM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 static bool
 pwm_input(uint16_t *values, uint16_t *num_values)
 {

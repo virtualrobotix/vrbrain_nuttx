@@ -62,12 +62,52 @@ __BEGIN_DECLS
 
 #define UDID_START		0x1FFF7A10
 
+#define APM_BUILD_APMrover2      1
+#define APM_BUILD_ArduCopter     2
+#define APM_BUILD_ArduPlane      3
+#define APM_BUILD_AntennaTracker 4
 
+#ifndef APM_BUILD_DIRECTORY
+#define APM_BUILD_DIRECTORY		APM_BUILD_ArduCopter
+#endif
 
+#ifdef APM_BUILD_DIRECTORY
+#define APM_BUILD_TYPE(type) ((type) == APM_BUILD_DIRECTORY)
+#endif
 
+#if APM_BUILD_TYPE(APM_BUILD_ArduCopter)
 
+#elif APM_BUILD_TYPE(APM_BUILD_ArduPlane)
 
+#elif APM_BUILD_TYPE(APM_BUILD_APMrover2)
 
+#endif
+
+#define RC_INPUT_PWM 		1
+#define RC_INPUT_PPMSUM 	2
+#define RC_INPUT_SBUS 		4
+#define RC_INPUT_DSM 		8
+
+#ifndef CONFIG_RC_INPUTS
+ #define CONFIG_RC_INPUTS  RC_INPUT_PPMSUM + RC_INPUT_SBUS
+#endif
+
+#ifdef CONFIG_RC_INPUTS
+#define CONFIG_RC_INPUTS_TYPE(type) ((type) & CONFIG_RC_INPUTS)
+#endif
+
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
+
+#endif
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)
+
+#endif
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
+
+#endif
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_DSM)
+
+#endif
 
 /* VRBRAIN GPIOs ***********************************************************************************/
 
@@ -145,8 +185,8 @@ __BEGIN_DECLS
 
 /* SBUS **************************/
 
-//#define GPIO_SBUS_INPUT   (GPIO_INPUT|GPIO_CNF_INFLOAT|GPIO_MODE_INPUT|GPIO_PORTC|GPIO_PIN7)
-//#define GPIO_SBUS_OUTPUT  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTC|GPIO_PIN6)
+
+
 
 
 /*
@@ -166,7 +206,7 @@ __BEGIN_DECLS
  * PWM INPUT
  */
 
-#ifdef PWM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 #define GPIO_TIM1_CH1IN		GPIO_TIM1_CH1IN_2
 #define GPIO_TIM1_CH2IN		GPIO_TIM1_CH2IN_2
 #define GPIO_TIM1_CH3IN		GPIO_TIM1_CH3IN_2
@@ -185,16 +225,15 @@ __BEGIN_DECLS
 
 /* High-resolution timer
  */
-//#define PWM_INPUT
-#ifdef PWM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 #define HRT_TIMER		    8	/* use timer8 for the HRT */
 #define HRT_TIMER_CHANNEL	1	/* use capture/compare channel 1 */
 #else
-#define PPMSUM_INPUT
-#define SBUS_INPUT
-//#define DSM_INPUT
 #define HRT_TIMER			1	/* use timer1 for the HRT */
 #define HRT_TIMER_CHANNEL	4	/* use capture/compare channel 4 */
+#endif
+
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)
 #define HRT_PPM_CHANNEL		1	/* use capture/compare channel 1 */
 #define GPIO_PPM_IN			(GPIO_ALT|GPIO_AF1|GPIO_SPEED_50MHz|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN9)
 #endif

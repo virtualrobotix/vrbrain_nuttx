@@ -50,7 +50,7 @@
 
 #include "board_config.h"
 
-#ifdef PWM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 
 /* PWM Input
 * RC1 PE9  Timer 1 Channel 1 (AF1)

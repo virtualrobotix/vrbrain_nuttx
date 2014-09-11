@@ -62,19 +62,54 @@ __BEGIN_DECLS
 
 #define UDID_START		0x1FFF7A10
 
+#define APM_BUILD_APMrover2      1
+#define APM_BUILD_ArduCopter     2
+#define APM_BUILD_ArduPlane      3
+#define APM_BUILD_AntennaTracker 4
 
+#ifndef APM_BUILD_DIRECTORY
+#define APM_BUILD_DIRECTORY		APM_BUILD_ArduCopter
+#endif
+
+#ifdef APM_BUILD_DIRECTORY
+#define APM_BUILD_TYPE(type) ((type) == APM_BUILD_DIRECTORY)
+#endif
+
+#if APM_BUILD_TYPE(APM_BUILD_ArduCopter)
+
+#elif APM_BUILD_TYPE(APM_BUILD_ArduPlane)
+
+#elif APM_BUILD_TYPE(APM_BUILD_APMrover2)
+
+#endif
+
+#define RC_INPUT_PWM 		1
+#define RC_INPUT_PPMSUM 	2
+#define RC_INPUT_SBUS 		4
+#define RC_INPUT_DSM 		8
+
+#ifndef CONFIG_RC_INPUTS
+ #define CONFIG_RC_INPUTS  RC_INPUT_PPMSUM + RC_INPUT_SBUS
+#endif
+
+#ifdef CONFIG_RC_INPUTS
+#define CONFIG_RC_INPUTS_TYPE(type) ((type) & CONFIG_RC_INPUTS)
+#endif
+
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
+
+#endif
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)
+
+#endif
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
+
+#endif
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_DSM)
+
+#endif
 
 //#define MPU6000_EXTERNAL
-
-
-
-
-
-
-
-
-
-
 
 /* VRBRAIN GPIOs ***********************************************************************************/
 
@@ -155,7 +190,7 @@ __BEGIN_DECLS
 
 
 /* User GPIOs ********************/
-#ifndef PWM_INPUT
+#if !CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 #define GPIO_GPIO0_INPUT	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN9)
 #define GPIO_GPIO1_INPUT	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN11)
 #define GPIO_GPIO2_INPUT	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN13)
@@ -248,12 +283,12 @@ __BEGIN_DECLS
 
 /* SBUS **************************/
 
-#define GPIO_SBUS_INPUT   (GPIO_INPUT|GPIO_CNF_INFLOAT|GPIO_MODE_INPUT|GPIO_PORTC|GPIO_PIN7)
-//#define GPIO_SBUS_OUTPUT  (GPIO_OUTPUT|GPIO_CNF_OUTPP|GPIO_MODE_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN10)
-//#define GPIO_SBUS_OENABLE (GPIO_OUTPUT|GPIO_CNF_OUTPP|GPIO_MODE_50MHz|GPIO_OUTPUT_SET|GPIO_PORTB|GPIO_PIN4)
+
+
+
 
 /*
- * PWM
+ * PWM OUTPUT
  */
 
 #define GPIO_TIM2_CH2OUT	GPIO_TIM2_CH2OUT_1
@@ -264,12 +299,27 @@ __BEGIN_DECLS
 #define GPIO_TIM3_CH4OUT	GPIO_TIM3_CH4OUT_1
 #define GPIO_TIM4_CH3OUT	GPIO_TIM4_CH3OUT_1
 #define GPIO_TIM4_CH4OUT	GPIO_TIM4_CH4OUT_1
-#ifndef PWM_INPUT
+#if !CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 #define GPIO_TIM1_CH1OUT	GPIO_TIM1_CH1OUT_2
 #define GPIO_TIM1_CH2OUT	GPIO_TIM1_CH2OUT_2
 #define GPIO_TIM1_CH3OUT	GPIO_TIM1_CH3OUT_2
 #define GPIO_TIM1_CH4OUT	GPIO_TIM1_CH4OUT_2
 #endif
+
+/*
+ * PWM INPUT
+ */
+
+
+
+
+
+
+
+
+
+
+
 
 /* USB OTG FS
  *
@@ -279,17 +329,16 @@ __BEGIN_DECLS
 
 /* High-resolution timer
  */
-//#define PWM_INPUT
-#ifdef PWM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 #define HRT_TIMER		    8	/* use timer8 for the HRT */
 #define HRT_TIMER_CHANNEL	1	/* use capture/compare channel 1 */
 #else
-#define PPMSUM_INPUT
-#define SBUS_INPUT
-//#define DSM_INPUT
 #define HRT_TIMER			8	/* use timer8 for the HRT */
 #define HRT_TIMER_CHANNEL	4	/* use capture/compare channel 4*/
-#define HRT_PPM_CHANNEL		3	/* use capture/compare channel 1 */
+#endif
+
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)
+#define HRT_PPM_CHANNEL		3	/* use capture/compare channel 3 */
 #define GPIO_PPM_IN			(GPIO_ALT|GPIO_AF3|GPIO_SPEED_50MHz|GPIO_PULLUP|GPIO_PORTC|GPIO_PIN8)
 #endif
 

@@ -42,7 +42,7 @@
 
 #include <board_config.h>
 
-#ifdef PWM_INPUT
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 
 #include <nuttx/config.h>
 #include <nuttx/arch.h>
