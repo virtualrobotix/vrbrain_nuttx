@@ -211,7 +211,7 @@ __EXPORT int nsh_archinitialize(void)
 	stm32_configgpio(GPIO_ADC1_IN11);
 
 	stm32_configgpio(GPIO_SBUS_ENABLE);
-#ifdef SBUS_INPUT
+#ifdef CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
 	stm32_gpiowrite(GPIO_SBUS_ENABLE, 0);
 #else
 	stm32_gpiowrite(GPIO_SBUS_ENABLE, 1);
