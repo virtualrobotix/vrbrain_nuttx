@@ -233,7 +233,7 @@ clean:
 
 .PHONY:	distclean
 distclean: clean
-	$(Q) $(REMOVE) $(ARCHIVE_DIR)*.export
+#	$(Q) $(REMOVE) $(ARCHIVE_DIR)*.export
 	$(Q) $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) distclean
 	$(Q) (cd $(NUTTX_SRC)/configs && $(FIND) . -maxdepth 1 -type l -delete)
 
