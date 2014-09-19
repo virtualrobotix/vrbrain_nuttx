@@ -202,6 +202,9 @@ ORB_DECLARE(output_pwm);
 /** force safety switch off (to disable use of safety switch) */
 #define PWM_SERVO_SET_FORCE_SAFETY_OFF _IOC(_PWM_SERVO_BASE, 23)
 
+/** force safety switch on (to enable use of safety switch) */
+#define PWM_SERVO_SET_FORCE_SAFETY_ON  _IOC(_PWM_SERVO_BASE, 24)
+
 /*
  *
  *
