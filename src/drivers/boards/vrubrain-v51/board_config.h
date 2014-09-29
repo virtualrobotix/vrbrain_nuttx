@@ -103,10 +103,10 @@ __BEGIN_DECLS
 
 #endif
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
-
+#define SBUS_COM_PORT "/dev/ttyS3"
 #endif
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_DSM)
-
+#define DSM_COM_PORT "/dev/ttyS3"
 #endif
 
 /* VRBRAIN GPIOs ***********************************************************************************/

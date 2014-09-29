@@ -79,13 +79,13 @@ controls_init(void)
 	system_state.rc_channels_timestamp_valid = 0;
 
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_DSM)
-	/* DSM input (USART1) */
-	dsm_init("/dev/ttyS0");
+	/* DSM input (USART6) */
+	dsm_init(DSM_COM_PORT);
 #endif
 
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
 	/* S.bus input (USART6) */
-	sbus_init("/dev/ttyS3");
+	sbus_init(SBUS_COM_PORT);
 #endif
 
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
