@@ -235,7 +235,7 @@ PX4FMU::PX4FMU() :
 		_max_pwm[i] = PWM_DEFAULT_MAX;
 	}
 
-	_debug_enabled = false;
+	_debug_enabled = true;
 }
 
 PX4FMU::~PX4FMU()

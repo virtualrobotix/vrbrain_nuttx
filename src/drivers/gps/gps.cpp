@@ -177,7 +177,7 @@ GPS::GPS(const char *uart_path, bool fake_gps) :
 	g_dev = this;
 	memset(&_report, 0, sizeof(_report));
 
-	_debug_enabled = false;
+	_debug_enabled = true;
 }
 
 GPS::~GPS()

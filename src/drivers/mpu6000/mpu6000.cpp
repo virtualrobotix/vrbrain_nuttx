@@ -411,7 +411,7 @@ MPU6000::MPU6000(int bus, const char *path_accel, const char *path_gyro, spi_dev
 	_bustype(bustype)
 {
 	// disable debug() calls
-	_debug_enabled = false;
+	_debug_enabled = true;
 
 	// default accel scale factors
 	_accel_scale.x_offset = 0;

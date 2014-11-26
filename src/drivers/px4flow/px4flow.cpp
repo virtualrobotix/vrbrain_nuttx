@@ -200,7 +200,7 @@ PX4FLOW::PX4FLOW(int bus, int address) :
 	_buffer_overflows(perf_alloc(PC_COUNT, "px4flow_buffer_overflows"))
 {
 	// enable debug() calls
-	_debug_enabled = false;
+	_debug_enabled = true;
 	
 	// work_cancel in the dtor will explode if we don't do this...
 	memset(&_work, 0, sizeof(_work));

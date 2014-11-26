@@ -243,7 +243,7 @@ MK::MK(int bus, const char *_device_path) :
 	/* enforce null termination */
 	_device[sizeof(_device) - 1] = '\0';
 
-	_debug_enabled = false;
+	_debug_enabled = true;
 }
 
 MK::~MK()

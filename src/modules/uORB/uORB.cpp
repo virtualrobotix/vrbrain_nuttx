@@ -169,7 +169,7 @@ ORBDevNode::ORBDevNode(const struct orb_metadata *meta, const char *name, const 
 	_publisher(0)
 {
 	// enable debug() calls
-	_debug_enabled = false;
+	_debug_enabled = true;
 }
 
 ORBDevNode::~ORBDevNode()
@@ -541,7 +541,7 @@ ORBDevMaster::ORBDevMaster(Flavor f) :
 	_flavor(f)
 {
 	// enable debug() calls
-	_debug_enabled = false;
+	_debug_enabled = true;
 
 }
 

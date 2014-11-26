@@ -223,7 +223,7 @@ MS5611::MS5611(device::Device *interface, const char *path, ms5611::prom_u &prom
 	_buffer_overflows(perf_alloc(PC_COUNT, "ms5611_buffer_overflows"))
 {
 	// enable debug() calls
-	_debug_enabled = false;
+	_debug_enabled = true;
 
 	// work_cancel in stop_cycle called from the dtor will explode if we don't do this...
 	memset(&_work, 0, sizeof(_work));

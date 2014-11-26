@@ -245,7 +245,7 @@ BMA180::BMA180(int bus, spi_dev_e device) :
 	_sample_perf(perf_alloc(PC_ELAPSED, "bma180_read"))
 {
 	// enable debug() calls
-	_debug_enabled = false;
+	_debug_enabled = true;
 
 	// default scale factors
 	_accel_scale.x_offset = 0;

@@ -328,7 +328,7 @@ ToneAlarm::ToneAlarm() :
 	_next(nullptr)
 {
 	// enable debug() calls
-	_debug_enabled = false;
+	//_debug_enabled = true;
 	_default_tunes[TONE_STARTUP_TUNE] = "MFT240L8 O4aO5dc O4aO5dc O4aO5dc L16dcdcdcdc";		// startup tune
 	_default_tunes[TONE_ERROR_TUNE] = "MBT200a8a8a8PaaaP";						// ERROR tone
 	_default_tunes[TONE_NOTIFY_POSITIVE_TUNE] = "MFT200e8a8a";					// Notify Positive tone
@@ -341,6 +341,7 @@ ToneAlarm::ToneAlarm() :
 	_default_tunes[TONE_ARMING_FAILURE_TUNE] = "MFT255L4<<<BAP";
 	_default_tunes[TONE_PARACHUTE_RELEASE_TUNE] = "MFT255L16agagagag";			// parachute release
 	_default_tunes[TONE_EKF_WARNING_TUNE] = "MFT255L8ddd#d#eeff";				// ekf warning
+	_default_tunes[TONE_BARO_WARNING_TUNE] = "MFT255L4gf#fed#d";				// baro warning
 
 	_tune_names[TONE_STARTUP_TUNE] = "startup";			// startup tune
 	_tune_names[TONE_ERROR_TUNE] = "error";				// ERROR tone
@@ -354,6 +355,7 @@ ToneAlarm::ToneAlarm() :
 	_tune_names[TONE_ARMING_FAILURE_TUNE] = "arming_failure";            //fail to arm
 	_tune_names[TONE_PARACHUTE_RELEASE_TUNE] = "parachute_release";	// parachute release
 	_tune_names[TONE_EKF_WARNING_TUNE] = "ekf_warning";				// ekf warning
+	_tune_names[TONE_BARO_WARNING_TUNE] = "baro_warning";			// baro warning
 }
 
 ToneAlarm::~ToneAlarm()

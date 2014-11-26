@@ -150,7 +150,7 @@ ADC::ADC(uint32_t channels) :
 	_samples(nullptr),
 	_to_system_power(0)
 {
-	_debug_enabled = false;
+	_debug_enabled = true;
 
 	/* always enable the temperature sensor */
 	channels |= 1 << 16;

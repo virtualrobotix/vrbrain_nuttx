@@ -339,7 +339,7 @@ L3GD20::L3GD20(int bus, const char* path, spi_dev_e device, enum Rotation rotati
         _rotation(rotation)                                            
 {
 	// enable debug() calls
-	_debug_enabled = false;
+	_debug_enabled = true;
 
 	// default scale factors
 	_gyro_scale.x_offset = 0;
