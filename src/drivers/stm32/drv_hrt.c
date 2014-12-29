@@ -298,7 +298,7 @@ static void		hrt_call_invoke(void);
 #  define DIER_PPM		GTIM_DIER_CC1IE		/* capture interrupt (non-DMA mode) */
 #  define SR_INT_PPM	GTIM_SR_CC1IF		/* capture interrupt (non-DMA mode) */
 #  define SR_OVF_PPM	GTIM_SR_CC1OF		/* capture overflow (non-DMA mode) */
-#  define CCMR1_PPM		(1 | 0x03 << 4)		/* not on TI1/TI2 */
+#  define CCMR1_PPM		((0x01 << 0) | (0x03 << 4))		/* not on TI1/TI2 */
 #  define CCMR2_PPM		0					/* on TI3, not on TI4 */
 #  define CCER_PPM		(GTIM_CCER_CC1E | GTIM_CCER_CC1P | GTIM_CCER_CC1NP) /* CC1, both edges */
 #  define CCER_PPM_FLIP	GTIM_CCER_CC1P
@@ -307,7 +307,7 @@ static void		hrt_call_invoke(void);
 #  define DIER_PPM		GTIM_DIER_CC2IE		/* capture interrupt (non-DMA mode) */
 #  define SR_INT_PPM	GTIM_SR_CC2IF		/* capture interrupt (non-DMA mode) */
 #  define SR_OVF_PPM	GTIM_SR_CC2OF		/* capture overflow (non-DMA mode) */
-#  define CCMR1_PPM		(2 | 0x03 << 4)		/* not on TI1/TI2 */
+#  define CCMR1_PPM		((0x01 << 8) | (0x03 << 12))		/* not on TI1/TI2 */
 #  define CCMR2_PPM		0					/* on TI3, not on TI4 */
 #  define CCER_PPM		(GTIM_CCER_CC2E | GTIM_CCER_CC2P | GTIM_CCER_CC2NP) /* CC2, both edges */
 #  define CCER_PPM_FLIP	GTIM_CCER_CC2P
@@ -317,7 +317,7 @@ static void		hrt_call_invoke(void);
 #  define SR_INT_PPM	GTIM_SR_CC3IF		/* capture interrupt (non-DMA mode) */
 #  define SR_OVF_PPM	GTIM_SR_CC3OF		/* capture overflow (non-DMA mode) */
 #  define CCMR1_PPM		0					/* not on TI1/TI2 */
-#  define CCMR2_PPM		(1 | 0x03 << 4)		/* on TI3, not on TI4 */
+#  define CCMR2_PPM		((0x01 << 0) | (0x03 << 4))		/* on TI3, not on TI4 */
 #  define CCER_PPM		(GTIM_CCER_CC3E | GTIM_CCER_CC3P | GTIM_CCER_CC3NP) /* CC3, both edges */
 #  define CCER_PPM_FLIP	GTIM_CCER_CC3P
 # elif HRT_PPM_CHANNEL == 4
@@ -326,7 +326,7 @@ static void		hrt_call_invoke(void);
 #  define SR_INT_PPM	GTIM_SR_CC4IF		/* capture interrupt (non-DMA mode) */
 #  define SR_OVF_PPM	GTIM_SR_CC4OF		/* capture overflow (non-DMA mode) */
 #  define CCMR1_PPM		0					/* not on TI1/TI2 */
-#  define CCMR2_PPM		(2 | 0x03 << 4)		/* on TI3, not on TI4 */
+#  define CCMR2_PPM		((0x01 << 8) | (0x03 << 12))		/* on TI3, not on TI4 */
 #  define CCER_PPM		(GTIM_CCER_CC4E | GTIM_CCER_CC4P | GTIM_CCER_CC4NP) /* CC4, both edges */
 #  define CCER_PPM_FLIP	GTIM_CCER_CC4P
 # else
