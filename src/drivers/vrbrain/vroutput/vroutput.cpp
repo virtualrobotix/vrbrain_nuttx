@@ -132,7 +132,7 @@ private:
 	static const unsigned _max_actuators = 12;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
-	static const unsigned _max_actuators = 8;
+	static const unsigned _max_actuators = 12;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	static const unsigned _max_actuators = 12;
@@ -1603,7 +1603,7 @@ vroutput_new_mode(PortMode new_mode)
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
 		/* select 8-pin PWM mode */
-		servo_mode = VROUTPUT::MODE_8PWM;
+		servo_mode = VROUTPUT::MODE_12PWM;
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 		/* select 8-pin PWM mode */
