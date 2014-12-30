@@ -43,7 +43,7 @@
 #include <board_config.h>
 
 /* configuration limits */
-#define PWM_SERVO_MAX_TIMERS	4
+#define PWM_SERVO_MAX_TIMERS	5
 #if !CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 #define PWM_SERVO_MAX_CHANNELS	12
 #else
