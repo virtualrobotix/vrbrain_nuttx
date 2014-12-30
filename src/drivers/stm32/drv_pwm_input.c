@@ -132,10 +132,10 @@ pwm_input_timer_init(unsigned timer)
 	rCCER(timer)  |= 0;
 	rDCR(timer)   |= 0;
 
-	if ((pwm_input_timers[timer].base == STM32_TIM1_BASE) || (pwm_input_timers[timer].base == STM32_TIM8_BASE)) {
-		/* master output enable = on */
-		rBDTR(timer) = ATIM_BDTR_MOE;
-	}
+//	if ((pwm_input_timers[timer].base == STM32_TIM1_BASE) || (pwm_input_timers[timer].base == STM32_TIM8_BASE)) {
+//		/* master output enable = on */
+//		rBDTR(timer) = ATIM_BDTR_MOE;
+//	}
 
 	/* configure the timer to free-run at 1MHz */
 	rPSC(timer)   |= (pwm_input_timers[timer].clock_freq / 1000000) - 1;
@@ -180,21 +180,21 @@ pwm_input_channel_init(unsigned channel)
 	case 2:
 		rCCMR1(timer) |= (GTIM_CCMR_CCS_CCIN1<<GTIM_CCMR1_CC2S_SHIFT)|(GTIM_CCMR_ICF_FCKINT8<<GTIM_CCMR1_IC2F_SHIFT);
 
-		rCCER(timer) |= GTIM_CCER_CC2E|GTIM_CCER_CC2P|GTIM_CCER_CC2NP;
+		rCCER(timer)  |= GTIM_CCER_CC2E|GTIM_CCER_CC2P|GTIM_CCER_CC2NP;
 		rDIER(timer)  |= GTIM_DIER_CC2IE;
 		break;
 
 	case 3:
-		rCCMR2(timer) |= (GTIM_CCMR_CCS_CCIN2<<GTIM_CCMR2_CC3S_SHIFT)|(GTIM_CCMR_ICF_FCKINT8<<GTIM_CCMR2_IC3F_SHIFT);
+		rCCMR2(timer) |= (GTIM_CCMR_CCS_CCIN1<<GTIM_CCMR2_CC3S_SHIFT)|(GTIM_CCMR_ICF_FCKINT8<<GTIM_CCMR2_IC3F_SHIFT);
 
-		rCCER(timer) |= GTIM_CCER_CC3E|GTIM_CCER_CC3P|GTIM_CCER_CC3NP;
+		rCCER(timer)  |= GTIM_CCER_CC3E|GTIM_CCER_CC3P|GTIM_CCER_CC3NP;
 		rDIER(timer)  |= GTIM_DIER_CC3IE;
 		break;
 
 	case 4:
-		rCCMR2(timer) |= (GTIM_CCMR_CCS_CCIN2<<GTIM_CCMR2_CC4S_SHIFT)|(GTIM_CCMR_ICF_FCKINT8<<GTIM_CCMR2_IC4F_SHIFT);
+		rCCMR2(timer) |= (GTIM_CCMR_CCS_CCIN1<<GTIM_CCMR2_CC4S_SHIFT)|(GTIM_CCMR_ICF_FCKINT8<<GTIM_CCMR2_IC4F_SHIFT);
 
-		rCCER(timer) |= GTIM_CCER_CC4E|GTIM_CCER_CC4P|GTIM_CCER_CC4NP;
+		rCCER(timer)  |= GTIM_CCER_CC4E|GTIM_CCER_CC4P|GTIM_CCER_CC4NP;
 		rDIER(timer)  |= GTIM_DIER_CC4IE;
 		break;
 	}
@@ -281,7 +281,7 @@ int
 up_pwm_input_init(uint32_t channel_mask)
 {
 	memset(&rc_in, 0, sizeof(rc_in));
-	rc_in.input_source = RC_INPUT_SOURCE_PX4FMU_PPM;
+	rc_in.input_source = RC_INPUT_SOURCE_VRBRAIN_PWM;
 
 	/* attach interrupt for the timers */
 	for (unsigned i = 0; i < PWM_INPUT_MAX_TIMERS; i++) {
