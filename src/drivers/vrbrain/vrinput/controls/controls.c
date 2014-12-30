@@ -46,6 +46,10 @@
 
 #include <board_config.h>
 
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)
+#include <drivers/stm32/drv_ppmsum_input.h>
+#endif
+
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 #include <drivers/stm32/drv_pwm_input.h>
 #endif
@@ -86,6 +90,11 @@ controls_init(void)
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
 	/* S.bus input (USART6) */
 	sbus_init(SBUS_COM_PORT);
+#endif
+
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)
+	/* PPMSUM input */
+	up_ppmsum_input_init();
 #endif
 
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
@@ -215,7 +224,7 @@ controls_tick() {
 	pwm_updated = pwm_input(r_raw_rc_values, &r_raw_rc_count);
 	if (pwm_updated) {
 
-		r_status_flags |= PX4IO_P_STATUS_FLAGS_RC_PPM;
+		r_status_flags |= PX4IO_P_STATUS_FLAGS_RC_PWM;
 		r_raw_rc_flags &= ~(PX4IO_P_RAW_RC_FLAGS_FRAME_DROP);
 		r_raw_rc_flags &= ~(PX4IO_P_RAW_RC_FLAGS_FAILSAFE);
 	}
@@ -351,6 +360,7 @@ controls_tick() {
 
 		/* clear the input-kind flags here */
 		r_status_flags &= ~(
+			PX4IO_P_STATUS_FLAGS_RC_PWM |
 			PX4IO_P_STATUS_FLAGS_RC_PPM |
 			PX4IO_P_STATUS_FLAGS_RC_DSM |
 			PX4IO_P_STATUS_FLAGS_RC_SBUS);
