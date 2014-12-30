@@ -105,6 +105,14 @@
 #define LED_GREEN		0
 #define LED_EXT1		3
 #define LED_EXT2		4
+#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
+#define LED_YELLOW		1
+#define LED_BLUE		1
+#define LED_AMBER		2
+#define LED_RED			2
+#define LED_GREEN		0
+#define LED_EXT1		3
+#define LED_EXT2		4
 #elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
 #define LED_YELLOW  	2
 #define LED_BLUE		2
