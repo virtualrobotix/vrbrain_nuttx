@@ -158,6 +158,17 @@ const struct {
 	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
 
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V52)
+
+	{"led",			test_led,	0},
+	{"sensors",		test_sensors,	0},
+	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"adc",			test_adc,	OPT_NOJIGTEST},
+	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"mtd",			test_mtd,	0},
+	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
+
 #elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
 
 	{"led",			test_led,	0},
