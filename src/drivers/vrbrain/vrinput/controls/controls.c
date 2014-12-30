@@ -427,7 +427,6 @@ ppm_input(uint16_t *values, uint16_t *num_values, uint16_t *frame_len)
 {
 	bool result = false;
 
-#ifdef HRT_PPM_CHANNEL
 	/* avoid racing with PPM updates */
 	irqstate_t state = irqsave();
 
@@ -457,7 +456,6 @@ ppm_input(uint16_t *values, uint16_t *num_values, uint16_t *frame_len)
 	}
 
 	irqrestore(state);
-#endif
 
 	return result;
 }
