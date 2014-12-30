@@ -1282,7 +1282,7 @@ MPU6000::measure()
 	gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
 	gyro_zt = report.gyro_z;
 
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
 
 	if (_bustype == TYPE_BUS_SENSOR_INTERNAL) {
 
