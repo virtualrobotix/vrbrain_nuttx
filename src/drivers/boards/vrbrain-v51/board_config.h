@@ -194,8 +194,10 @@ __BEGIN_DECLS
 /*
  * I2C busses
  */
-#define I2C_BUS_HMC5883		2
-#define I2C_BUS_EXT_HMC5883	1
+#define I2C_BUS_HMC5883			2
+#define I2C_BUS_EXT_HMC5883		1
+#define I2C_BUS_MEAS_AIRSPEED	1
+#define I2C_BUS_MB12XX          1
 
 
 
@@ -208,7 +210,9 @@ __BEGIN_DECLS
 
 /* User GPIOs ********************/
 #define GPIO_GPIO0_OUTPUT   (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN4)
+#if !CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 #define GPIO_GPIO1_OUTPUT   (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTC|GPIO_PIN9)
+#endif
 
 /* USB Present */
 
@@ -267,16 +271,12 @@ __BEGIN_DECLS
 
 /* High-resolution timer
  */
-#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
-#define HRT_TIMER		    8	/* use timer8 for the HRT */
+#define HRT_TIMER			5	/* use timer5 for the HRT */
 #define HRT_TIMER_CHANNEL	1	/* use capture/compare channel 1 */
-#else
-#define HRT_TIMER			8	/* use timer8 for the HRT */
-#define HRT_TIMER_CHANNEL	4	/* use capture/compare channel 4*/
-#endif
 
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)
-#define HRT_PPM_CHANNEL		3	/* use capture/compare channel 3 */
+#define PPMSUM_TIMER		8	/* use timer8 for the PPMSUM */
+#define PPMSUM_CHANNEL		3	/* use capture/compare channel 3 */
 #define GPIO_PPM_IN			(GPIO_ALT|GPIO_AF3|GPIO_SPEED_50MHz|GPIO_PULLUP|GPIO_PORTC|GPIO_PIN8)
 #endif
 
