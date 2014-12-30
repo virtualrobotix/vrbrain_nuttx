@@ -134,6 +134,16 @@
 
 #endif
 
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V52
+
+/**
+ * Device paths for things that support the GPIO ioctl protocol.
+ */
+# define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
+# define VRINPUT_DEVICE_PATH	"/dev/vrinput"
+
+#endif
+
 #ifdef CONFIG_ARCH_BOARD_VRUBRAIN_V51
 
 /**
