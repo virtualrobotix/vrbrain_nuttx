@@ -206,11 +206,6 @@ __EXPORT int nsh_archinitialize(void)
 	message("\n");
 
 	/* configure always-on ADC pins */
-#if APM_BUILD_TYPE(APM_BUILD_ArduPlane)
-	stm32_configgpio(GPIO_ADC1_IN1);
-	stm32_configgpio(GPIO_ADC1_IN2);
-	stm32_configgpio(GPIO_ADC1_IN3);
-#endif
 	stm32_configgpio(GPIO_ADC1_IN10);
 
 
