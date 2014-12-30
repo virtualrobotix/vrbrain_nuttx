@@ -39,6 +39,7 @@
 
 SRCS		= drv_hrt.c \
 		  drv_pwm_servo.c \
-		  drv_pwm_input.c
+		  drv_pwm_input.c \
+		  drv_ppmsum_input.c
 
 INCLUDE_DIRS	+= $(NUTTX_SRC)/arch/arm/src/stm32 $(NUTTX_SRC)/arch/arm/src/common
