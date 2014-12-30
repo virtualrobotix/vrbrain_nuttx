@@ -1485,13 +1485,16 @@ VRINPUT::io_publish_raw_rc()
 
 	/* sort out the source of the values */
 	if (_status & PX4IO_P_STATUS_FLAGS_RC_PPM) {
-		rc_val.input_source = RC_INPUT_SOURCE_PX4IO_PPM;
+		rc_val.input_source = RC_INPUT_SOURCE_VRBRAIN_PPM;
 
 	} else if (_status & PX4IO_P_STATUS_FLAGS_RC_DSM) {
-		rc_val.input_source = RC_INPUT_SOURCE_PX4IO_SPEKTRUM;
+		rc_val.input_source = RC_INPUT_SOURCE_VRBRAIN_SPEKTRUM;
 
 	} else if (_status & PX4IO_P_STATUS_FLAGS_RC_SBUS) {
-		rc_val.input_source = RC_INPUT_SOURCE_PX4IO_SBUS;
+		rc_val.input_source = RC_INPUT_SOURCE_VRBRAIN_SBUS;
+
+	} else if (_status & PX4IO_P_STATUS_FLAGS_RC_PWM) {
+		rc_val.input_source = RC_INPUT_SOURCE_VRBRAIN_PWM;
 
 	} else {
 		rc_val.input_source = RC_INPUT_SOURCE_UNKNOWN;
@@ -1818,6 +1821,7 @@ VRINPUT::print_status()
 	       ((flags & PX4IO_P_STATUS_FLAGS_RC_OK)    ? " RC_OK" : " RC_FAIL"),
 	       ((flags & PX4IO_P_STATUS_FLAGS_RC_PPM)   ? " PPM" : ""),
 	       ((flags & PX4IO_P_STATUS_FLAGS_RC_SBUS)  ? " SBUS" : ""),
+	       ((flags & PX4IO_P_STATUS_FLAGS_RC_PWM)   ? " PWM" : ""),
 	       ((flags & PX4IO_P_STATUS_FLAGS_FMU_OK)   ? " FMU_OK" : " FMU_FAIL"),
 	       ((flags & PX4IO_P_STATUS_FLAGS_RAW_PWM)  ? " RAW_PWM_PASSTHROUGH" : ""),
 	       ((flags & PX4IO_P_STATUS_FLAGS_MIXER_OK) ? " MIXER_OK" : " MIXER_FAIL"),
