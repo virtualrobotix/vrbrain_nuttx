@@ -32,6 +32,7 @@ MODULES		+= drivers/hmc5883
 MODULES		+= drivers/hmc5983
 
 MODULES		+= drivers/ms5611
+MODULES		+= drivers/mb12xx
 
 
 
@@ -39,10 +40,9 @@ MODULES		+= drivers/ms5611
 
 
 
+MODULES		+= drivers/airspeed
 
-
-
-
+MODULES		+= drivers/meas_airspeed
 
 
 
