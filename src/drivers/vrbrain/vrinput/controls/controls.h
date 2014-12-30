@@ -234,6 +234,20 @@ __EXPORT extern pwm_limit_t pwm_limit;
 
 #endif
 
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V52
+
+# define PX4IO_RELAY_CHANNELS		0
+//# define POWER_SPEKTRUM(_s)		stm32_gpiowrite(GPIO_SPEKTRUM_PWR_EN, (_s))
+//# define ENABLE_SBUS_OUT(_s)		stm32_gpiowrite(GPIO_SBUS_OENABLE, !(_s))
+
+//# define VDD_SERVO_FAULT		(!stm32_gpioread(GPIO_SERVO_FAULT_DETECT))
+
+# define PX4IO_ADC_CHANNEL_COUNT	0
+//# define ADC_VSERVO			4
+//# define ADC_RSSI			5
+
+#endif
+
 #ifdef CONFIG_ARCH_BOARD_VRUBRAIN_V51
 
 # define PX4IO_RELAY_CHANNELS		0
