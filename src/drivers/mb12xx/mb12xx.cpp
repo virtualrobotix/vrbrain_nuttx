@@ -72,7 +72,7 @@
 #include <board_config.h>
 
 /* Configuration Constants */
-#define MB12XX_BUS 			PX4_I2C_BUS_EXPANSION
+#define MB12XX_BUS 			I2C_BUS_MB12XX
 #define MB12XX_BASEADDR 	0x70 /* 7-bit address. 8-bit address is 0xE0 */
 #define MB12XX_DEVICE_PATH	"/dev/mb12xx"
 
