@@ -67,7 +67,7 @@
 #define RGBLED_ONTIME 120
 #define RGBLED_OFFTIME 120
 
-#define ADDR			PX4_I2C_OBDEV_LED	/**< I2C adress of TCA62724FMG */
+#define ADDR			I2C_BUS_RGBLED	/**< I2C adress of TCA62724FMG */
 #define SUB_ADDR_START		0x01	/**< write everything (with auto-increment) */
 #define SUB_ADDR_PWM0		0x81	/**< blue     (without auto-increment) */
 #define SUB_ADDR_PWM1		0x82	/**< green    (without auto-increment) */
@@ -563,7 +563,7 @@ rgbled_usage()
 {
 	warnx("missing command: try 'start', 'test', 'info', 'off', 'stop', 'rgb 30 40 50'");
 	warnx("options:");
-	warnx("    -b i2cbus (%d)", PX4_I2C_BUS_LED);
+	warnx("    -b i2cbus (%d)", I2C_BUS_RGBLED);
 	warnx("    -a addr (0x%x)", ADDR);
 }
 
@@ -608,21 +608,21 @@ rgbled_main(int argc, char *argv[])
 
 		if (i2cdevice == -1) {
 			// try the external bus first
-			i2cdevice = PX4_I2C_BUS_EXPANSION;
-			g_rgbled = new RGBLED(PX4_I2C_BUS_EXPANSION, rgbledadr);
+			i2cdevice = I2C_BUS_RGBLED;
 
-			if (g_rgbled != nullptr && OK != g_rgbled->init()) {
-				delete g_rgbled;
-				g_rgbled = nullptr;
-			}
 
-			if (g_rgbled == nullptr) {
-				// fall back to default bus
-				if (PX4_I2C_BUS_LED == PX4_I2C_BUS_EXPANSION) {
-					errx(1, "init failed");
-				}
-				i2cdevice = PX4_I2C_BUS_LED;
-			}
+
+
+
+
+
+
+
+
+
+
+
+
 		}
 
 		if (g_rgbled == nullptr) {
