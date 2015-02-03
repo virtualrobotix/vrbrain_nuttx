@@ -198,7 +198,7 @@ __BEGIN_DECLS
 #define I2C_BUS_EXT_HMC5883		1
 #define I2C_BUS_MEAS_AIRSPEED	1
 #define I2C_BUS_MB12XX          1
-
+#define I2C_BUS_RGBLED          1
 
 
 /*
