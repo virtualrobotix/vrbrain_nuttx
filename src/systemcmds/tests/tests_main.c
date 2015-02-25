@@ -116,16 +116,6 @@ const struct {
 	{"mathlib",		test_mathlib,	0},
 #endif
 
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
-
-	{"led",			test_led,	0},
-	{"sensors",		test_sensors,	0},
-	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"adc",			test_adc,	OPT_NOJIGTEST},
-	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"mtd",			test_mtd,	0},
-	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
-
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
 
 	{"led",			test_led,	0},
@@ -136,16 +126,6 @@ const struct {
 	{"mtd",			test_mtd,	0},
 	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
-
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
-
-	{"led",			test_led,	0},
-	{"sensors",		test_sensors,	0},
-	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"adc",			test_adc,	OPT_NOJIGTEST},
-	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"mtd",			test_mtd,	0},
-	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
 
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
 

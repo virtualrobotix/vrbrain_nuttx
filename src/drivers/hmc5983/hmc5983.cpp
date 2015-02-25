@@ -74,9 +74,6 @@
 #include <getopt.h>
 #include <lib/conversion/rotation.h>
 
-//Define the type of orientation of the board
-//#define HMC5983_CHIP_FORWARD
-
 #define DIR_READ			0x80
 #define DIR_READ_MULT       0xC0
 #define DIR_WRITE			0x00
@@ -946,7 +943,7 @@ HMC5983::collect()
         }
 #endif
 
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 
 	if (_bustype == TYPE_BUS_SENSOR_INTERNAL) {
 
@@ -968,18 +965,6 @@ HMC5983::collect()
 
 	}
 
-#elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
-
-#ifdef	HMC5983_CHIP_FORWARD
-	new_report.x_raw = -report.z;
-	new_report.y_raw = -report.x;
-	new_report.z_raw = report.y;
-#else
-	new_report.x_raw = report.z;
-	new_report.y_raw = report.x;
-	new_report.z_raw = report.y;
-#endif
-
 #endif
 
 	/* the standard external mag by 3DR has x pointing to the
@@ -992,7 +977,7 @@ HMC5983::collect()
 	/* z remains z */
 	new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
 
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V50) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 
 	if (_bustype == TYPE_BUS_SENSOR_INTERNAL) {
 
@@ -1013,18 +998,6 @@ HMC5983::collect()
 		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
 
 	}
-
-#elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
-
-#ifdef	HMC5983_CHIP_FORWARD
-	new_report.x = - ((report.z * _range_scale) - _scale.x_offset) * _scale.x_scale;
-	new_report.y = - ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-	new_report.z = ((report.y * _range_scale) - _scale.z_offset) * _scale.z_scale;
-#else
-	new_report.x = ((report.z * _range_scale) - _scale.x_offset) * _scale.x_scale;
-	new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-	new_report.z = ((report.y * _range_scale) - _scale.z_offset) * _scale.z_scale;
-#endif
 
 #endif
 

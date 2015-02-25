@@ -419,16 +419,8 @@ adc_main(int argc, char *argv[])
 		g_adc = new ADC((1 << 2) | (1 << 3) | (1 << 4) | 
 			(1 << 10) | (1 << 11) | (1 << 12) | (1 << 13) | (1 << 14) | (1 << 15));
 #endif
-#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V40
-		/* XXX this hardcodes the default channel set for VRBRAINv40 - should be configurable */
-		g_adc = new ADC((1 <<  0) | (1 << 10) | (1 << 11));
-#endif
 #ifdef CONFIG_ARCH_BOARD_VRBRAIN_V45
 		/* XXX this hardcodes the default channel set for VRBRAINv45 - should be configurable */
-		g_adc = new ADC((1 <<  0) | (1 << 10) | (1 << 11));
-#endif
-#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V50
-		/* XXX this hardcodes the default channel set for VRBRAINv50 - should be configurable */
 		g_adc = new ADC((1 <<  0) | (1 << 10) | (1 << 11));
 #endif
 #ifdef CONFIG_ARCH_BOARD_VRBRAIN_V51
@@ -446,10 +438,6 @@ adc_main(int argc, char *argv[])
 #ifdef CONFIG_ARCH_BOARD_VRUBRAIN_V52
 		/* XXX this hardcodes the default channel set for VRUBRAINv51 - should be configurable */
 		g_adc = new ADC((1 << 1) | (1 << 2) | (1 << 3) | (1 << 10));
-#endif
-#ifdef CONFIG_ARCH_BOARD_VRHERO_V10
-		/* XXX this hardcodes the default channel set for VRHEROv10 - should be configurable */
-		g_adc = new ADC((1 << 10) | (1 << 11) | (1 << 14) | (1 << 15));
 #endif
 
 		if (g_adc == nullptr)

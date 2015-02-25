@@ -52,25 +52,7 @@
 #define LED_RED			1	/* some boards have red rather than amber */
 #define LED_BLUE		0
 #define LED_SAFETY		2
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V40)
-#define LED_YELLOW		0
-#define LED_BLUE		0
-#define LED_AMBER		1
-#define LED_RED			1
-#define LED_GREEN		2
-#define LED_EXT1		3
-#define LED_EXT2		4
-#define LED_EXT3		5
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-#define LED_YELLOW		0
-#define LED_BLUE		0
-#define LED_AMBER		1
-#define LED_RED			1
-#define LED_GREEN		2
-#define LED_EXT1		3
-#define LED_EXT2		4
-#define LED_EXT3		5
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V50)
 #define LED_YELLOW		0
 #define LED_BLUE		0
 #define LED_AMBER		1
@@ -113,13 +95,6 @@
 #define LED_GREEN		0
 #define LED_EXT1		3
 #define LED_EXT2		4
-#elif defined(CONFIG_ARCH_BOARD_VRHERO_V10)
-#define LED_YELLOW  	2
-#define LED_BLUE		2
-#define LED_AMBER		0
-#define LED_RED  		0
-#define LED_GREEN		1
-//#define LED_SAFETY  	1
 #endif
 
 #define LED_ON			_IOC(_LED_BASE, 0)
