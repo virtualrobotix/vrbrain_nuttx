@@ -1484,7 +1484,14 @@ MPU6000_gyro::read(struct file *filp, char *buffer, size_t buflen)
 int
 MPU6000_gyro::ioctl(struct file *filp, int cmd, unsigned long arg)
 {
-	return _parent->gyro_ioctl(filp, cmd, arg);
+
+	switch (cmd) {
+		case DEVIOCGDEVICEID:
+			return (int)CDev::ioctl(filp, cmd, arg);
+			break;
+		default:
+			return _parent->gyro_ioctl(filp, cmd, arg);
+	}
 }
 
 /**

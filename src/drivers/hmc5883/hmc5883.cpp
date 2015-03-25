@@ -747,6 +747,9 @@ HMC5883::ioctl(struct file *filp, int cmd, unsigned long arg)
 	case MAGIOCGEXTERNAL:
 		return (_bustype != TYPE_BUS_SENSOR_INTERNAL);
 
+	case DEVIOCGDEVICEID:
+		return I2C::ioctl(nullptr, cmd, arg);
+
 	default:
 		/* give it to the superclass */
 		return I2C::ioctl(filp, cmd, arg);
