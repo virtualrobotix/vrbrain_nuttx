@@ -66,6 +66,7 @@
 #include <drivers/drv_mag.h>
 #include <drivers/drv_hrt.h>
 #include <drivers/device/ringbuffer.h>
+#include <drivers/drv_device.h>
 
 #include <uORB/uORB.h>
 #include <uORB/topics/subsystem_info.h>
@@ -376,7 +377,7 @@ HMC5983::HMC5983(int bus, const char *path, spi_dev_e device, enum Rotation rota
 	_rotation(rotation),
 	_bustype(bustype)
 {
-	_device_id.devid_s.devtype = DRV_MAG_DEVTYPE_HMC5983;
+	_device_id.devid_s.devtype = DRV_MAG_DEVTYPE_HMC5883;
 
 	// enable debug() calls
 	_debug_enabled = false;

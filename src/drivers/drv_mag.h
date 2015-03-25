@@ -86,13 +86,6 @@ ORB_DECLARE(sensor_mag);
 
 
 /*
- * mag device types, for _device_id
- */
-#define DRV_MAG_DEVTYPE_HMC5883 1
-#define DRV_MAG_DEVTYPE_LSM303D 2
-#define DRV_MAG_DEVTYPE_HMC5983 3
-
-/*
  * ioctl() definitions
  */
 
