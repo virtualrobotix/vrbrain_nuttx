@@ -408,7 +408,13 @@ MPU6000::MPU6000(int bus, const char *path_accel, const char *path_gyro, spi_dev
 	_bustype(bustype)
 {
 	// disable debug() calls
-	_debug_enabled = true;
+	_debug_enabled = false;
+
+	_device_id.devid_s.devtype = DRV_ACC_DEVTYPE_MPU6000;
+
+	/* Prime _gyro with parents devid. */
+	_gyro->_device_id.devid = _device_id.devid;
+	_gyro->_device_id.devid_s.devtype = DRV_GYR_DEVTYPE_MPU6000;
 
 	// default accel scale factors
 	_accel_scale.x_offset = 0;
@@ -444,7 +450,7 @@ MPU6000::~MPU6000()
 		delete _gyro_reports;
 
 	if (_accel_class_instance != -1)
-		unregister_class_devname(ACCEL_DEVICE_PATH, _accel_class_instance);
+		unregister_class_devname(ACCEL_BASE_DEVICE_PATH, _accel_class_instance);
 
 	/* delete the perf counter */
 	perf_free(_sample_perf);
@@ -502,7 +508,7 @@ MPU6000::init()
 		return ret;
 	}
 
-	_accel_class_instance = register_class_devname(ACCEL_DEVICE_PATH);
+	_accel_class_instance = register_class_devname(ACCEL_BASE_DEVICE_PATH);
 
 	measure();
 
@@ -1441,7 +1447,7 @@ MPU6000_gyro::MPU6000_gyro(MPU6000 *parent, const char *path) :
 MPU6000_gyro::~MPU6000_gyro()
 {
 	if (_gyro_class_instance != -1)
-		unregister_class_devname(GYRO_DEVICE_PATH, _gyro_class_instance);
+		unregister_class_devname(GYRO_BASE_DEVICE_PATH, _gyro_class_instance);
 }
 
 int
@@ -1458,7 +1464,7 @@ MPU6000_gyro::init()
 		return ret;
 	}
 
-	_gyro_class_instance = register_class_devname(GYRO_DEVICE_PATH);
+	_gyro_class_instance = register_class_devname(GYRO_BASE_DEVICE_PATH);
 
 	return ret;
 }
