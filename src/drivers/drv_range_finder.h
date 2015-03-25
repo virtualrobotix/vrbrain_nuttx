@@ -44,7 +44,8 @@
 #include "drv_sensor.h"
 #include "drv_orb_dev.h"
 
-#define RANGE_FINDER_DEVICE_PATH	"/dev/range_finder"
+#define RANGE_FINDER_BASE_DEVICE_PATH	"/dev/range_finder"
+#define RANGE_FINDER0_DEVICE_PATH	"/dev/range_finder0"
 
 /**
  * range finder report structure.  Reads from the device must be in multiples of this
