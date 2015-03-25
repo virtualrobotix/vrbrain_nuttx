@@ -235,7 +235,7 @@ MS5611::~MS5611()
 	stop_cycle();
 
 	if (_class_instance != -1)
-		unregister_class_devname(BARO_DEVICE_PATH, _class_instance);
+		unregister_class_devname(BARO_BASE_DEVICE_PATH, _class_instance);
 
 	/* free any existing reports */
 	if (_reports != nullptr)
@@ -271,7 +271,7 @@ MS5611::init()
 	}
 
 	/* register alternate interfaces if we have to */
-	_class_instance = register_class_devname(BARO_DEVICE_PATH);
+	_class_instance = register_class_devname(BARO_BASE_DEVICE_PATH);
 
 	struct baro_report brp;
 	/* do a first measurement cycle to populate reports with valid data */
@@ -1032,10 +1032,10 @@ test2(enum BusSensor bustype)
 	ssize_t sz;
 	int ret;
 
-	int fd = open(BARO_DEVICE_PATH, O_RDONLY);
+	int fd = open(BARO_BASE_DEVICE_PATH, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'ms5611 start' if the driver is not running)", BARO_DEVICE_PATH);
+		err(1, "%s open failed (try 'ms5611 start' if the driver is not running)", BARO_BASE_DEVICE_PATH);
 
 	/* set the queue depth to 20 */
 	if (OK != ioctl(fd, SENSORIOCSQUEUEDEPTH, 20))
