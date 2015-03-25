@@ -292,7 +292,7 @@ start(int i2c_bus)
 		goto fail;
 
 	/* set the poll rate to default, starts automatic data collection */
-	fd = open(AIRSPEED_DEVICE_PATH, O_RDONLY);
+	fd = open(AIRSPEED0_DEVICE_PATH, O_RDONLY);
 
 	if (fd < 0)
 		goto fail;
