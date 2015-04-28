@@ -2,38 +2,10 @@
 
 #define  _MATH_H_
 
-//#include <sys/reent.h>
 #include <machine/ieeefp.h>
 #include "_ansi.h"
 
-//#define _PARAMS(_x)   _x
-
 _BEGIN_STD_C
-
-#if 0
-/* __dmath, __fmath, and __ldmath are only here for backwards compatibility
- * in case any code used them.  They are no longer used by Newlib, itself,
- * other than legacy.  */
-union __dmath
-{
-  double d;
-  __ULong i[2];
-};
-
-union __fmath
-{
-  float f;
-  __ULong i[1];
-};
-
-#if defined(_HAVE_LONG_DOUBLE)
-union __ldmath
-{
-  long double ld;
-  __ULong i[4];
-};
-#endif
-#endif
 
 /* Natural log of 2 */
 #define _M_LN2        0.693147180559945309417
@@ -254,7 +226,7 @@ extern double scalbln _PARAMS((double, long int));
 extern double tgamma _PARAMS((double));
 extern double nearbyint _PARAMS((double));
 extern long int lrint _PARAMS((double));
-extern _LONG_LONG_TYPE int llrint _PARAMS((double));
+extern long long int llrint _PARAMS((double));
 extern double round _PARAMS((double));
 extern long int lround _PARAMS((double));
 extern long long int llround _PARAMS((double));
@@ -324,7 +296,7 @@ extern float scalblnf _PARAMS((float, long int));
 extern float tgammaf _PARAMS((float));
 extern float nearbyintf _PARAMS((float));
 extern long int lrintf _PARAMS((float));
-extern _LONG_LONG_TYPE llrintf _PARAMS((float));
+extern long long llrintf _PARAMS((float));
 extern float roundf _PARAMS((float));
 extern long int lroundf _PARAMS((float));
 extern long long int llroundf _PARAMS((float));
@@ -417,7 +389,7 @@ extern long int lrintl _PARAMS((long double));
 extern long long int llrintl _PARAMS((long double));
 extern long double roundl _PARAMS((long double));
 extern long lroundl _PARAMS((long double));
-extern _LONG_LONG_TYPE int llroundl _PARAMS((long double));
+extern long long int llroundl _PARAMS((long double));
 extern long double truncl _PARAMS((long double));
 extern long double remquol _PARAMS((long double, long double, int *));
 extern long double fdiml _PARAMS((long double, long double));
@@ -437,7 +409,7 @@ extern long double erfcl _PARAMS((long double));
 /* Other long double precision functions.  */
 extern _LONG_DOUBLE rintl _PARAMS((_LONG_DOUBLE));
 extern long int lrintl _PARAMS((_LONG_DOUBLE));
-extern _LONG_LONG_TYPE llrintl _PARAMS((_LONG_DOUBLE));
+extern long long llrintl _PARAMS((_LONG_DOUBLE));
 #endif /* __i386__ */
 #endif /* !_LDBL_EQ_DBL */
 

@@ -406,7 +406,7 @@ static struct stm32_spidev_s g_spi4dev =
 {
   .spidev   = { &g_sp4iops },
   .spibase  = STM32_SPI4_BASE,
-  .spiclock = STM32_PCLK1_FREQUENCY,
+  .spiclock = STM32_PCLK2_FREQUENCY,
 #ifdef CONFIG_STM32_SPI_INTERRUPTS
   .spiirq   = STM32_IRQ_SPI4,
 #endif
@@ -445,7 +445,7 @@ static struct stm32_spidev_s g_spi5dev =
 {
   .spidev   = { &g_sp5iops },
   .spibase  = STM32_SPI5_BASE,
-  .spiclock = STM32_PCLK1_FREQUENCY,
+  .spiclock = STM32_PCLK2_FREQUENCY,
 #ifdef CONFIG_STM32_SPI_INTERRUPTS
   .spiirq   = STM32_IRQ_SPI5,
 #endif
@@ -484,7 +484,7 @@ static struct stm32_spidev_s g_spi6dev =
 {
   .spidev   = { &g_sp6iops },
   .spibase  = STM32_SPI6_BASE,
-  .spiclock = STM32_PCLK1_FREQUENCY,
+  .spiclock = STM32_PCLK2_FREQUENCY,
 #ifdef CONFIG_STM32_SPI_INTERRUPTS
   .spiirq   = STM32_IRQ_SPI6,
 #endif
@@ -1035,7 +1035,9 @@ static uint32_t spi_setfrequency(FAR struct spi_dev_s *dev, uint32_t frequency)
           actual = priv->spiclock >> 8;
         }
 
+      spi_modifycr1(priv, 0, SPI_CR1_SPE);
       spi_modifycr1(priv, setbits, SPI_CR1_BR_MASK);
+      spi_modifycr1(priv, SPI_CR1_SPE, 0);
 
       /* Save the frequency selection so that subsequent reconfigurations will be
        * faster.
@@ -1110,9 +1112,11 @@ static void spi_setmode(FAR struct spi_dev_s *dev, enum spi_mode_e mode)
           return;
         }
 
-        spi_modifycr1(priv, setbits, clrbits);
+      spi_modifycr1(priv, 0, SPI_CR1_SPE);
+      spi_modifycr1(priv, setbits, clrbits);
+      spi_modifycr1(priv, SPI_CR1_SPE, 0);
 
-        /* Save the mode so that subsequent re-configurations will be faster */
+      /* Save the mode so that subsequent re-configurations will be faster */
 
 #ifndef CONFIG_SPI_OWNBUS
         priv->mode = mode;
@@ -1155,12 +1159,12 @@ static void spi_setbits(FAR struct spi_dev_s *dev, int nbits)
         {
         case 8:
           setbits = 0;
-          clrbits = SPI_CR1_DFF;
+          clrbits = SPI_CR1_DFF|SPI_CR1_LSBFIRST;
           break;
 
         case 16:
           setbits = SPI_CR1_DFF;
-          clrbits = 0;
+          clrbits = SPI_CR1_LSBFIRST;
           break;
 
         default:
