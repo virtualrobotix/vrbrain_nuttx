@@ -38,10 +38,13 @@
  * @author Example User <mail@example.com>
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include <nuttx/config.h>
 #include <nuttx/sched.h>
-#include <unistd.h>
-#include <stdio.h>
 
 #include <systemlib/systemlib.h>
 #include <systemlib/err.h>
@@ -98,9 +101,9 @@ int px4_daemon_app_main(int argc, char *argv[])
 		daemon_task = task_spawn_cmd("daemon",
 					 SCHED_DEFAULT,
 					 SCHED_PRIORITY_DEFAULT,
-					 4096,
+					 2000,
 					 px4_daemon_thread_main,
-					 (argv) ? (const char **)&argv[2] : (const char **)NULL);
+					 (argv) ? (char * const *)&argv[2] : (char * const *)NULL);
 		exit(0);
 	}
 

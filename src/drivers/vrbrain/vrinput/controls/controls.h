@@ -65,7 +65,6 @@ __BEGIN_DECLS
 /*
  * Debug logging
  */
-//#define DEBUG
 
 #ifdef DEBUG
 # include <debug.h>
@@ -114,6 +113,7 @@ __EXPORT extern uint16_t			r_page_servo_disarmed[];	/* PX4IO_PAGE_DISARMED_PWM *
 #ifdef CONFIG_ARCH_BOARD_PX4IO_V1
 #define r_setup_relays		r_page_setup[PX4IO_P_SETUP_RELAYS]
 #endif
+#define r_setup_rc_thr_failsafe	r_page_setup[PX4IO_P_SETUP_RC_THR_FAILSAFE_US]
 
 #define r_control_values	(&r_page_controls[0])
 
@@ -145,6 +145,7 @@ __EXPORT extern pwm_limit_t pwm_limit;
 #define LED_BLUE(_s)			stm32_gpiowrite(GPIO_LED1, !(_s))
 #define LED_AMBER(_s)			stm32_gpiowrite(GPIO_LED2, !(_s))
 #define LED_SAFETY(_s)			stm32_gpiowrite(GPIO_LED3, !(_s))
+#define LED_RING(_s)			stm32_gpiowrite(GPIO_LED4, (_s))
 
 #ifdef CONFIG_ARCH_BOARD_PX4IO_V1
 
@@ -290,10 +291,12 @@ __EXPORT uint16_t	adc_measure(unsigned channel);
 __EXPORT void	controls_init(void);
 __EXPORT void	controls_tick(void);
 __EXPORT int	dsm_init(const char *device);
-__EXPORT bool	dsm_input(uint16_t *values, uint16_t *num_values);
+__EXPORT bool	dsm_input(uint16_t *values, uint16_t *num_values, uint8_t *n_bytes, uint8_t **bytes);
 __EXPORT void	dsm_bind(uint16_t cmd, int pulses);
 __EXPORT int	sbus_init(const char *device);
 __EXPORT bool	sbus_input(uint16_t *values, uint16_t *num_values, bool *sbus_failsafe, bool *sbus_frame_drop, uint16_t max_channels);
+__EXPORT void	sbus1_output(uint16_t *values, uint16_t num_values);
+__EXPORT void	sbus2_output(uint16_t *values, uint16_t num_values);
 
 /** global debug level for isr_debug() */
 __EXPORT extern volatile uint8_t debug_level;

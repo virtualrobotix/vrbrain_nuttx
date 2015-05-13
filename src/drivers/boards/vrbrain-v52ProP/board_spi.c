@@ -69,39 +69,37 @@
 
 __EXPORT void weak_function stm32_spiinitialize(void)
 {
+	stm32_configgpio(GPIO_SPI_CS_MS5611);
+	stm32_configgpio(GPIO_SPI_CS_EXP_MS5611);
+	stm32_configgpio(GPIO_SPI_CS_EXP_MPU6000);
+	stm32_configgpio(GPIO_SPI_CS_EXP_HMC5983);
+
+	stm32_configgpio(GPIO_SPI_CS_MPU6000);
+	stm32_configgpio(GPIO_SPI_CS_IMU_MS5611);
+	stm32_configgpio(GPIO_SPI_CS_IMU_MPU6000);
+	stm32_configgpio(GPIO_SPI_CS_IMU_HMC5983);
+
 	stm32_configgpio(GPIO_SPI_CS_DATAFLASH);
 	stm32_configgpio(GPIO_SPI_CS_EEPROM);
-	stm32_configgpio(GPIO_SPI_CS_MS5611);
-	stm32_configgpio(GPIO_SPI_CS_IMU_MS5611);
-	stm32_configgpio(GPIO_SPI_CS_EXP_MS5611);
-	stm32_configgpio(GPIO_SPI_CS_MPU6000);
-	stm32_configgpio(GPIO_SPI_CS_IMU_MPU6000);
-	stm32_configgpio(GPIO_SPI_CS_EXP_MPU6000);
 	stm32_configgpio(GPIO_SPI_CS_SDCARD);
-	stm32_configgpio(GPIO_SPI_CS_IMU_HMC5983);
-	stm32_configgpio(GPIO_SPI_CS_EXP_HMC5983);
-	stm32_configgpio(GPIO_SPI_CS_IMU_EEPROM);
-	stm32_configgpio(GPIO_SPI_CS_EXP_WIFI_EEPROM);
-	stm32_configgpio(GPIO_EXP_WIFI_EN);
-	stm32_configgpio(GPIO_EXP_WIFI_INT);
 
 	/* De-activate all peripherals,
 	 * required for some peripheral
 	 * state machines
 	 */
-	stm32_gpiowrite(GPIO_SPI_CS_DATAFLASH, 1);
-	stm32_gpiowrite(GPIO_SPI_CS_EEPROM, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_MS5611, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_IMU_MS5611, 1);
-	stm32_gpiowrite(GPIO_SPI_CS_EXP_MS5611, 1);
-	stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_IMU_MPU6000, 1);
-	stm32_gpiowrite(GPIO_SPI_CS_EXP_MPU6000, 1);
-	stm32_gpiowrite(GPIO_SPI_CS_SDCARD, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_IMU_HMC5983, 1);
+
+	stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_EXP_MS5611, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_EXP_MPU6000, 1);
 	stm32_gpiowrite(GPIO_SPI_CS_EXP_HMC5983, 1);
-	stm32_gpiowrite(GPIO_SPI_CS_IMU_EEPROM, 1);
-	stm32_gpiowrite(GPIO_SPI_CS_EXP_WIFI_EEPROM, 1);
+
+	stm32_gpiowrite(GPIO_SPI_CS_DATAFLASH, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_EEPROM, 1);
+	stm32_gpiowrite(GPIO_SPI_CS_SDCARD, 1);
 }
 
 __EXPORT void stm32_spi1select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected)
@@ -109,50 +107,36 @@ __EXPORT void stm32_spi1select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, 
 	/* SPI select is active low, so write !selected to select the device */
 
 	switch (devid) {
-	case SPIDEV_WIRELESS:
-	case SPIDEV_FLASH:
-		/* Making sure the other peripherals are not selected */
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_WIFI_EEPROM, !selected);
-		stm32_gpiowrite(GPIO_SPI_CS_MS5611, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_MS5611, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_MPU6000, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_HMC5983, 1);
-		break;
-
 	case SPIDEV_MS5611:
 		/* Making sure the other peripherals are not selected */
 		stm32_gpiowrite(GPIO_SPI_CS_MS5611, !selected);
 		stm32_gpiowrite(GPIO_SPI_CS_EXP_MS5611, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_EXP_MPU6000, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_EXP_HMC5983, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_WIFI_EEPROM, 1);
 		break;
 
 	case SPIDEV_EXP_MS5611:
 		/* Making sure the other peripherals are not selected */
+		stm32_gpiowrite(GPIO_SPI_CS_MS5611, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_EXP_MS5611, !selected);
 		stm32_gpiowrite(GPIO_SPI_CS_EXP_MPU6000, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_EXP_HMC5983, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_WIFI_EEPROM, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_MS5611, 1);
 		break;
 
 	case SPIDEV_EXP_MPU6000:
 		/* Making sure the other peripherals are not selected */
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_MPU6000, !selected);
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_HMC5983, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_WIFI_EEPROM, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_MS5611, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_EXP_MS5611, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_EXP_MPU6000, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_EXP_HMC5983, 1);
 		break;
 
 	case SPIDEV_EXP_HMC5983:
 		/* Making sure the other peripherals are not selected */
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_HMC5983, !selected);
-		stm32_gpiowrite(GPIO_SPI_CS_EXP_WIFI_EEPROM, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_MS5611, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_EXP_MS5611, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_EXP_MPU6000, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_EXP_HMC5983, !selected);
 		break;
 
 	default:
@@ -177,43 +161,30 @@ __EXPORT void stm32_spi2select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, 
 		stm32_gpiowrite(GPIO_SPI_CS_IMU_MS5611, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_IMU_MPU6000, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_IMU_HMC5983, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_EEPROM, 1);
 		break;
 
 	case SPIDEV_IMU_MS5611:
 		/* Making sure the other peripherals are not selected */
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_IMU_MS5611, !selected);
 		stm32_gpiowrite(GPIO_SPI_CS_IMU_MPU6000, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_IMU_HMC5983, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_EEPROM, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
 		break;
 
 	case SPIDEV_IMU_MPU6000:
 		/* Making sure the other peripherals are not selected */
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_MPU6000, !selected);
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_HMC5983, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_EEPROM, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_IMU_MS5611, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_IMU_MPU6000, !selected);
+		stm32_gpiowrite(GPIO_SPI_CS_IMU_HMC5983, 1);
 		break;
 
 	case SPIDEV_IMU_HMC5983:
 		/* Making sure the other peripherals are not selected */
+		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_IMU_MS5611, 1);
+		stm32_gpiowrite(GPIO_SPI_CS_IMU_MPU6000, 1);
 		stm32_gpiowrite(GPIO_SPI_CS_IMU_HMC5983, !selected);
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_EEPROM, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_MS5611, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_MPU6000, 1);
-		break;
-
-	case SPIDEV_FLASH:
-		/* Making sure the other peripherals are not selected */
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_EEPROM, !selected);
-		stm32_gpiowrite(GPIO_SPI_CS_MPU6000, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_MS5611, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_MPU6000, 1);
-		stm32_gpiowrite(GPIO_SPI_CS_IMU_HMC5983, 1);
 		break;
 
 	default:

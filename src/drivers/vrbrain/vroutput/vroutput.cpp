@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2012-2013 PX4 Development Team. All rights reserved.
+ *   Copyright (C) 2012-2015 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -55,6 +55,7 @@
 #include <nuttx/arch.h>
 
 #include <drivers/device/device.h>
+
 #include <drivers/drv_pwm_output.h>
 #include <drivers/drv_gpio.h>
 #include <drivers/drv_hrt.h>
@@ -70,6 +71,10 @@
 #include <drivers/drv_rc_input.h>
 
 #include <uORB/topics/actuator_controls.h>
+#include <uORB/topics/actuator_controls_0.h>
+#include <uORB/topics/actuator_controls_1.h>
+#include <uORB/topics/actuator_controls_2.h>
+#include <uORB/topics/actuator_controls_3.h>
 #include <uORB/topics/actuator_outputs.h>
 #include <uORB/topics/actuator_armed.h>
 
@@ -109,13 +114,18 @@ public:
 	int		set_pwm_alt_rate(unsigned rate);
 	int		set_pwm_alt_channels(uint32_t channels);
 
+
+
 private:
-
-
-
-
-
-
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+	static const unsigned _max_actuators = 4;
+#endif
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+	static const unsigned _max_actuators = 6;
+#endif
+#if defined(CONFIG_ARCH_BOARD_AEROCORE)
+	static const unsigned _max_actuators = 8;
+#endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
 	static const unsigned _max_actuators = 12;
 #endif
@@ -138,19 +148,26 @@ private:
 	uint32_t	_pwm_alt_rate_channels;
 	unsigned	_current_update_rate;
 	int		_task;
-	int		_t_actuators;
-	int		_t_actuator_armed;
-	orb_advert_t	_t_outputs;
+	int		_armed_sub;
+	orb_advert_t	_outputs_pub;
+	actuator_armed_s	_armed;
 	unsigned	_num_outputs;
-	bool		_primary_pwm_device;
+	int		_class_instance;
 
 	volatile bool	_task_should_exit;
-	bool		_armed;
+	bool		_servo_armed;
 	bool		_pwm_on;
 
 
 
-	actuator_controls_s _controls;
+	uint32_t	_groups_required;
+	uint32_t	_groups_subscribed;
+	int		_control_subs[actuator_controls_s::NUM_ACTUATOR_CONTROL_GROUPS];
+	actuator_controls_s _controls[actuator_controls_s::NUM_ACTUATOR_CONTROL_GROUPS];
+	orb_id_t	_control_topics[actuator_controls_s::NUM_ACTUATOR_CONTROL_GROUPS];
+	int		_actuator_output_topic_instance;
+	pollfd	_poll_fds[actuator_controls_s::NUM_ACTUATOR_CONTROL_GROUPS];
+	unsigned	_poll_fds_num;
 
 	pwm_limit_t	_pwm_limit;
 	uint16_t	_failsafe_pwm[_max_actuators];
@@ -161,13 +178,13 @@ private:
 	unsigned	_num_disarmed_set;
 
 	static void	task_main_trampoline(int argc, char *argv[]);
-	void		task_main() __attribute__((noreturn));
+	void		task_main();
 
 	static int	control_callback(uintptr_t handle,
 					 uint8_t control_group,
 					 uint8_t control_index,
 					 float &input);
-
+	void	subscribe();
 	int		set_pwm_rate(unsigned rate_map, unsigned default_rate, unsigned alt_rate);
 	int		pwm_ioctl(file *filp, int cmd, unsigned long arg);
 
@@ -187,34 +204,51 @@ private:
 	uint32_t	gpio_read(void);
 	int		gpio_ioctl(file *filp, int cmd, unsigned long arg);
 
+	/* do not allow to copy due to ptr data members */
+	VROUTPUT(const VROUTPUT&);
+	VROUTPUT operator=(const VROUTPUT&);
 };
 
 const VROUTPUT::GPIOConfig VROUTPUT::_gpio_tab[] = {
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+	{GPIO_GPIO0_INPUT, GPIO_GPIO0_OUTPUT, 0},
+	{GPIO_GPIO1_INPUT, GPIO_GPIO1_OUTPUT, 0},
+	{GPIO_GPIO2_INPUT, GPIO_GPIO2_OUTPUT, GPIO_USART2_CTS_1},
+	{GPIO_GPIO3_INPUT, GPIO_GPIO3_OUTPUT, GPIO_USART2_RTS_1},
+	{GPIO_GPIO4_INPUT, GPIO_GPIO4_OUTPUT, GPIO_USART2_TX_1},
+	{GPIO_GPIO5_INPUT, GPIO_GPIO5_OUTPUT, GPIO_USART2_RX_1},
+	{GPIO_GPIO6_INPUT, GPIO_GPIO6_OUTPUT, GPIO_CAN2_TX_2},
+	{GPIO_GPIO7_INPUT, GPIO_GPIO7_OUTPUT, GPIO_CAN2_RX_2},
+#endif
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+	{GPIO_GPIO0_INPUT,       GPIO_GPIO0_OUTPUT,       0},
+	{GPIO_GPIO1_INPUT,       GPIO_GPIO1_OUTPUT,       0},
+	{GPIO_GPIO2_INPUT,       GPIO_GPIO2_OUTPUT,       0},
+	{GPIO_GPIO3_INPUT,       GPIO_GPIO3_OUTPUT,       0},
+	{GPIO_GPIO4_INPUT,       GPIO_GPIO4_OUTPUT,       0},
+	{GPIO_GPIO5_INPUT,       GPIO_GPIO5_OUTPUT,       0},
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	{0,                      GPIO_VDD_5V_PERIPH_EN,   0},
+	{0,                      GPIO_VDD_3V3_SENSORS_EN, 0},
+	{GPIO_VDD_BRICK_VALID,   0,                       0},
+	{GPIO_VDD_SERVO_VALID,   0,                       0},
+	{GPIO_VDD_5V_HIPOWER_OC, 0,                       0},
+	{GPIO_VDD_5V_PERIPH_OC,  0,                       0},
+#endif
+#if defined(CONFIG_ARCH_BOARD_AEROCORE)
+	/* AeroCore breaks out User GPIOs on J11 */
+	{GPIO_GPIO0_INPUT,       GPIO_GPIO0_OUTPUT,       0},
+	{GPIO_GPIO1_INPUT,       GPIO_GPIO1_OUTPUT,       0},
+	{GPIO_GPIO3_INPUT,       GPIO_GPIO3_OUTPUT,       0},
+	{GPIO_GPIO4_INPUT,       GPIO_GPIO4_OUTPUT,       0},
+	{GPIO_GPIO5_INPUT,       GPIO_GPIO5_OUTPUT,       0},
+	{GPIO_GPIO6_INPUT,       GPIO_GPIO6_OUTPUT,       0},
+	{GPIO_GPIO7_INPUT,       GPIO_GPIO7_OUTPUT,       0},
+	{GPIO_GPIO8_INPUT,       GPIO_GPIO8_OUTPUT,       0},
+	{GPIO_GPIO9_INPUT,       GPIO_GPIO9_OUTPUT,       0},
+	{GPIO_GPIO10_INPUT,      GPIO_GPIO10_OUTPUT,      0},
+	{GPIO_GPIO11_INPUT,      GPIO_GPIO11_OUTPUT,      0},
+#endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
@@ -244,26 +278,40 @@ VROUTPUT::VROUTPUT() :
 	_pwm_alt_rate_channels(0),
 	_current_update_rate(0),
 	_task(-1),
-	_t_actuators(-1),
-	_t_actuator_armed(-1),
-	_t_outputs(0),
+	_armed_sub(-1),
+	_outputs_pub(-1),
+	_armed{},
 	_num_outputs(0),
-	_primary_pwm_device(false),
+	_class_instance(0),
 	_task_should_exit(false),
-	_armed(false),
+	_servo_armed(false),
 	_pwm_on(false),
 
-	_failsafe_pwm({0}),
-	      _disarmed_pwm({0}),
-	      _num_failsafe_set(0),
-	      _num_disarmed_set(0)
+	_groups_required(0),
+	_groups_subscribed(0),
+	_control_subs{-1},
+	_actuator_output_topic_instance(-1),
+	_poll_fds_num(0),
+	_pwm_limit{},
+	_failsafe_pwm{0},
+	_disarmed_pwm{0},
+	_num_failsafe_set(0),
+	_num_disarmed_set(0)
 {
 	for (unsigned i = 0; i < _max_actuators; i++) {
 		_min_pwm[i] = PWM_DEFAULT_MIN;
 		_max_pwm[i] = PWM_DEFAULT_MAX;
 	}
 
-	_debug_enabled = false;
+	_control_topics[0] = ORB_ID(actuator_controls_0);
+	_control_topics[1] = ORB_ID(actuator_controls_1);
+	_control_topics[2] = ORB_ID(actuator_controls_2);
+	_control_topics[3] = ORB_ID(actuator_controls_3);
+
+	memset(_controls, 0, sizeof(_controls));
+	memset(_poll_fds, 0, sizeof(_poll_fds));
+
+	_debug_enabled = true;
 }
 
 VROUTPUT::~VROUTPUT()
@@ -288,8 +336,7 @@ VROUTPUT::~VROUTPUT()
 	}
 
 	/* clean up the alternate device node */
-	if (_primary_pwm_device)
-		unregister_driver(PWM_OUTPUT_DEVICE_PATH);
+	unregister_class_devname(PWM_OUTPUT_BASE_DEVICE_PATH, _class_instance);
 
 	g_dev = nullptr;
 }
@@ -308,11 +355,10 @@ VROUTPUT::init()
 		return ret;
 
 	/* try to claim the generic PWM output device node as well - it's OK if we fail at this */
-	ret = register_driver(PWM_OUTPUT_DEVICE_PATH, &fops, 0666, (void *)this);
+	_class_instance = register_class_devname(PWM_OUTPUT_BASE_DEVICE_PATH);
 
-	if (ret == OK) {
+	if (_class_instance == CLASS_DEVICE_PRIMARY) {
 		log("default PWM output device");
-		_primary_pwm_device = true;
 	}
 
 	/* reset GPIOs */
@@ -322,7 +368,7 @@ VROUTPUT::init()
 	_task = task_spawn_cmd("vroutput",
 			       SCHED_DEFAULT,
 			       SCHED_PRIORITY_DEFAULT,
-			       2048,
+			       1600,
 			       (main_t)&VROUTPUT::task_main_trampoline,
 			       nullptr);
 
@@ -514,33 +560,49 @@ VROUTPUT::set_pwm_alt_channels(uint32_t channels)
 	return set_pwm_rate(channels, _pwm_default_rate, _pwm_alt_rate);
 }
 
+
+
+
+
+
+
+void
+VROUTPUT::subscribe()
+{
+	/* subscribe/unsubscribe to required actuator control groups */
+	uint32_t sub_groups = _groups_required & ~_groups_subscribed;
+	uint32_t unsub_groups = _groups_subscribed & ~_groups_required;
+	_poll_fds_num = 0;
+	for (unsigned i = 0; i < actuator_controls_s::NUM_ACTUATOR_CONTROL_GROUPS; i++) {
+		if (sub_groups & (1 << i)) {
+			warnx("subscribe to actuator_controls_%d", i);
+			_control_subs[i] = orb_subscribe(_control_topics[i]);
+		}
+		if (unsub_groups & (1 << i)) {
+			warnx("unsubscribe from actuator_controls_%d", i);
+			::close(_control_subs[i]);
+			_control_subs[i] = -1;
+		}
+
+		if (_control_subs[i] > 0) {
+			_poll_fds[_poll_fds_num].fd = _control_subs[i];
+			_poll_fds[_poll_fds_num].events = POLLIN;
+			_poll_fds_num++;
+		}
+	}
+}
+
 void
 VROUTPUT::task_main()
 {
-	/*
-	 * Subscribe to the appropriate PWM output topic based on whether we are the
-	 * primary PWM output or not.
-	 */
-	_t_actuators = orb_subscribe(_primary_pwm_device ? ORB_ID_VEHICLE_ATTITUDE_CONTROLS :
-				     ORB_ID(actuator_controls_1));
 	/* force a reset of the update rate */
 	_current_update_rate = 0;
 
-	_t_actuator_armed = orb_subscribe(ORB_ID(actuator_armed));
-	orb_set_interval(_t_actuator_armed, 200);		/* 5Hz update rate */
+	_armed_sub = orb_subscribe(ORB_ID(actuator_armed));
 
 	/* advertise the mixed control outputs */
 	actuator_outputs_s outputs;
 	memset(&outputs, 0, sizeof(outputs));
-	/* advertise the mixed control outputs */
-	_t_outputs = orb_advertise(_primary_pwm_device ? ORB_ID_VEHICLE_CONTROLS : ORB_ID(actuator_outputs_1),
-				   &outputs);
-
-	pollfd fds[2];
-	fds[0].fd = _t_actuators;
-	fds[0].events = POLLIN;
-	fds[1].fd = _t_actuator_armed;
-	fds[1].events = POLLIN;
 
 
 
@@ -558,6 +620,12 @@ VROUTPUT::task_main()
 
 	/* loop until killed */
 	while (!_task_should_exit) {
+		if (_groups_subscribed != _groups_required) {
+			subscribe();
+			_groups_subscribed = _groups_required;
+			/* force setting update rate */
+			_current_update_rate = 0;
+		}
 
 		/*
 		 * Adjust actuator topic update rate to keep up with
@@ -582,20 +650,23 @@ VROUTPUT::task_main()
 			}
 
 			debug("adjusted actuator update interval to %ums", update_rate_in_ms);
-			orb_set_interval(_t_actuators, update_rate_in_ms);
+			for (unsigned i = 0; i < actuator_controls_s::NUM_ACTUATOR_CONTROL_GROUPS; i++) {
+				if (_control_subs[i] > 0) {
+					orb_set_interval(_control_subs[i], update_rate_in_ms);
+				}
+			}
 
 			// set to current max rate, even if we are actually checking slower/faster
 			_current_update_rate = max_rate;
 		}
 
 		/* sleep waiting for data, stopping to check for PPM
-		 * input at 100Hz */
-		int ret = ::poll(&fds[0], 2, CONTROL_INPUT_DROP_LIMIT_MS);
+		 * input at 50Hz */
+		int ret = ::poll(_poll_fds, _poll_fds_num, CONTROL_INPUT_DROP_LIMIT_MS);
 
 		/* this would be bad... */
 		if (ret < 0) {
 			log("poll error %d", errno);
-			usleep(1000000);
 			continue;
 
 		} else if (ret == 0) {
@@ -604,89 +675,100 @@ VROUTPUT::task_main()
 
 		} else {
 
-			/* do we have a control update? */
-			if (fds[0].revents & POLLIN) {
-
-				/* get controls - must always do this to avoid spinning */
-				orb_copy(_primary_pwm_device ? ORB_ID_VEHICLE_ATTITUDE_CONTROLS : ORB_ID(actuator_controls_1), _t_actuators, &_controls);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+			/* get controls for required topics */
+			unsigned poll_id = 0;
+			for (unsigned i = 0; i < actuator_controls_s::NUM_ACTUATOR_CONTROL_GROUPS; i++) {
+				if (_control_subs[i] > 0) {
+					if (_poll_fds[poll_id].revents & POLLIN) {
+						orb_copy(_control_topics[i], _control_subs[i], &_controls[i]);
+					}
+					poll_id++;
+				}
 			}
 
-			/* how about an arming update? */
-			if (fds[1].revents & POLLIN) {
-				actuator_armed_s aa;
 
-				/* get new value */
-				orb_copy(ORB_ID(actuator_armed), _t_actuator_armed, &aa);
 
-				/* update the armed status and check that we're not locked down */
-				bool set_armed = aa.armed && !aa.lockdown;
 
-				if (_armed != set_armed)
-					_armed = set_armed;
 
-				/* update PWM status if armed or if disarmed PWM values are set */
-				bool pwm_on = (aa.armed || _num_disarmed_set > 0);
 
-				if (_pwm_on != pwm_on) {
-					_pwm_on = pwm_on;
-					up_pwm_servo_arm(pwm_on);
-				}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		}
+
+		/* check arming state */
+		bool updated = false;
+		orb_check(_armed_sub, &updated);
+
+		if (updated) {
+			orb_copy(ORB_ID(actuator_armed), _armed_sub, &_armed);
+
+			/* update the armed status and check that we're not locked down */
+			bool set_armed = _armed.armed && !_armed.lockdown;
+
+			if (_servo_armed != set_armed)
+				_servo_armed = set_armed;
+
+			/* update PWM status if armed or if disarmed PWM values are set */
+			bool pwm_on = (_armed.armed || _num_disarmed_set > 0);
+
+			if (_pwm_on != pwm_on) {
+				_pwm_on = pwm_on;
+				up_pwm_servo_arm(pwm_on);
 			}
 		}
 
@@ -728,8 +810,13 @@ VROUTPUT::task_main()
 
 	}
 
-	::close(_t_actuators);
-	::close(_t_actuator_armed);
+	for (unsigned i = 0; i < actuator_controls_s::NUM_ACTUATOR_CONTROL_GROUPS; i++) {
+		if (_control_subs[i] > 0) {
+			::close(_control_subs[i]);
+			_control_subs[i] = -1;
+		}
+	}
+	::close(_armed_sub);
 
 	/* make sure servos are off */
 	up_pwm_servo_deinit();
@@ -751,7 +838,7 @@ VROUTPUT::control_callback(uintptr_t handle,
 {
 	const actuator_controls_s *controls = (actuator_controls_s *)handle;
 
-	input = controls->control[control_index];
+	input = controls[control_group].control[control_index];
 	return 0;
 }
 
@@ -1142,7 +1229,7 @@ VROUTPUT::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 		 * and PWM under control of the flight config
 		 * parameters. Note that this does not allow for
 		 * changing a set of pins to be used for serial on
-		 * FMUv1 
+		 * FMUv1
 		 */
 		switch (arg) {
 		case 0:
@@ -1237,6 +1324,14 @@ VROUTPUT::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 
 
 
+
+
+
+
+
+
+
+
 	default:
 		ret = -ENOTTY;
 		break;
@@ -1257,16 +1352,25 @@ VROUTPUT::write(file *filp, const char *buffer, size_t len)
 	unsigned count = len / 2;
 	uint16_t values[6];
 
+
+
+
+
+
+
 	if (count > 6) {
 		// we have at most 6 outputs
 		count = 6;
 	}
 
+
 	// allow for misaligned values
 	memcpy(values, buffer, count * 2);
 
 	for (uint8_t i = 0; i < count; i++) {
-		up_pwm_servo_set(i, values[i]);
+		if (values[i] != PWM_IGNORE_THIS_CHANNEL) {
+			up_pwm_servo_set(i, values[i]);
+		}
 	}
 
 	return count * 2;
@@ -1356,18 +1460,18 @@ VROUTPUT::sensor_reset(int ms)
 void
 VROUTPUT::gpio_reset(void)
 {
-	/*
-	 * Setup default GPIO config - all pins as GPIOs, input if
-	 * possible otherwise output if possible.
-	 */
-	for (unsigned i = 0; i < _ngpio; i++) {
-		if (_gpio_tab[i].input != 0) {
-			stm32_configgpio(_gpio_tab[i].input);
 
-		} else if (_gpio_tab[i].output != 0) {
-			stm32_configgpio(_gpio_tab[i].output);
-		}
-	}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1395,26 +1499,26 @@ VROUTPUT::gpio_set_function(uint32_t gpios, int function)
 
 
 
-	/* configure selected GPIOs as required */
-	for (unsigned i = 0; i < _ngpio; i++) {
-		if (gpios & (1 << i)) {
-			switch (function) {
-			case GPIO_SET_INPUT:
-				stm32_configgpio(_gpio_tab[i].input);
-				break;
 
-			case GPIO_SET_OUTPUT:
-				stm32_configgpio(_gpio_tab[i].output);
-				break;
 
-			case GPIO_SET_ALT_1:
-				if (_gpio_tab[i].alt != 0)
-					stm32_configgpio(_gpio_tab[i].alt);
 
-				break;
-			}
-		}
-	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1428,11 +1532,11 @@ VROUTPUT::gpio_set_function(uint32_t gpios, int function)
 void
 VROUTPUT::gpio_write(uint32_t gpios, int function)
 {
-	int value = (function == GPIO_SET) ? 1 : 0;
 
-	for (unsigned i = 0; i < _ngpio; i++)
-		if (gpios & (1 << i))
-			stm32_gpiowrite(_gpio_tab[i].output, value);
+
+
+
+
 }
 
 uint32_t
@@ -1440,9 +1544,9 @@ VROUTPUT::gpio_read(void)
 {
 	uint32_t bits = 0;
 
-	for (unsigned i = 0; i < _ngpio; i++)
-		if (stm32_gpioread(_gpio_tab[i].input))
-			bits |= (1 << i);
+
+
+
 
 	return bits;
 }
@@ -1505,6 +1609,7 @@ enum PortMode {
 	PORT_GPIO_AND_SERIAL,
 	PORT_PWM_AND_SERIAL,
 	PORT_PWM_AND_GPIO,
+	PORT_PWM4,
 };
 
 PortMode g_port_mode;
@@ -1528,13 +1633,16 @@ vroutput_new_mode(PortMode new_mode)
 		break;
 
 	case PORT_FULL_PWM:
-
-
-
-
-
-
-
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+		/* select 4-pin PWM mode */
+		servo_mode = PX4FMU::MODE_4PWM;
+#endif
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+		servo_mode = PX4FMU::MODE_6PWM;
+#endif
+#if defined(CONFIG_ARCH_BOARD_AEROCORE)
+		servo_mode = PX4FMU::MODE_8PWM;
+#endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
 		/* select 12-pin PWM mode */
 		servo_mode = VROUTPUT::MODE_12PWM;
@@ -1557,31 +1665,38 @@ vroutput_new_mode(PortMode new_mode)
 #endif
 		break;
 
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+	case PORT_PWM4:
+		/* select 4-pin PWM mode */
+		servo_mode = PX4FMU::MODE_4PWM;
+		break;
+#endif
+
 		/* mixed modes supported on v1 board only */
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
 
+	case PORT_FULL_SERIAL:
+		/* set all multi-GPIOs to serial mode */
+		gpio_bits = GPIO_MULTI_1 | GPIO_MULTI_2 | GPIO_MULTI_3 | GPIO_MULTI_4;
+		break;
 
+	case PORT_GPIO_AND_SERIAL:
+		/* set RX/TX multi-GPIOs to serial mode */
+		gpio_bits = GPIO_MULTI_3 | GPIO_MULTI_4;
+		break;
 
+	case PORT_PWM_AND_SERIAL:
+		/* select 2-pin PWM mode */
+		servo_mode = PX4FMU::MODE_2PWM;
+		/* set RX/TX multi-GPIOs to serial mode */
+		gpio_bits = GPIO_MULTI_3 | GPIO_MULTI_4;
+		break;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	case PORT_PWM_AND_GPIO:
+		/* select 2-pin PWM mode */
+		servo_mode = PX4FMU::MODE_2PWM;
+		break;
+#endif
 
 	default:
 		return -1;
@@ -1596,6 +1711,11 @@ vroutput_new_mode(PortMode new_mode)
 
 	return OK;
 }
+
+
+
+
+
 
 int
 vroutput_start(void)
@@ -1643,12 +1763,15 @@ sensor_reset(int ms)
 
 	fd = open(VROUTPUT_DEVICE_PATH, O_RDWR);
 
-	if (fd < 0)
+	if (fd < 0) {
 		errx(1, "open fail");
+	}
 
-	if (ioctl(fd, GPIO_SENSOR_RAIL_RESET, ms) < 0)
-		err(1, "servo arm failed");
+	if (ioctl(fd, GPIO_SENSOR_RAIL_RESET, ms) < 0) {
+		warnx("sensor rail reset failed");
+	}
 
+	close(fd);
 }
 
 void
@@ -1821,20 +1944,24 @@ vroutput_main(int argc, char *argv[])
 	} else if (!strcmp(verb, "mode_pwm")) {
 		new_mode = PORT_FULL_PWM;
 
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+	} else if (!strcmp(verb, "mode_pwm4")) {
+		new_mode = PORT_PWM4;
+#endif
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
 
+	} else if (!strcmp(verb, "mode_serial")) {
+		new_mode = PORT_FULL_SERIAL;
 
+	} else if (!strcmp(verb, "mode_gpio_serial")) {
+		new_mode = PORT_GPIO_AND_SERIAL;
 
+	} else if (!strcmp(verb, "mode_pwm_serial")) {
+		new_mode = PORT_PWM_AND_SERIAL;
 
-
-
-
-
-
-
-
-
-
-
+	} else if (!strcmp(verb, "mode_pwm_gpio")) {
+		new_mode = PORT_PWM_AND_GPIO;
+#endif
 	}
 
 	/* was a new mode set? */
@@ -1869,11 +1996,27 @@ vroutput_main(int argc, char *argv[])
 	}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	fprintf(stderr, "FMU: unrecognised command %s, try:\n", verb);
-
-
-
-
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+	fprintf(stderr, "  mode_gpio, mode_serial, mode_pwm, mode_gpio_serial, mode_pwm_serial, mode_pwm_gpio, test\n");
+#elif defined(CONFIG_ARCH_BOARD_PX4FMU_V2) || defined(CONFIG_ARCH_BOARD_AEROCORE)
+	fprintf(stderr, "  mode_gpio, mode_pwm, test, sensor_reset [milliseconds], i2c <bus> <hz>\n");
+#endif
 #if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
 	fprintf(stderr, "  mode_gpio, mode_pwm, test\n");
 #endif

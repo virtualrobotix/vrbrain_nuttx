@@ -47,13 +47,13 @@
 #include <arch/board/board.h>
 
 __BEGIN_DECLS
-extern void buzzer_init();
+extern void buzzer_init(void);
 extern void buzzer_on(int buzzer);
 extern void buzzer_off(int buzzer);
 extern void buzzer_toggle(int buzzer);
 __END_DECLS
 
-__EXPORT void buzzer_init()
+__EXPORT void buzzer_init(void)
 {
 	stm32_configgpio(GPIO_BUZZER);
 }

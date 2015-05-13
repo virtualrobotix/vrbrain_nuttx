@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2012, 2013 PX4 Development Team. All rights reserved.
+#   Copyright (c) 2012-2015 PX4 Development Team. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -36,8 +36,8 @@
 #
 # Get path and tool configuration
 #
-export VRX_BASE		 := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/
-include $(VRX_BASE)makefiles/setup.mk
+export PX4_BASE		 := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))/
+include $(PX4_BASE)makefiles/setup.mk
 
 #
 # Get a version string provided by git
@@ -53,13 +53,13 @@ export GIT_DESC
 #
 # Canned firmware configurations that we (know how to) build.
 #
-KNOWN_CONFIGS		:= $(subst config_,,$(basename $(notdir $(wildcard $(VRX_MK_DIR)config_*.mk))))
+KNOWN_CONFIGS		:= $(subst config_,,$(basename $(notdir $(wildcard $(PX4_MK_DIR)config_*.mk))))
 CONFIGS			?= $(KNOWN_CONFIGS)
 
 #
 # Boards that we (know how to) build NuttX export kits for.
 #
-KNOWN_BOARDS		:= $(subst board_,,$(basename $(notdir $(wildcard $(VRX_MK_DIR)board_*.mk))))
+KNOWN_BOARDS		:= $(subst board_,,$(basename $(notdir $(wildcard $(PX4_MK_DIR)board_*.mk))))
 BOARDS			?= $(KNOWN_BOARDS)
 
 #
@@ -104,12 +104,12 @@ DESIRED_FIRMWARES 	 = $(foreach config,$(CONFIGS),$(IMAGE_DIR)$(config).vrx)
 STAGED_FIRMWARES	 = $(foreach config,$(KNOWN_CONFIGS),$(IMAGE_DIR)$(config).vrx)
 FIRMWARES		 = $(foreach config,$(KNOWN_CONFIGS),$(BUILD_DIR)$(config).build/firmware.vrx)
 
-all:			$(DESIRED_FIRMWARES)
+all:	$(DESIRED_FIRMWARES)
 
 #
 # Copy FIRMWARES into the image directory.
 #
-# XXX copying the .bin files is a hack to work around the PX4IO uploader 
+# XXX copying the .bin files is a hack to work around the PX4IO uploader
 #     not supporting .vrx files, and it should be deprecated onced that 
 #     is taken care of.
 #
@@ -125,13 +125,13 @@ $(STAGED_FIRMWARES): $(IMAGE_DIR)%.vrx: $(BUILD_DIR)%.build/firmware.vrx
 .PHONY: $(FIRMWARES)
 $(BUILD_DIR)%.build/firmware.vrx: config   = $(patsubst $(BUILD_DIR)%.build/firmware.vrx,%,$@)
 $(BUILD_DIR)%.build/firmware.vrx: work_dir = $(BUILD_DIR)$(config).build/
-$(FIRMWARES): $(BUILD_DIR)%.build/firmware.vrx:
+$(FIRMWARES): $(BUILD_DIR)%.build/firmware.vrx:	checksubmodules generateuorbtopicheaders
 	@$(ECHO) %%%%
 	@$(ECHO) %%%% Building $(config) in $(work_dir)
 	@$(ECHO) %%%%
 	$(Q) $(MKDIR) -p $(work_dir)
 	$(Q) $(MAKE) -r -C $(work_dir) \
-		-f $(VRX_MK_DIR)firmware.mk \
+		-f $(PX4_MK_DIR)firmware.mk \
 		CONFIG=$(config) \
 		WORK_DIR=$(work_dir) \
 		$(FIRMWARE_GOAL)
@@ -153,7 +153,7 @@ $(FIRMWARES): $(BUILD_DIR)%.build/firmware.vrx:
 # Build the NuttX export archives.
 #
 # Note that there are no explicit dependencies extended from these
-# archives. If NuttX is updated, the user is expected to rebuild the 
+# archives. If NuttX is updated, the user is expected to rebuild the
 # archives/build area manually. Likewise, when the 'archives' target is
 # invoked, all archives are always rebuilt.
 #
@@ -162,7 +162,7 @@ $(FIRMWARES): $(BUILD_DIR)%.build/firmware.vrx:
 #
 NUTTX_ARCHIVES		 = $(foreach board,$(BOARDS),$(ARCHIVE_DIR)$(board).export)
 .PHONY:			archives
-archives:		$(NUTTX_ARCHIVES)
+archives:		checksubmodules $(NUTTX_ARCHIVES)
 
 # We cannot build these parallel; note that we also force -j1 for the
 # sub-make invocations.
@@ -170,16 +170,18 @@ ifneq ($(filter archives,$(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 
+J?=1
+
 $(ARCHIVE_DIR)%.export:	board = $(notdir $(basename $@))
 $(ARCHIVE_DIR)%.export:	configuration = nsh
 $(NUTTX_ARCHIVES): $(ARCHIVE_DIR)%.export: $(NUTTX_SRC)
 	@$(ECHO) %% Configuring NuttX for $(board)
 	$(Q) (cd $(NUTTX_SRC) && $(RMDIR) nuttx-export)
-	$(Q) $(MAKE) -r -j1 -C $(NUTTX_SRC) -r $(MQUIET) distclean
-	$(Q) (cd $(NUTTX_SRC)/configs && $(COPYDIR) $(VRX_BASE)nuttx-configs/$(board) .)
+	$(Q) $(MAKE) -r -j$(J) -C $(NUTTX_SRC) -r $(MQUIET) distclean
+	$(Q) (cd $(NUTTX_SRC)/configs && $(COPYDIR) $(PX4_BASE)nuttx-configs/$(board) .)
 	$(Q) (cd $(NUTTX_SRC)tools && ./configure.sh $(board)/$(configuration))
 	@$(ECHO) %% Exporting NuttX for $(board)
-	$(Q) $(MAKE) -r -j1 -C $(NUTTX_SRC) -r $(MQUIET) CONFIG_ARCH_BOARD=$(board) export
+	$(Q) $(MAKE) -r -j$(J) -C $(NUTTX_SRC) -r $(MQUIET) CONFIG_ARCH_BOARD=$(board) export
 	$(Q) $(MKDIR) -p $(dir $@)
 	$(Q) $(COPY) $(NUTTX_SRC)nuttx-export.zip $@
 	$(Q) (cd $(NUTTX_SRC)/configs && $(RMDIR) $(board))
@@ -196,13 +198,13 @@ BOARD			 = $(BOARDS)
 menuconfig: $(NUTTX_SRC)
 	@$(ECHO) %% Configuring NuttX for $(BOARD)
 	$(Q) (cd $(NUTTX_SRC) && $(RMDIR) nuttx-export)
-	$(Q) $(MAKE) -r -j1 -C $(NUTTX_SRC) -r $(MQUIET) distclean
-	$(Q) (cd $(NUTTX_SRC)/configs && $(COPYDIR) $(VRX_BASE)nuttx-configs/$(BOARD) .)
+	$(Q) $(MAKE) -r -j$(J) -C $(NUTTX_SRC) -r $(MQUIET) distclean
+	$(Q) (cd $(NUTTX_SRC)/configs && $(COPYDIR) $(PX4_BASE)nuttx-configs/$(BOARD) .)
 	$(Q) (cd $(NUTTX_SRC)tools && ./configure.sh $(BOARD)/nsh)
 	@$(ECHO) %% Running menuconfig for $(BOARD)
-	$(Q) $(MAKE) -r -j1 -C $(NUTTX_SRC) -r $(MQUIET) menuconfig
+	$(Q) $(MAKE) -r -j$(J) -C $(NUTTX_SRC) -r $(MQUIET) menuconfig
 	@$(ECHO) %% Saving configuration file
-	$(Q)$(COPY) $(NUTTX_SRC).config $(VRX_BASE)nuttx-configs/$(BOARD)/nsh/defconfig
+	$(Q)$(COPY) $(NUTTX_SRC).config $(PX4_BASE)nuttx-configs/$(BOARD)/nsh/defconfig
 else
 menuconfig:
 	@$(ECHO) ""
@@ -210,30 +212,71 @@ menuconfig:
 	@$(ECHO) ""
 endif
 
-$(NUTTX_SRC):
-	@$(ECHO) ""
-	@$(ECHO) "NuttX sources missing - clone https://github.com/PX4/NuttX.git and try again."
-	@$(ECHO) ""
+$(NUTTX_SRC): checksubmodules
+
+$(UAVCAN_DIR):
+	$(Q) (./Tools/check_submodules.sh)
+
+.PHONY: checksubmodules
+checksubmodules:
+	$(Q) ($(PX4_BASE)/Tools/check_submodules.sh)
+
+.PHONY: updatesubmodules
+updatesubmodules:
+	$(Q) (git submodule init)
+	$(Q) (git submodule update)
+
+MSG_DIR = $(PX4_BASE)msg
+UORB_TEMPLATE_DIR = $(PX4_BASE)msg/templates/uorb
+MULTIPLATFORM_TEMPLATE_DIR = $(PX4_BASE)msg/templates/px4/uorb
+TOPICS_DIR = $(PX4_BASE)src/modules/uORB/topics
+MULTIPLATFORM_HEADER_DIR = $(PX4_BASE)src/platforms/nuttx/px4_messages
+MULTIPLATFORM_PREFIX = px4_
+TOPICHEADER_TEMP_DIR = $(BUILD_DIR)topics_temporary
+GENMSG_PYTHONPATH = $(PX4_BASE)Tools/genmsg/src
+GENCPP_PYTHONPATH = $(PX4_BASE)Tools/gencpp/src
+
+.PHONY: generateuorbtopicheaders
+generateuorbtopicheaders:
+	@$(ECHO) "Generating uORB topic headers"
+	$(Q) (PYTHONPATH=$(GENMSG_PYTHONPATH):$(GENCPP_PYTHONPATH):$(PYTHONPATH) $(PYTHON) \
+		$(PX4_BASE)Tools/px_generate_uorb_topic_headers.py \
+		-d $(MSG_DIR) -o $(TOPICS_DIR) -e $(UORB_TEMPLATE_DIR) -t $(TOPICHEADER_TEMP_DIR))
+	@$(ECHO) "Generating multiplatform uORB topic wrapper headers"
+	$(Q) (PYTHONPATH=$(GENMSG_PYTHONPATH):$(GENCPP_PYTHONPATH):$(PYTHONPATH) $(PYTHON) \
+		$(PX4_BASE)Tools/px_generate_uorb_topic_headers.py \
+		-d $(MSG_DIR) -o $(MULTIPLATFORM_HEADER_DIR) -e $(MULTIPLATFORM_TEMPLATE_DIR) -t $(TOPICHEADER_TEMP_DIR) -p $(MULTIPLATFORM_PREFIX))
+# clean up temporary files
+	$(Q) (rm -r $(TOPICHEADER_TEMP_DIR))
 
 #
 # Testing targets
 #
 testbuild:
-	$(Q) (cd $(VRX_BASE) && $(MAKE) distclean && $(MAKE) archives && $(MAKE) -j8)
+	$(Q) (cd $(PX4_BASE) && $(MAKE) distclean && $(MAKE) archives && $(MAKE) -j8)
+	$(Q) (zip -r Firmware.zip $(PX4_BASE)/Images)
+
+#
+# Unittest targets. Builds and runs the host-level
+# unit tests.
+.PHONY: tests
+tests:	generateuorbtopicheaders
+	$(Q) (mkdir -p $(PX4_BASE)/unittests/build && cd $(PX4_BASE)/unittests/build && cmake .. && $(MAKE) unittests)
 
 #
 # Cleanup targets.  'clean' should remove all built products and force
-# a complete re-compilation, 'distclean' should remove everything 
+# a complete re-compilation, 'distclean' should remove everything
 # that's generated leaving only files that are in source control.
 #
 .PHONY:	clean
 clean:
+	@echo > /dev/null
 	$(Q) $(RMDIR) $(BUILD_DIR)*.build
 	$(Q) $(REMOVE) $(IMAGE_DIR)*.vrx
 
 .PHONY:	distclean
 distclean: clean
-#	$(Q) $(REMOVE) $(ARCHIVE_DIR)*.export
+	@echo > /dev/null
 	$(Q) $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) distclean
 	$(Q) (cd $(NUTTX_SRC)/configs && $(FIND) . -maxdepth 1 -type l -delete)
 

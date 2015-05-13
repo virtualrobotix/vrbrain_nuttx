@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2012-2014 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2012-2015 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -70,9 +70,16 @@
 /**
  * Array of static parameter info.
  */
-extern char __param_start, __param_end;
-static const struct param_info_s	*param_info_base = (struct param_info_s *) &__param_start;
-static const struct param_info_s	*param_info_limit = (struct param_info_s *) &__param_end;
+#ifdef _UNIT_TEST
+	extern struct param_info_s	param_array[];
+	extern struct param_info_s	*param_info_base;
+	extern struct param_info_s	*param_info_limit;
+#else
+	extern char __param_start, __param_end;
+	static const struct param_info_s *param_info_base = (struct param_info_s *) &__param_start;
+	static const struct param_info_s *param_info_limit = (struct param_info_s *) &__param_end;
+#endif
+
 #define	param_info_count		((unsigned)(param_info_limit - param_info_base))
 
 /**
@@ -95,8 +102,6 @@ ORB_DEFINE(parameter_update, struct parameter_update_s);
 
 /** parameter update topic handle */
 static orb_advert_t param_topic = -1;
-
-static sem_t param_sem = { .semcount = 1 };
 
 /** lock the parameter store */
 static void
@@ -324,7 +329,8 @@ param_get_value_ptr(param_t param)
 			v = &param_info_base[param].val;
 		}
 
-		if (param_type(param) == PARAM_TYPE_STRUCT) {
+		if (param_type(param) >= PARAM_TYPE_STRUCT
+				&& param_type(param) <= PARAM_TYPE_STRUCT_MAX) {
 			result = v->p;
 
 		} else {
@@ -442,10 +448,11 @@ param_set(param_t param, const void *val)
 	return param_set_internal(param, val, false);
 }
 
-void
+int
 param_reset(param_t param)
 {
 	struct param_wbuf_s *s = NULL;
+	bool param_found = false;
 
 	param_lock();
 
@@ -459,12 +466,16 @@ param_reset(param_t param)
 			int pos = utarray_eltidx(param_values, s);
 			utarray_erase(param_values, pos, 1);
 		}
+
+		param_found = true;
 	}
 
 	param_unlock();
 
 	if (s != NULL)
 		param_notify_changes();
+
+	return (!param_found);
 }
 
 void
@@ -478,6 +489,38 @@ param_reset_all(void)
 
 	/* mark as reset / deleted */
 	param_values = NULL;
+
+	param_unlock();
+
+	param_notify_changes();
+}
+
+void
+param_reset_excludes(const char* excludes[], int num_excludes)
+{
+	param_lock();
+
+	param_t	param;
+
+	for (param = 0; handle_in_range(param); param++) {
+		const char* name = param_name(param);
+		bool exclude = false;
+
+		for (int index = 0; index < num_excludes; index ++) {
+			int len = strlen(excludes[index]);
+
+			if((excludes[index][len - 1] == '*'
+				&& strncmp(name, excludes[index], len - 1) == 0)
+				|| strcmp(name, excludes[index]) == 0) {
+				exclude = true;
+				break;
+			}
+		}
+
+		if(!exclude) {
+			param_reset(param);
+		}
+	}
 
 	param_unlock();
 
@@ -521,73 +564,15 @@ param_save_default(void)
 		return ERROR;
 	}
 
-	if (res == OK) {
-		res = param_export(fd, false);
+	res = param_export(fd, false);
 
-	        if (res != OK) {
-	            warnx("failed to write parameters to file: %s", filename);
-	        }
+	if (res != OK) {
+		warnx("failed to write parameters to file: %s", filename);
 	}
 
 	close(fd);
 
 	return res;
-
-#if 0
-	const char *filename_tmp = malloc(strlen(filename) + 5);
-	sprintf(filename_tmp, "%s.tmp", filename);
-
-	/* delete temp file if exist */
-	res = unlink(filename_tmp);
-
-	if (res != OK && errno == ENOENT)
-		res = OK;
-
-	if (res != OK)
-		warn("failed to delete temp file: %s", filename_tmp);
-
-	if (res == OK) {
-		/* write parameters to temp file */
-		fd = open(filename_tmp, O_WRONLY | O_CREAT | O_EXCL);
-
-		if (fd < 0) {
-			warn("failed to open temp file: %s", filename_tmp);
-			res = ERROR;
-		}
-
-		if (res == OK) {
-			res = param_export(fd, false);
-
-			if (res != OK)
-				warnx("failed to write parameters to file: %s", filename_tmp);
-		}
-
-		close(fd);
-	}
-
-	if (res == OK) {
-		/* delete parameters file */
-		res = unlink(filename);
-
-		if (res != OK && errno == ENOENT)
-			res = OK;
-
-		if (res != OK)
-			warn("failed to delete parameters file: %s", filename);
-	}
-
-	if (res == OK) {
-		/* rename temp file to parameters */
-		res = rename(filename_tmp, filename);
-
-		if (res != OK)
-			warn("failed to rename %s to %s", filename_tmp, filename);
-	}
-
-	free(filename_tmp);
-
-	return res;
-#endif
 }
 
 /**

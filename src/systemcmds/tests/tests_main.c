@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2012, 2013 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2012-2015 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -63,9 +63,11 @@
  ****************************************************************************/
 
 static int test_help(int argc, char *argv[]);
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 static int test_all(int argc, char *argv[]);
 static int test_perf(int argc, char *argv[]);
 static int test_jig(int argc, char *argv[]);
+#endif
 
 /****************************************************************************
  * Private Data
@@ -79,18 +81,23 @@ const struct {
 #define OPT_NOALLTEST	(1<<1)
 #define OPT_NOJIGTEST	(1<<2)
 } tests[] = {
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
-
 	{"led",			test_led,	0},
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"int",			test_int,	0},
 	{"float",		test_float,	0},
+#endif
 	{"sensors",		test_sensors,	0},
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"gpio",		test_gpio,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#endif
 	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"ppm",			test_ppm,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"servo",		test_servo,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"ppm_loopback",	test_ppm_loopback,	OPT_NOALLTEST},
+#endif
 	{"adc",			test_adc,	OPT_NOJIGTEST},
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"jig_voltages",	test_jig_voltages,	OPT_NOALLTEST},
 	{"uart_loopback",	test_uart_loopback,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"uart_baudchange",	test_uart_baudchange,	OPT_NOJIGTEST | OPT_NOALLTEST},
@@ -105,74 +112,22 @@ const struct {
 	{"jig",			test_jig,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"param",		test_param,	0},
 	{"bson",		test_bson,	0},
-	{"file",		test_file,	0},
-	{"file2",		test_file2,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"file",		test_file,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"file2",		test_file2,	OPT_NOJIGTEST},
 	{"mixer",		test_mixer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#endif
 	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	{"conv",		test_conv,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mount",		test_mount,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"mtd",			test_mtd,	0},
-#ifndef ARDUPILOT_BUILD
+#endif
+#ifndef TESTS_MATHLIB_DISABLE
 	{"mathlib",		test_mathlib,	0},
 #endif
-
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
-
-	{"led",			test_led,	0},
-	{"sensors",		test_sensors,	0},
-	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"adc",			test_adc,	OPT_NOJIGTEST},
-	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"mtd",			test_mtd,	0},
+#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
-
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
-
-	{"led",			test_led,	0},
-	{"sensors",		test_sensors,	0},
-	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"adc",			test_adc,	OPT_NOJIGTEST},
-	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"mtd",			test_mtd,	0},
-	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
-
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V52)
-
-	{"led",			test_led,	0},
-	{"sensors",		test_sensors,	0},
-	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"adc",			test_adc,	OPT_NOJIGTEST},
-	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"mtd",			test_mtd,	0},
-	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
-
-#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
-
-	{"led",			test_led,	0},
-	{"sensors",		test_sensors,	0},
-	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"adc",			test_adc,	OPT_NOJIGTEST},
-	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"mtd",			test_mtd,	0},
-	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
-
-#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
-
-	{"led",			test_led,	0},
-	{"sensors",		test_sensors,	0},
-	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"adc",			test_adc,	OPT_NOJIGTEST},
-	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"mtd",			test_mtd,	0},
-	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
-	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
-
 #endif
-
 	{"help",		test_help,	OPT_NOALLTEST | OPT_NOHELP | OPT_NOJIGTEST},
 	{NULL,			NULL, 		0}
 };
@@ -192,6 +147,7 @@ test_help(int argc, char *argv[])
 	return 0;
 }
 
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 static int
 test_all(int argc, char *argv[])
 {
@@ -270,7 +226,7 @@ test_all(int argc, char *argv[])
 
 	fflush(stdout);
 
-	return 0;
+	return (failcount > 0);
 }
 
 static int
@@ -297,7 +253,7 @@ test_perf(int argc, char *argv[])
 	printf("perf: expect count of 1\n");
 	perf_print_counter(ec);
 	printf("perf: expect at least two counters\n");
-	perf_print_all();
+	perf_print_all(0);
 
 	perf_free(cc);
 	perf_free(ec);
@@ -377,6 +333,7 @@ int test_jig(int argc, char *argv[])
 
 	return 0;
 }
+#endif
 
 __EXPORT int tests_main(int argc, char *argv[]);
 

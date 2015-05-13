@@ -113,7 +113,15 @@ __EXPORT uint64_t ppm_last_valid_decode = 0;
 static void		pwm_input_timer_init(unsigned timer);
 static void		pwm_input_timer_set_rate(unsigned timer, unsigned rate);
 static void		pwm_input_channel_init(unsigned channel);
-static int		pwm_input_timer_isr(void);
+static int		pwm_input_timer_isr(int irq, void *context);
+
+int             up_pwm_input_set(unsigned channel, rc_input_t value);
+rc_input_t      up_pwm_input_get(unsigned channel);
+void            up_pwm_init_deinit(void);
+void            up_pwm_input_arm(bool armed);
+int             up_pwm_init_set_rate_group_update(unsigned group, unsigned rate);
+int             up_pwm_input_set_rate(unsigned rate);
+uint32_t        up_pwm_input_get_rate_group(unsigned group);
 
 static void
 pwm_input_timer_init(unsigned timer)
@@ -338,8 +346,8 @@ up_pwm_init_set_rate_group_update(unsigned group, unsigned rate)
 int
 up_pwm_input_set_rate(unsigned rate)
 {
-	for (unsigned i = 0; i < PWM_INPUT_MAX_TIMERS; i++)
-		up_pwm_input_set_rate_group_update(i, rate);
+//	for (unsigned i = 0; i < PWM_INPUT_MAX_TIMERS; i++)
+//		up_pwm_input_set_rate_group_update(i, rate);
 
 	return 0;
 }
@@ -381,7 +389,7 @@ up_pwm_input_arm(bool armed)
 	}
 }
 
-static int pwm_input_timer_isr(void)
+static int pwm_input_timer_isr(int irq, void *context)
 {
 	uint16_t count = 0;
 
@@ -468,7 +476,7 @@ static int pwm_input_timer_isr(void)
 		}
 	}
 
-	return;
+	return  OK;
   	
 }
 

@@ -144,8 +144,8 @@ private:
 };
 
 ADC::ADC(uint32_t channels) :
-	CDev("adc", ADC_DEVICE_PATH),
-	_sample_perf(perf_alloc(PC_ELAPSED, "ADC samples")),
+	CDev("adc", ADC0_DEVICE_PATH),
+	_sample_perf(perf_alloc(PC_ELAPSED, "adc_samples")),
 	_channel_count(0),
 	_samples(nullptr),
 	_to_system_power(0)
@@ -381,12 +381,12 @@ void
 test(void)
 {
 
-	int fd = open(ADC_DEVICE_PATH, O_RDONLY);
+	int fd = open(ADC0_DEVICE_PATH, O_RDONLY);
 	if (fd < 0)
 		err(1, "can't open ADC device");
 
 	for (unsigned i = 0; i < 50; i++) {
-		adc_msg_s data[10];
+		adc_msg_s data[12];
 		ssize_t count = read(fd, data, sizeof(data));
 
 		if (count < 0)
@@ -418,6 +418,10 @@ adc_main(int argc, char *argv[])
 		/* XXX this hardcodes the default channel set for PX4FMUv2 - should be configurable */
 		g_adc = new ADC((1 << 2) | (1 << 3) | (1 << 4) | 
 			(1 << 10) | (1 << 11) | (1 << 12) | (1 << 13) | (1 << 14) | (1 << 15));
+#endif
+#ifdef CONFIG_ARCH_BOARD_AEROCORE
+		/* XXX this hardcodes the default channel set for AeroCore - should be configurable */
+		g_adc = new ADC((1 << 10) | (1 << 11) | (1 << 12) | (1 << 13));
 #endif
 #ifdef CONFIG_ARCH_BOARD_VRBRAIN_V45
 		/* XXX this hardcodes the default channel set for VRBRAINv45 - should be configurable */

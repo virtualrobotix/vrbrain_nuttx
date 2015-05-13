@@ -130,7 +130,8 @@ public:
 	enum DeviceBusType {
 		DeviceBusType_UNKNOWN = 0,
 		DeviceBusType_I2C     = 1,
-		DeviceBusType_SPI     = 2
+		DeviceBusType_SPI     = 2,
+		DeviceBusType_UAVCAN  = 3,
 	};
 
 	/*
@@ -240,6 +241,7 @@ private:
 	 * @param context	Pointer to the interrupted context.
 	 */
 	static void	dev_interrupt(int irq, void *context);
+
 };
 
 /**
@@ -443,6 +445,13 @@ protected:
 	 */
 	virtual int unregister_class_devname(const char *class_devname, unsigned class_instance);
 
+	/**
+	 * Get the device name.
+	 *
+	 * @return the file system string of the device handle
+	 */
+	const char*	get_devname() { return _devname; }
+
 	bool		_pub_blocked;		/**< true if publishing should be blocked */
 
 private:
@@ -469,6 +478,10 @@ private:
 	 * @return		OK, or -errno on error.
 	 */
 	int		remove_poll_waiter(struct pollfd *fds);
+
+	/* do not allow copying this class */
+	CDev(const CDev&);
+	CDev operator=(const CDev&);
 };
 
 /**
@@ -538,6 +551,10 @@ private:
 } // namespace device
 
 // class instance for primary driver of each class
-#define CLASS_DEVICE_PRIMARY 0
+enum CLASS_DEVICE {
+	CLASS_DEVICE_PRIMARY=0,
+	CLASS_DEVICE_SECONDARY=1,
+	CLASS_DEVICE_TERTIARY=2
+};
 
 #endif /* _DEVICE_DEVICE_H */

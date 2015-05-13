@@ -1,5 +1,5 @@
 #
-#   Copyright (C) 2012 PX4 Development Team. All rights reserved.
+#   Copyright (C) 2012-2014 PX4 Development Team. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -48,6 +48,16 @@ NM			 = $(CROSSDEV)nm
 OBJCOPY			 = $(CROSSDEV)objcopy
 OBJDUMP			 = $(CROSSDEV)objdump
 
+# Check if the right version of the toolchain is available
+#
+CROSSDEV_VER_SUPPORTED	 = 4.7.4 4.7.5 4.7.6 4.8.4 4.9.3
+CROSSDEV_VER_FOUND	 = $(shell $(CC) -dumpversion)
+
+ifeq (,$(findstring $(CROSSDEV_VER_FOUND), $(CROSSDEV_VER_SUPPORTED)))
+$(error Unsupported version of $(CC), found: $(CROSSDEV_VER_FOUND) instead of one in: $(CROSSDEV_VER_SUPPORTED))
+endif
+
+
 # XXX this is pulled pretty directly from the fmu Make.defs - needs cleanup
 
 MAXOPTIMIZATION		 ?= -O3
@@ -70,13 +80,20 @@ ARCHCPUFLAGS_CORTEXM3	 = -mcpu=cortex-m3 \
 			   -march=armv7-m \
 			   -mfloat-abi=soft
 
-ARCHINSTRUMENTATIONDEFINES_CORTEXM4F = -finstrument-functions \
-			   -ffixed-r10
-
-ARCHINSTRUMENTATIONDEFINES_CORTEXM4 = -finstrument-functions \
-			   -ffixed-r10
-
-ARCHINSTRUMENTATIONDEFINES_CORTEXM3 = 
+# Enabling stack checks if OS was build with them
+#
+TEST_FILE_STACKCHECK=$(WORK_DIR)nuttx-export/include/nuttx/config.h
+TEST_VALUE_STACKCHECK=CONFIG_ARMV7M_STACKCHECK\ 1
+ENABLE_STACK_CHECKS=$(shell $(GREP) -q "$(TEST_VALUE_STACKCHECK)" $(TEST_FILE_STACKCHECK); echo $$?;)
+ifeq ("$(ENABLE_STACK_CHECKS)","0")
+ARCHINSTRUMENTATIONDEFINES_CORTEXM4F = -finstrument-functions -ffixed-r10
+ARCHINSTRUMENTATIONDEFINES_CORTEXM4  = -finstrument-functions -ffixed-r10
+ARCHINSTRUMENTATIONDEFINES_CORTEXM3  =
+else
+ARCHINSTRUMENTATIONDEFINES_CORTEXM4F =
+ARCHINSTRUMENTATIONDEFINES_CORTEXM4  =
+ARCHINSTRUMENTATIONDEFINES_CORTEXM3  =
+endif
 
 # Pick the right set of flags for the architecture.
 #
@@ -95,14 +112,14 @@ ARCHDEFINES		+= -DCONFIG_ARCH_BOARD_$(CONFIG_BOARD)
 # optimisation flags
 #
 ARCHOPTIMIZATION	 = $(MAXOPTIMIZATION) \
-			   -g \
+			   -g3 \
 			   -fno-strict-aliasing \
 			   -fno-strength-reduce \
 			   -fomit-frame-pointer \
-   			   -funsafe-math-optimizations \
-   			   -fno-builtin-printf \
-   			   -ffunction-sections \
-   			   -fdata-sections
+			   -funsafe-math-optimizations \
+			   -fno-builtin-printf \
+			   -ffunction-sections \
+			   -fdata-sections
 
 # enable precise stack overflow tracking
 # note - requires corresponding support in NuttX
@@ -111,12 +128,13 @@ INSTRUMENTATIONDEFINES	 = $(ARCHINSTRUMENTATIONDEFINES_$(CONFIG_ARCH))
 # Language-specific flags
 #
 ARCHCFLAGS		 = -std=gnu99
-ARCHCXXFLAGS		 = -fno-exceptions -fno-rtti -std=gnu++0x -fno-threadsafe-statics
+ARCHCXXFLAGS		 = -fno-exceptions -fno-rtti -std=gnu++0x -fno-threadsafe-statics -D__CUSTOM_FILE_IO__
 
 # Generic warnings
 #
 ARCHWARNINGS		 = -Wall \
 			   -Wextra \
+			   -Werror \
 			   -Wdouble-promotion \
 			   -Wshadow \
 			   -Wfloat-equal \
@@ -125,7 +143,18 @@ ARCHWARNINGS		 = -Wall \
 			   -Wlogical-op \
 			   -Wmissing-declarations \
 			   -Wpacked \
-			   -Wno-unused-parameter
+			   -Wno-unused-parameter \
+			   -Werror=format-security \
+			   -Werror=array-bounds \
+			   -Wfatal-errors \
+			   -Wformat=1 \
+			   -Werror=unused-but-set-variable \
+			   -Werror=unused-variable \
+			   -Werror=double-promotion \
+			   -Werror=reorder \
+			   -Werror=uninitialized \
+			   -Werror=init-self
+#   -Werror=float-conversion - works, just needs to be phased in with some effort and needs GCC 4.9+
 #   -Wcast-qual  - generates spurious noreturn attribute warnings, try again later
 #   -Wconversion - would be nice, but too many "risky-but-safe" conversions in the code
 #   -Wcast-align - would help catch bad casts in some cases, but generates too many false positives
@@ -142,7 +171,8 @@ ARCHCWARNINGS		 = $(ARCHWARNINGS) \
 
 # C++-specific warnings
 #
-ARCHWARNINGSXX		 = $(ARCHWARNINGS)
+ARCHWARNINGSXX		 = $(ARCHWARNINGS) \
+			   -Wno-missing-field-initializers
 
 # pull in *just* libm from the toolchain ... this is grody
 LIBM			:= $(shell $(CC) $(ARCHCPUFLAGS) -print-file-name=libm.a)
@@ -208,7 +238,7 @@ DEP_INCLUDES		 = $(subst .o,.d,$(OBJS))
 define COMPILE
 	@$(ECHO) "CC:      $1"
 	@$(MKDIR) -p $(dir $2)
-	$(Q) $(CC) -MD -c $(CFLAGS) $(abspath $1) -o $2
+	$(Q) $(CCACHE) $(CC) -MD -c $(CFLAGS) $(abspath $1) -o $2
 endef
 
 # Compile C++ source $1 to $2
@@ -217,7 +247,7 @@ endef
 define COMPILEXX
 	@$(ECHO) "CXX:     $1"
 	@$(MKDIR) -p $(dir $2)
-	$(Q) $(CXX) -MD -c $(CXXFLAGS) $(abspath $1) -o $2
+	$(Q) $(CCACHE) $(CXX) -MD -c $(CXXFLAGS) $(abspath $1) -o $2
 endef
 
 # Assemble $1 into $2
@@ -268,7 +298,7 @@ define SYM_TO_HEX
 	$(Q) $(OBJCOPY) -O ihex $1 $2
 endef
 
-# Take the raw binary $1 and make it into an object file $2. 
+# Take the raw binary $1 and make it into an object file $2.
 # The symbol $3 points to the beginning of the file, and $3_len
 # gives its length.
 #

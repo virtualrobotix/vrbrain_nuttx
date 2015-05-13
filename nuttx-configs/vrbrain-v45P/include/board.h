@@ -154,8 +154,8 @@
  * Note: TIM1,8 are on APB2, others on APB1
  */
 
-#define STM32_TIM18_FREQUENCY   STM32_HCLK_FREQUENCY
-#define STM32_TIM27_FREQUENCY   (STM32_HCLK_FREQUENCY/2)
+#define STM32_TIM18_FREQUENCY   (2*STM32_PCLK2_FREQUENCY)
+#define STM32_TIM27_FREQUENCY   (2*STM32_PCLK1_FREQUENCY)
 
 /* Alternate function pin selections ************************************************/
 
@@ -238,25 +238,6 @@ extern "C" {
  ************************************************************************************/
 
 void stm32_boardinitialize(void);
-
-/************************************************************************************
- * Name: nsh_archinitialize
- *
- * Description:
- *   Perform architecture specific initialization for NSH.
- *
- *   CONFIG_NSH_ARCHINIT=y :
- *     Called from the NSH library
- *
- *   CONFIG_BOARD_INITIALIZE=y, CONFIG_NSH_LIBRARY=y, &&
- *   CONFIG_NSH_ARCHINIT=n:
- *     Called from board_initialize().
- *
- ************************************************************************************/
-
-#ifdef CONFIG_NSH_LIBRARY
-int nsh_archinitialize(void);
-#endif
 
 #undef EXTERN
 #if defined(__cplusplus)

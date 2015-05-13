@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2013 Estimation and Control Library (ECL). All rights reserved.
+ *   Copyright (c) 2013, 2014 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,9 +10,9 @@
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
- *    the documentation4 and/or other materials provided with the
+ *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name ECL nor the names of its contributors may be
+ * 3. Neither the name PX4 nor the names of its contributors may be
  *    used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -44,12 +44,26 @@
 namespace launchdetection
 {
 
+enum LaunchDetectionResult {
+	LAUNCHDETECTION_RES_NONE = 0, /**< No launch has been detected */
+	LAUNCHDETECTION_RES_DETECTED_ENABLECONTROL = 1, /**< Launch has been detected, the controller should
+							  control the attitude. However any motors should not throttle
+							  up and still be set to 'throttlePreTakeoff'.
+							  For instance this is used to have a delay for the motor
+							  when launching a fixed wing aircraft from a bungee */
+	LAUNCHDETECTION_RES_DETECTED_ENABLEMOTORS = 2 /**< Launch has been detected, teh controller should control
+							attitude and also throttle up the motors. */
+};
+
 class LaunchMethod
 {
 public:
 	virtual void update(float accel_x) = 0;
-	virtual bool getLaunchDetected() = 0;
+	virtual LaunchDetectionResult getLaunchDetected() const = 0;
 	virtual void reset() = 0;
+
+	/* Returns a upper pitch limit if required, otherwise returns pitchMaxDefault */
+	virtual float getPitchMax(float pitchMaxDefault) = 0;
 
 protected:
 private:

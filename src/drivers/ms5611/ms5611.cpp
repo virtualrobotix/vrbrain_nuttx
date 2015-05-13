@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2012-2014 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2012-2015 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -57,7 +57,6 @@
 #include <nuttx/clock.h>
 
 #include <arch/board/board.h>
-
 #include <board_config.h>
 
 #include <drivers/device/device.h>
@@ -69,6 +68,13 @@
 #include <systemlib/err.h>
 
 #include "ms5611.h"
+
+enum MS5611_BUS {
+	MS5611_BUS_ALL = 0,
+	MS5611_BUS_SPI_INTERNAL,
+	MS5611_BUS_SPI_EXTERNAL,
+	MS5611_BUS_SPI_IMU
+};
 
 /* oddly, ERROR is not defined for c++ */
 #ifdef ERROR
@@ -94,14 +100,10 @@ static const int ERROR = -1;
 #define MS5611_CONVERSION_INTERVAL	10000	/* microseconds */
 #define MS5611_MEASUREMENT_RATIO	3	/* pressure measurements per temperature measurement */
 
-#define MS5611_BARO_DEVICE_PATH_INT		"/dev/ms5611_int"
-#define MS5611_BARO_DEVICE_PATH_EXP		"/dev/ms5611_exp"
-#define MS5611_BARO_DEVICE_PATH_IMU		"/dev/ms5611_imu"
-
 class MS5611 : public device::CDev
 {
 public:
-	MS5611(device::Device *interface, const char *path, ms5611::prom_u &prom_buf);
+	MS5611(device::Device *interface, ms5611::prom_u &prom_buf, const char* path);
 	~MS5611();
 
 	virtual int		init();
@@ -133,15 +135,12 @@ protected:
 	int64_t			_SENS;
 	float			_P;
 	float			_T;
-	float			_Alt;
-	uint32_t                _D1;
-	uint32_t                _D2;
 
 	/* altitude conversion calibration */
-	unsigned		_msl_pressure;	/* in kPa */
+	unsigned		_msl_pressure;	/* in Pa */
 
 	orb_advert_t		_baro_topic;
-
+	int			_orb_class_instance;
 	int			_class_instance;
 
 	perf_counter_t		_sample_perf;
@@ -178,6 +177,13 @@ protected:
 	void			cycle();
 
 	/**
+	 * Get the internal / external state
+	 *
+	 * @return true if the sensor is not on the main MCU board
+	 */
+	bool			is_external() { return (_orb_class_instance == 0); /* XXX put this into the interface class */ }
+
+	/**
 	 * Static trampoline from the workq context; because we don't have a
 	 * generic workq wrapper yet.
 	 *
@@ -203,7 +209,7 @@ protected:
  */
 extern "C" __EXPORT int ms5611_main(int argc, char *argv[]);
 
-MS5611::MS5611(device::Device *interface, const char *path, ms5611::prom_u &prom_buf) :
+MS5611::MS5611(device::Device *interface, ms5611::prom_u &prom_buf, const char* path) :
 	CDev("MS5611", path),
 	_interface(interface),
 	_prom(prom_buf.s),
@@ -216,15 +222,13 @@ MS5611::MS5611(device::Device *interface, const char *path, ms5611::prom_u &prom
 	_SENS(0),
 	_msl_pressure(101325),
 	_baro_topic(-1),
+	_orb_class_instance(-1),
 	_class_instance(-1),
 	_sample_perf(perf_alloc(PC_ELAPSED, "ms5611_read")),
 	_measure_perf(perf_alloc(PC_ELAPSED, "ms5611_measure")),
 	_comms_errors(perf_alloc(PC_COUNT, "ms5611_comms_errors")),
 	_buffer_overflows(perf_alloc(PC_COUNT, "ms5611_buffer_overflows"))
 {
-	// enable debug() calls
-	_debug_enabled = true;
-
 	// work_cancel in stop_cycle called from the dtor will explode if we don't do this...
 	memset(&_work, 0, sizeof(_work));
 }
@@ -235,7 +239,7 @@ MS5611::~MS5611()
 	stop_cycle();
 
 	if (_class_instance != -1)
-		unregister_class_devname(BARO_BASE_DEVICE_PATH, _class_instance);
+		unregister_class_devname(get_devname(), _class_instance);
 
 	/* free any existing reports */
 	if (_reports != nullptr)
@@ -311,12 +315,12 @@ MS5611::init()
 
 		ret = OK;
 
-		if (_class_instance == CLASS_DEVICE_PRIMARY) {
+		_baro_topic = orb_advertise_multi(ORB_ID(sensor_baro), &brp,
+				&_orb_class_instance, (is_external()) ? ORB_PRIO_HIGH : ORB_PRIO_DEFAULT);
 
-			_baro_topic = orb_advertise(ORB_ID(sensor_baro), &brp);
 
-			if (_baro_topic < 0)
-				debug("failed to create sensor_baro publication");
+		if (_baro_topic < 0) {
+			warnx("failed to create sensor_baro publication");
 		}
 
 	} while (0);
@@ -472,7 +476,7 @@ MS5611::ioctl(struct file *filp, int cmd, unsigned long arg)
 			irqrestore(flags);
 			return -ENOMEM;
 		}
-		irqrestore(flags);		
+		irqrestore(flags);
 		return OK;
 	}
 
@@ -538,6 +542,7 @@ void
 MS5611::cycle()
 {
 	int ret;
+	unsigned dummy;
 
 	/* collection phase? */
 	if (_collect_phase) {
@@ -554,6 +559,8 @@ MS5611::cycle()
 			} else {
 				//log("collection error %d", ret);
 			}
+			/* issue a reset command to the sensor */
+			_interface->ioctl(IOCTL_RESET, dummy);
 			/* reset the collection state machine and try again */
 			start_cycle();
 			return;
@@ -585,6 +592,8 @@ MS5611::cycle()
 	ret = measure();
 	if (ret != OK) {
 		//log("measure error %d", ret);
+		/* issue a reset command to the sensor */
+		_interface->ioctl(IOCTL_RESET, dummy);
 		/* reset the collection state machine and try again */
 		start_cycle();
 		return;
@@ -645,17 +654,6 @@ MS5611::collect()
 		perf_end(_sample_perf);
 		return ret;
 	}
-
-	// report the raw D1/D2 values to help diagnose problems with
-	// transfers at higher temperatures
-	if (_measure_phase == 0) {
-		_D1 = raw;
-	} else {
-		_D2 = raw;
-	}
-
-        report.ms5611_D1 = _D1;
-        report.ms5611_D2 = _D2;
 
 	/* handle a measurement */
 	if (_measure_phase == 0) {
@@ -737,10 +735,9 @@ MS5611::collect()
 		 *                   a
 		 */
 		report.altitude = (((pow((p / p1), (-(a * R) / g))) * T1) - T1) / a;
-		_Alt = report.altitude;
 
 		/* publish it */
-		if (_baro_topic > 0 && !(_pub_blocked)) {
+		if (!(_pub_blocked)) {
 			/* publish it */
 			orb_publish(ORB_ID(sensor_baro), _baro_topic, &report);
 		}
@@ -772,9 +769,8 @@ MS5611::print_info()
 	printf("TEMP:           %d\n", _TEMP);
 	printf("SENS:           %lld\n", _SENS);
 	printf("OFF:            %lld\n", _OFF);
-	printf("P:              %.3f\n", _P);
-	printf("T:              %.3f\n", _T);
-	printf("alt:            %.3f\n", _Alt);
+	printf("P:              %.3f\n", (double)_P);
+	printf("T:              %.3f\n", (double)_T);
 	printf("MSL pressure:   %10.4f\n", (double)(_msl_pressure / 100.f));
 
 	printf("factory_setup             %u\n", _prom.factory_setup);
@@ -793,16 +789,38 @@ MS5611::print_info()
 namespace ms5611
 {
 
-MS5611	*g_dev_int;
-MS5611	*g_dev_exp;
-MS5611	*g_dev_imu;
+/*
+  list of supported bus configurations
+ */
+struct ms5611_bus_option {
+	enum MS5611_BUS busid;
+	const char *devpath;
+	MS5611_constructor interface_constructor;
+	uint8_t busnum;
+	uint16_t address;
+	bool is_external;
+	MS5611 *dev;
+} bus_options[] = {
+#ifdef SPI_BUS_MS5611
+	{ MS5611_BUS_SPI_INTERNAL, "/dev/ms5611_spi_int", &MS5611_spi_interface, SPI_BUS_MS5611, SPIDEV_MS5611, false, NULL },
+#endif
+#ifdef SPI_BUS_EXP_MS5611
+	{ MS5611_BUS_SPI_EXTERNAL, "/dev/ms5611_spi_exp", &MS5611_spi_interface, SPI_BUS_EXP_MS5611, SPIDEV_EXP_MS5611, true, NULL },
+#endif
+#ifdef SPI_BUS_IMU_MS5611
+	{ MS5611_BUS_SPI_IMU, "/dev/ms5611_spi_imu", &MS5611_spi_interface, SPI_BUS_IMU_MS5611, SPIDEV_IMU_MS5611, true, NULL },
+#endif
+};
+#define NUM_BUS_OPTIONS (sizeof(bus_options)/sizeof(bus_options[0]))
 
-void	start(enum BusSensor bustype);
-void	test(enum BusSensor bustype);
-void	test2(enum BusSensor bustype);
-void	reset(enum BusSensor bustype);
-void	info(enum BusSensor bustype);
-void	calibrate(enum BusSensor bustype, unsigned altitude);
+bool	start_bus(struct ms5611_bus_option &bus);
+struct ms5611_bus_option &find_bus(enum MS5611_BUS busid);
+void	start(enum MS5611_BUS busid);
+void	test(enum MS5611_BUS busid);
+void	reset(enum MS5611_BUS busid);
+void	info();
+void	calibrate(unsigned altitude, enum MS5611_BUS busid);
+void	usage();
 
 /**
  * MS5611 crc4 cribbed from the datasheet
@@ -854,86 +872,87 @@ crc4(uint16_t *n_prom)
 /**
  * Start the driver.
  */
-void
-start(enum BusSensor bustype)
+bool
+start_bus(struct ms5611_bus_option &bus)
 {
-	int fd;
+	if (bus.dev != nullptr)
+		errx(1,"bus option already started");
+
 	prom_u prom_buf;
-	MS5611 *g_dev = nullptr;
-	const char *path;
-
-	switch (bustype) {
-	case TYPE_BUS_SENSOR_INTERNAL:
-#ifdef SPI_BUS_MS5611
-		g_dev = g_dev_int;
-		path = MS5611_BARO_DEVICE_PATH_INT;
-#endif
-		break;
-	case TYPE_BUS_SENSOR_IMU:
-#ifdef SPI_BUS_IMU_MS5611
-		g_dev = g_dev_imu;
-		path = MS5611_BARO_DEVICE_PATH_IMU;
-#endif
-		break;
-	case TYPE_BUS_SENSOR_EXTERNAL:
-#ifdef SPI_BUS_EXP_MS5611
-		g_dev = g_dev_exp;
-		path = MS5611_BARO_DEVICE_PATH_EXP;
-#endif
-		break;
-	}
-
-	if (g_dev != nullptr)
-		/* if already started, the still command succeeded */
-		errx(0, "already started");
-
-	device::Device *interface = nullptr;
-
-	/* create the driver, try SPI first, fall back to I2C if unsuccessful */
-	if (MS5611_spi_interface != nullptr)
-		interface = MS5611_spi_interface(prom_buf, bustype);
-	if (interface == nullptr && (MS5611_i2c_interface != nullptr))
-		interface = MS5611_i2c_interface(prom_buf);
-
-	if (interface == nullptr)
-		errx(1, "failed to allocate an interface");
-
+	device::Device *interface = bus.interface_constructor(prom_buf, bus.busnum, bus.address, bus.is_external);
 	if (interface->init() != OK) {
 		delete interface;
-		errx(1, "interface init failed");
+		warnx("no device on bus %u", (unsigned)bus.busid);
+		return false;
 	}
 
-	g_dev = new MS5611(interface, path, prom_buf);
-
-	if (g_dev == nullptr)
-		goto fail;
-
-	if (OK != g_dev->init())
-		goto fail;
+	bus.dev = new MS5611(interface, prom_buf, bus.devpath);
+	if (bus.dev != nullptr && OK != bus.dev->init()) {
+		delete bus.dev;
+		bus.dev = NULL;
+		return false;
+	}
+			
+	int fd = open(bus.devpath, O_RDONLY);
 
 	/* set the poll rate to default, starts automatic data collection */
-	fd = open(path, O_RDONLY);
-
-	if (fd < 0) {
-		warnx("can't open baro device");
-		goto fail;
+	if (fd == -1) {
+		errx(1, "can't open baro device");
 	}
 	if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0) {
-		warnx("failed setting default poll rate");
-		goto fail;
+		close(fd);
+		errx(1, "failed setting default poll rate");
 	}
 
+	close(fd);
+	return true;
+}
+
+
+/**
+ * Start the driver.
+ *
+ * This function call only returns once the driver
+ * is either successfully up and running or failed to start.
+ */
+void
+start(enum MS5611_BUS busid)
+{
+	uint8_t i;
+	bool started = false;
+
+	for (i=0; i<NUM_BUS_OPTIONS; i++) {
+		if (busid == MS5611_BUS_ALL && bus_options[i].dev != NULL) {
+			// this device is already started
+			continue;
+		}
+		if (busid != MS5611_BUS_ALL && bus_options[i].busid != busid) {
+			// not the one that is asked for
+			continue;
+		}
+		started |= start_bus(bus_options[i]);
+	}
+
+	if (!started)
+		errx(1, "driver start failed");
+
+	// one or more drivers started OK
 	exit(0);
+}
 
-fail:
 
-	if (g_dev != nullptr) {
-		delete interface;
-		delete g_dev;
-		g_dev = nullptr;
-	}
-
-	errx(1, "driver start failed");
+/**
+ * find a bus structure for a busid
+ */
+struct ms5611_bus_option &find_bus(enum MS5611_BUS busid)
+{
+	for (uint8_t i=0; i<NUM_BUS_OPTIONS; i++) {
+		if ((busid == MS5611_BUS_ALL ||
+		     busid == bus_options[i].busid) && bus_options[i].dev != NULL) {
+			return bus_options[i];
+		}
+	}	
+	errx(1,"bus %u not started", (unsigned)busid);
 }
 
 /**
@@ -942,35 +961,18 @@ fail:
  * and automatic modes.
  */
 void
-test(enum BusSensor bustype)
+test(enum MS5611_BUS busid)
 {
+	struct ms5611_bus_option &bus = find_bus(busid);
 	struct baro_report report;
 	ssize_t sz;
 	int ret;
-	const char *path;
 
-	switch (bustype) {
-	case TYPE_BUS_SENSOR_INTERNAL:
-#ifdef SPI_BUS_MS5611
-		path = MS5611_BARO_DEVICE_PATH_INT;
-#endif
-		break;
-	case TYPE_BUS_SENSOR_IMU:
-#ifdef SPI_BUS_IMU_MS5611
-		path = MS5611_BARO_DEVICE_PATH_IMU;
-#endif
-		break;
-	case TYPE_BUS_SENSOR_EXTERNAL:
-#ifdef SPI_BUS_EXP_MS5611
-		path = MS5611_BARO_DEVICE_PATH_EXP;
-#endif
-		break;
-	}
+	int fd;
 
-	int fd = open(path, O_RDONLY);
-
+	fd = open(bus.devpath, O_RDONLY);
 	if (fd < 0)
-		err(1, "%s open failed (try 'ms5611 start' if the driver is not running)", path);
+		err(1, "open failed (try 'ms5611 start' if the driver is not running)");
 
 	/* do a simple demand read */
 	sz = read(fd, &report, sizeof(report));
@@ -1017,82 +1019,7 @@ test(enum BusSensor bustype)
 		warnx("time:        %lld", report.timestamp);
 	}
 
-	errx(0, "PASS");
-}
-
-/**
- * Perform some basic functional tests on the driver;
- * make sure we can collect data from the sensor in polled
- * and automatic modes.
- */
-void
-test2(enum BusSensor bustype)
-{
-	struct baro_report report;
-	ssize_t sz;
-	int ret;
-
-	int fd = open(BARO_BASE_DEVICE_PATH, O_RDONLY);
-
-	if (fd < 0)
-		err(1, "%s open failed (try 'ms5611 start' if the driver is not running)", BARO_BASE_DEVICE_PATH);
-
-	/* set the queue depth to 20 */
-	if (OK != ioctl(fd, SENSORIOCSQUEUEDEPTH, 20))
-		errx(1, "failed to set queue depth");
-
-	/* start the sensor polling at max speed */
-	if (OK != ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_MAX))
-		errx(1, "failed to set 2Hz poll rate");
-
-        hrt_abstime last_report = hrt_absolute_time();
-        uint32_t last_D1=0, last_D2=0;
-
-	/* read the sensor for 5 mins, reporting large D1 jumps and data at 1Hz */
-        while (true) {
-		struct pollfd fds;
-
-		/* wait for data to be ready */
-		fds.fd = fd;
-		fds.events = POLLIN;
-		ret = poll(&fds, 1, 2000);
-
-		if (ret != 1)
-			errx(1, "timed out waiting for sensor data");
-
-		/* now go get it */
-		sz = read(fd, &report, sizeof(report));
-
-		if (sz != sizeof(report))
-			err(1, "periodic read failed");
-
-                int32_t d1_diff = abs((int32_t)last_D1 - (int32_t)report.ms5611_D1);
-                if (last_D1 != 0 && d1_diff >= 0x10000) {
-                    printf("jump D1=0x%08x/0x%08x D2=0x%08x/0x%08x\n", 
-                           (unsigned)last_D1, (unsigned)report.ms5611_D1,
-                           (unsigned)last_D2, (unsigned)report.ms5611_D2);
-                }
-
-                if (hrt_elapsed_time(&last_report) >= 1000*1000) {
-                    printf("temp %u press %u D1=0x%08x D2=0x%08x alt=%u\n", 
-                           (unsigned)(report.temperature*100.0),
-                           (unsigned)(report.pressure*1000.0),
-                           (unsigned)report.ms5611_D1,
-                           (unsigned)report.ms5611_D2,
-                           (unsigned)report.altitude);
-                    last_report = hrt_absolute_time();
-                }
-                last_D1 = report.ms5611_D1;
-                last_D2 = report.ms5611_D2;
-
-		fds.fd = 0;
-		fds.events = POLLIN;
-		if (poll(&fds, 1, 0) == 1) {
-                    // user input
-                    break;
-                }                
-	}
-
+	close(fd);
 	errx(0, "PASS");
 }
 
@@ -1100,30 +1027,12 @@ test2(enum BusSensor bustype)
  * Reset the driver.
  */
 void
-reset(enum BusSensor bustype)
+reset(enum MS5611_BUS busid)
 {
-	const char *path;
+	struct ms5611_bus_option &bus = find_bus(busid);
+	int fd;
 
-	switch (bustype) {
-	case TYPE_BUS_SENSOR_INTERNAL:
-#ifdef SPI_BUS_MS5611
-		path = MS5611_BARO_DEVICE_PATH_INT;
-#endif
-		break;
-	case TYPE_BUS_SENSOR_IMU:
-#ifdef SPI_BUS_IMU_MS5611
-		path = MS5611_BARO_DEVICE_PATH_IMU;
-#endif
-		break;
-	case TYPE_BUS_SENSOR_EXTERNAL:
-#ifdef SPI_BUS_EXP_MS5611
-		path = MS5611_BARO_DEVICE_PATH_EXP;
-#endif
-		break;
-	}
-
-	int fd = open(path, O_RDONLY);
-
+	fd = open(bus.devpath, O_RDONLY);
 	if (fd < 0)
 		err(1, "failed ");
 
@@ -1140,28 +1049,15 @@ reset(enum BusSensor bustype)
  * Print a little info about the driver.
  */
 void
-info(enum BusSensor bustype)
+info()
 {
-	MS5611 *g_dev = nullptr;
-
-    switch (bustype) {
-    case TYPE_BUS_SENSOR_INTERNAL:
-		g_dev = g_dev_int;
-    	break;
-    case TYPE_BUS_SENSOR_IMU:
-		g_dev = g_dev_imu;
-    	break;
-    case TYPE_BUS_SENSOR_EXTERNAL:
-		g_dev = g_dev_exp;
-    	break;
-    }
-
-	if (g_dev == nullptr)
-		errx(1, "driver not running");
-
-	printf("state @ %p\n", g_dev);
-	g_dev->print_info();
-
+	for (uint8_t i=0; i<NUM_BUS_OPTIONS; i++) {
+		struct ms5611_bus_option &bus = bus_options[i];
+		if (bus.dev != nullptr) {
+			warnx("%s", bus.devpath);
+			bus.dev->print_info();
+		}
+	}
 	exit(0);
 }
 
@@ -1169,35 +1065,19 @@ info(enum BusSensor bustype)
  * Calculate actual MSL pressure given current altitude
  */
 void
-calibrate(enum BusSensor bustype, unsigned altitude)
+calibrate(unsigned altitude, enum MS5611_BUS busid)
 {
+	struct ms5611_bus_option &bus = find_bus(busid);
 	struct baro_report report;
 	float	pressure;
 	float	p1;
-	const char *path;
 
-	switch (bustype) {
-	case TYPE_BUS_SENSOR_INTERNAL:
-#ifdef SPI_BUS_MS5611
-		path = MS5611_BARO_DEVICE_PATH_INT;
-#endif
-		break;
-	case TYPE_BUS_SENSOR_IMU:
-#ifdef SPI_BUS_IMU_MS5611
-		path = MS5611_BARO_DEVICE_PATH_IMU;
-#endif
-		break;
-	case TYPE_BUS_SENSOR_EXTERNAL:
-#ifdef SPI_BUS_EXP_MS5611
-		path = MS5611_BARO_DEVICE_PATH_EXP;
-#endif
-		break;
-	}
+	int fd;
 
-	int fd = open(path, O_RDONLY);
+	fd = open(bus.devpath, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'ms5611 start' if the driver is not running)", path);
+		err(1, "open failed (try 'ms5611 start' if the driver is not running)");
 
 	/* start the sensor polling at max */
 	if (OK != ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_MAX))
@@ -1249,41 +1129,42 @@ calibrate(enum BusSensor bustype, unsigned altitude)
 	if (ioctl(fd, BAROIOCSMSLPRESSURE, (unsigned long)p1) != OK)
 		err(1, "BAROIOCSMSLPRESSURE");
 
+	close(fd);
 	exit(0);
+}
+
+void
+usage()
+{
+	warnx("missing command: try 'start', 'info', 'test', 'test2', 'reset', 'calibrate'");
+	warnx("options:");
+	warnx("    -X only external SPI bus");
+	warnx("    -U only external SPI IMU");
+	warnx("    -I only internal SPI bus");
 }
 
 } // namespace
 
-void
-ms5611_usage()
-{
-	warnx("missing command: try 'start', 'info', 'test', 'test2', 'reset', 'calibrate'");
-	warnx("options:");
-	warnx("    -X only external bus");
-	warnx("    -U only external IMU");
-	warnx("    -I only internal bus");
-}
-
 int
 ms5611_main(int argc, char *argv[])
 {
+	enum MS5611_BUS busid = MS5611_BUS_ALL;
 	int ch;
-	enum BusSensor bustype = TYPE_BUS_SENSOR_NONE;
 
 	/* jump over start/off/etc and look at options first */
-	while ((ch = getopt(argc, argv, "XIU")) != EOF) {
+	while ((ch = getopt(argc, argv, "XUIxiu")) != EOF) {
 		switch (ch) {
-		case 'I':
-			bustype = TYPE_BUS_SENSOR_INTERNAL;
-			break;
 		case 'X':
-			bustype = TYPE_BUS_SENSOR_EXTERNAL;
+			busid = MS5611_BUS_SPI_EXTERNAL;
+			break;
+		case 'I':
+			busid = MS5611_BUS_SPI_INTERNAL;
 			break;
 		case 'U':
-			bustype = TYPE_BUS_SENSOR_IMU;
+			busid = MS5611_BUS_SPI_IMU;
 			break;
 		default:
-			ms5611_usage();
+			ms5611::usage();
 			exit(0);
 		}
 	}
@@ -1294,31 +1175,25 @@ ms5611_main(int argc, char *argv[])
 	 * Start/load the driver.
 	 */
 	if (!strcmp(verb, "start"))
-		ms5611::start(bustype);
+		ms5611::start(busid);
 
 	/*
 	 * Test the driver/device.
 	 */
 	if (!strcmp(verb, "test"))
-		ms5611::test(bustype);
-
-	/*
-	 * Test the driver/device for 300 seconds
-	 */
-	if (!strcmp(verb, "test2"))
-		ms5611::test2(bustype);
+		ms5611::test(busid);
 
 	/*
 	 * Reset the driver.
 	 */
 	if (!strcmp(verb, "reset"))
-		ms5611::reset(bustype);
+		ms5611::reset(busid);
 
 	/*
 	 * Print driver information.
 	 */
 	if (!strcmp(verb, "info"))
-		ms5611::info(bustype);
+		ms5611::info();
 
 	/*
 	 * Perform MSL pressure calibration given an altitude in metres
@@ -1329,7 +1204,7 @@ ms5611_main(int argc, char *argv[])
 
 		long altitude = strtol(argv[optind+1], nullptr, 10);
 
-		ms5611::calibrate(bustype, altitude);
+		ms5611::calibrate(altitude, busid);
 	}
 
 	errx(1, "unrecognised command, try 'start', 'test', 'reset' or 'info'");

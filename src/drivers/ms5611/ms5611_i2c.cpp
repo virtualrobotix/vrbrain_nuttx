@@ -56,19 +56,17 @@
 
 #include "board_config.h"
 
-#ifdef I2C_OBDEV_MS5611
-
 #define MS5611_ADDRESS_1		0x76	/* address select pins pulled high (PX4FMU series v1.6+) */
 #define MS5611_ADDRESS_2		0x77    /* address select pins pulled low (PX4FMU prototypes) */
 
 
 
-device::Device *MS5611_i2c_interface(ms5611::prom_u &prom_buf);
+device::Device *MS5611_i2c_interface(ms5611::prom_u &prom_buf, uint16_t address, bool is_external);
 
 class MS5611_I2C : public device::I2C
 {
 public:
-	MS5611_I2C(int bus, ms5611::prom_u &prom_buf);
+	MS5611_I2C(uint8_t bus, ms5611::prom_u &prom_buf, uint16_t address, bool is_external);
 	virtual ~MS5611_I2C();
 
 	virtual int	init();
@@ -80,6 +78,7 @@ protected:
 
 private:
 	ms5611::prom_u	&_prom;
+	bool _is_external;
 
 	int		_probe_address(uint8_t address);
 
@@ -107,14 +106,15 @@ private:
 };
 
 device::Device *
-MS5611_i2c_interface(ms5611::prom_u &prom_buf)
+MS5611_i2c_interface(ms5611::prom_u &prom_buf, uint8_t busnum, uint16_t address, bool is_external)
 {
-	return new MS5611_I2C(I2C_BUS_MS5611, prom_buf);
+	return new MS5611_I2C(busnum, prom_buf, address, is_external);
 }
 
-MS5611_I2C::MS5611_I2C(int bus, ms5611::prom_u &prom) :
-	I2C("MS5611_I2C", nullptr, bus, 0, 400000),
-	_prom(prom)
+MS5611_I2C::MS5611_I2C(uint8_t bus, ms5611::prom_u &prom, uint16_t address, bool is_external) :
+	I2C("MS5611_I2C", nullptr, bus, address, 100000),
+	_prom(prom),
+	_is_external(is_external)
 {
 }
 
@@ -268,5 +268,3 @@ MS5611_I2C::_read_prom()
 	/* calculate CRC and return success/failure accordingly */
 	return ms5611::crc4(&_prom.c[0]) ? OK : -EIO;
 }
-
-#endif /* PX4_I2C_OBDEV_MS5611 */

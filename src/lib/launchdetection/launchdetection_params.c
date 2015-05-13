@@ -1,7 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2013 PX4 Development Team. All rights reserved.
- *   Author: Lorenz Meier <lm@inf.ethz.ch>
+ *   Copyright (c) 2013, 2014 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -18,7 +17,7 @@
  *    without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
  * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
  * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -77,6 +76,31 @@ PARAM_DEFINE_FLOAT(LAUN_CAT_A, 30.0f);
  * @group Launch detection
  */
 PARAM_DEFINE_FLOAT(LAUN_CAT_T, 0.05f);
+
+/**
+ * Motor delay
+ *
+ * Delay between starting attitude control and powering up the throttle (giving throttle control to the controller)
+ * Before this timespan is up the throttle will be set to LAUN_THR_PRE, set to 0 to deactivate
+ *
+ * @unit seconds
+ * @min 0
+ * @group Launch detection
+ */
+PARAM_DEFINE_FLOAT(LAUN_CAT_MDEL, 0.0f);
+
+/**
+ * Maximum pitch before the throttle is powered up (during motor delay phase)
+ *
+ * This is an extra limit for the maximum pitch which is imposed in the phase before the throttle turns on.
+ * This allows to limit the maximum pitch angle during a bungee launch (make the launch less steep).
+ *
+ * @unit deg
+ * @min 0
+ * @max 45
+ * @group Launch detection
+ */
+PARAM_DEFINE_FLOAT(LAUN_CAT_PMAX, 30.0f);
 
 /**
  * Throttle setting while detecting launch.

@@ -54,13 +54,13 @@
  * CONFIG_ARCH_LEDS configuration switch.
  */
 __BEGIN_DECLS
-extern void led_init();
+extern void led_init(void);
 extern void led_on(int led);
 extern void led_off(int led);
 extern void led_toggle(int led);
 __END_DECLS
 
-__EXPORT void led_init()
+__EXPORT void led_init(void)
 {
 	/* Configure LED1-2 GPIOs for output */
 
@@ -69,6 +69,7 @@ __EXPORT void led_init()
 	stm32_configgpio(GPIO_LED3);
 	stm32_configgpio(GPIO_EXT_LED1);
 	stm32_configgpio(GPIO_EXT_LED2);
+
 }
 
 __EXPORT void led_on(int led)
@@ -98,6 +99,11 @@ __EXPORT void led_on(int led)
 		/* Pull down to switch on */
 		stm32_gpiowrite(GPIO_EXT_LED2, true);
 	}
+
+
+
+
+
 }
 
 __EXPORT void led_off(int led)
@@ -127,6 +133,11 @@ __EXPORT void led_off(int led)
 		/* Pull up to switch off */
 		stm32_gpiowrite(GPIO_EXT_LED2, false);
 	}
+
+
+
+
+
 }
 
 __EXPORT void led_toggle(int led)
@@ -166,4 +177,11 @@ __EXPORT void led_toggle(int led)
 		else
 			stm32_gpiowrite(GPIO_EXT_LED2, false);
 	}
+
+
+
+
+
+
+
 }

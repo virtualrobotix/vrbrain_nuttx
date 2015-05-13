@@ -59,4 +59,28 @@
 #define	HW_ARCH "PX4FMU_V2"
 #endif
 
+#ifdef CONFIG_ARCH_BOARD_AEROCORE
+#define	HW_ARCH "AEROCORE"
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V45
+#define	HW_ARCH "VRBRAIN_V45"
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V51
+#define	HW_ARCH "VRBRAIN_V51"
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V52
+#define	HW_ARCH "VRBRAIN_V52"
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRUBRAIN_V51
+#define	HW_ARCH "VRUBRAIN_V51"
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRUBRAIN_V52
+#define	HW_ARCH "VRUBRAIN_V52"
+#endif
+
 #endif /* VERSION_H_ */

@@ -49,7 +49,7 @@
 #include <unistd.h>
 
 #include <arch/board/board.h>
-#include <systemlib/err.h>
+
 #include <drivers/device/spi.h>
 
 #include "ms5611.h"
@@ -60,14 +60,11 @@
 #define DIR_WRITE			(0<<7)
 #define ADDR_INCREMENT			(1<<6)
 
-#if defined(SPIDEV_MS5611) || defined(SPIDEV_EXP_MS5611) || defined(SPIDEV_IMU_MS5611)
-
-device::Device *MS5611_spi_interface(ms5611::prom_u &prom_buf, enum BusSensor bustype);
 
 class MS5611_SPI : public device::SPI
 {
 public:
-	MS5611_SPI(int bus, spi_dev_e device, ms5611::prom_u &prom_buf);
+	MS5611_SPI(uint8_t bus, spi_dev_e device, ms5611::prom_u &prom_buf, bool is_external);
 	virtual ~MS5611_SPI();
 
 	virtual int	init();
@@ -76,6 +73,8 @@ public:
 
 private:
 	ms5611::prom_u	&_prom;
+
+	bool _is_external;
 
 	/**
 	 * Send a reset command to the MS5611.
@@ -115,39 +114,16 @@ private:
 };
 
 device::Device *
-MS5611_spi_interface(ms5611::prom_u &prom_buf, enum BusSensor bustype)
+MS5611_spi_interface(ms5611::prom_u &prom_buf, uint8_t busnum, uint16_t address, bool is_external)
 {
-	switch (bustype) {
-	case TYPE_BUS_SENSOR_INTERNAL:
-#ifdef SPI_BUS_MS5611
-		return new MS5611_SPI(SPI_BUS_MS5611, (spi_dev_e)SPIDEV_MS5611, prom_buf);
-#else
-		errx(0, "Internal SPI not available");
-#endif
-		break;
-	case TYPE_BUS_SENSOR_IMU:
-#ifdef SPI_BUS_IMU_MS5611
-		return new MS5611_SPI(SPI_BUS_IMU_MS5611, (spi_dev_e)SPIDEV_IMU_MS5611, prom_buf);
-#else
-		errx(0, "External IMU SPI not available");
-#endif
-		break;
-	case TYPE_BUS_SENSOR_EXTERNAL:
-#ifdef SPI_BUS_EXP_MS5611
-		return new MS5611_SPI(SPI_BUS_EXP_MS5611, (spi_dev_e)SPIDEV_EXP_MS5611, prom_buf);
-#else
-		errx(0, "External EXP SPI not available");
-#endif
-		break;
-	}
+	return new MS5611_SPI(busnum, (spi_dev_e)address, prom_buf, is_external);
 }
 
-MS5611_SPI::MS5611_SPI(int bus, spi_dev_e device, ms5611::prom_u &prom_buf) :
-	SPI("MS5611_SPI", nullptr, bus, device, SPIDEV_MODE3, 6*1000*1000),
-	_prom(prom_buf)
+MS5611_SPI::MS5611_SPI(uint8_t bus, spi_dev_e device, ms5611::prom_u &prom_buf, bool is_external) :
+	SPI("MS5611_SPI", nullptr, bus, device, SPIDEV_MODE3, 11*1000*1000 /* will be rounded to 10.4 MHz */),
+	_prom(prom_buf),
+	_is_external(is_external)
 {
-	// enable debug() calls
-	_debug_enabled = false;
 }
 
 MS5611_SPI::~MS5611_SPI()
@@ -297,4 +273,3 @@ MS5611_SPI::_transfer(uint8_t *send, uint8_t *recv, unsigned len)
 	return transfer(send, recv, len);
 }
 
-#endif /* SPIDEV_MS5611 or SPIDEV_EXP_MS5611 or SPIDEV_IMU_MS5611 */

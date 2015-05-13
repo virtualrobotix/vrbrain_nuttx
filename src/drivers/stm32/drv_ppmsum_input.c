@@ -37,6 +37,9 @@
  * Servo driver supporting PPMSUM inputs connected to STM32 timer blocks.
  */
 
+#include <nuttx/arch.h>
+
+#include <drivers/drv_hrt.h>
 #include <board_config.h>
 
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_PPMSUM)

@@ -74,6 +74,7 @@
 #include <drivers/drv_mixer.h>
 
 #include <uORB/topics/actuator_controls.h>
+#include <uORB/topics/actuator_controls_0.h>
 #include <uORB/topics/actuator_outputs.h>
 #include <uORB/topics/actuator_armed.h>
 #include <uORB/topics/esc_status.h>
@@ -92,8 +93,20 @@
 #define MOTOR_SPINUP_COUNTER			30
 #define ESC_UORB_PUBLISH_DELAY		500000
 
-
-
+struct MotorData_t {
+	unsigned int Version;                        // the version of the BL (0 = old)
+	unsigned int SetPoint;                       // written by attitude controller
+	unsigned int SetPointLowerBits;      // for higher Resolution of new BLs
+	float SetPoint_PX4; 			     // Values from PX4
+	unsigned int State;                          // 7 bit for I2C error counter, highest bit indicates if motor is present
+	unsigned int ReadMode;                       // select data to read
+	unsigned short RawPwmValue;							// length of PWM pulse
+	// the following bytes must be exactly in that order!
+	unsigned int Current;                        // in 0.1 A steps, read back from BL
+	unsigned int MaxPWM;                         // read back from BL is less than 255 if BL is in current limit
+	unsigned int Temperature;            // old BL-Ctrl will return a 255 here, the new version the temp. in
+	unsigned int RoundCount;
+};
 
 class MK : public device::I2C
 {
@@ -119,8 +132,8 @@ public:
 	int		set_motor_count(unsigned count);
 	int		set_motor_test(bool motortest);
 	int		set_overrideSecurityChecks(bool overrideSecurityChecks);
-	int		set_px4mode(int px4mode);
-	int		set_frametype(int frametype);
+	void		set_px4mode(int px4mode);
+	void		set_frametype(int frametype);
 	unsigned int		mk_check_for_blctrl(unsigned int count, bool showOutput, bool initI2C);
 
 private:
@@ -154,8 +167,10 @@ private:
 
 	actuator_controls_s _controls;
 
+	MotorData_t Motor[MAX_MOTORS];
+
 	static void	task_main_trampoline(int argc, char *argv[]);
-	void		task_main() __attribute__((noreturn));
+	void		task_main();
 
 	static int	control_callback(uintptr_t handle,
 					 uint8_t control_group,
@@ -195,24 +210,6 @@ const int blctrlAddr_px4[]  = { 0, 0, 0, 0, 0, 0, 0, 0};
 
 int addrTranslator[] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-struct MotorData_t {
-	unsigned int Version;                        // the version of the BL (0 = old)
-	unsigned int SetPoint;                       // written by attitude controller
-	unsigned int SetPointLowerBits;      // for higher Resolution of new BLs
-	float SetPoint_PX4; 			     // Values from PX4
-	unsigned int State;                          // 7 bit for I2C error counter, highest bit indicates if motor is present
-	unsigned int ReadMode;                       // select data to read
-	unsigned short RawPwmValue;							// length of PWM pulse
-	// the following bytes must be exactly in that order!
-	unsigned int Current;                        // in 0.1 A steps, read back from BL
-	unsigned int MaxPWM;                         // read back from BL is less than 255 if BL is in current limit
-	unsigned int Temperature;            // old BL-Ctrl will return a 255 here, the new version the temp. in
-	unsigned int RoundCount;
-};
-
-MotorData_t Motor[MAX_MOTORS];
-
-
 namespace
 {
 
@@ -226,15 +223,15 @@ MK::MK(int bus, const char *_device_path) :
 	_task(-1),
 	_t_actuators(-1),
 	_t_actuator_armed(-1),
-	_t_outputs(0),
-	_t_esc_status(0),
-	_num_outputs(0),
-	_motortest(false),
-	_overrideSecurityChecks(false),
 	_motor(-1),
 	_px4mode(MAPPING_MK),
 	_frametype(FRAME_PLUS),
+	_t_outputs(0),
+	_t_esc_status(0),
+	_num_outputs(0),
 	_primary_pwm_device(false),
+	_motortest(false),
+	_overrideSecurityChecks(false),
 	_task_should_exit(false),
 	_armed(false),
 	_mixers(nullptr)
@@ -334,13 +331,13 @@ MK::set_update_rate(unsigned rate)
 	return OK;
 }
 
-int
+void
 MK::set_px4mode(int px4mode)
 {
 	_px4mode = px4mode;
 }
 
-int
+void
 MK::set_frametype(int frametype)
 {
 	_frametype = frametype;
@@ -444,9 +441,6 @@ MK::scaling(float val, float inMin, float inMax, float outMin, float outMax)
 void
 MK::task_main()
 {
-	long update_rate_in_us = 0;
-	float tmpVal = 0;
-
 	/*
 	 * Subscribe to the appropriate PWM output topic based on whether we are the
 	 * primary PWM output or not.
@@ -463,8 +457,9 @@ MK::task_main()
 	actuator_outputs_s outputs;
 	memset(&outputs, 0, sizeof(outputs));
 	/* advertise the mixed control outputs */
-	_t_outputs = orb_advertise(_primary_pwm_device ? ORB_ID_VEHICLE_CONTROLS : ORB_ID(actuator_outputs_1),
-				   &outputs);
+	int dummy;
+	_t_outputs = orb_advertise_multi(ORB_ID(actuator_outputs),
+				   &outputs, &dummy, ORB_PRIO_HIGH);
 
 	/* advertise the blctrl status */
 	esc_status_s esc;
@@ -487,7 +482,6 @@ MK::task_main()
 		/* handle update rate changes */
 		if (_current_update_rate != _update_rate) {
 			int update_rate_in_ms = int(1000 / _update_rate);
-			update_rate_in_us = long(1000000 / _update_rate);
 
 			/* reject faster than 500 Hz updates */
 			if (update_rate_in_ms < 2) {
@@ -608,8 +602,8 @@ MK::task_main()
 				esc.esc[i].esc_address = (uint8_t) BLCTRL_BASE_ADDR + i;
 				esc.esc[i].esc_vendor = ESC_VENDOR_MIKROKOPTER;
 				esc.esc[i].esc_version = (uint16_t) Motor[i].Version;
-				esc.esc[i].esc_voltage = (uint16_t) 0;
-				esc.esc[i].esc_current = (uint16_t) Motor[i].Current;
+				esc.esc[i].esc_voltage = 0.0F;
+				esc.esc[i].esc_current = static_cast<float>(Motor[i].Current) * 0.1F;
 				esc.esc[i].esc_rpm = (uint16_t) 0;
 				esc.esc[i].esc_setpoint = (float) Motor[i].SetPoint_PX4;
 
@@ -622,7 +616,7 @@ MK::task_main()
 					esc.esc[i].esc_setpoint_raw = (uint16_t) Motor[i].SetPoint;
 				}
 
-				esc.esc[i].esc_temperature = (uint16_t) Motor[i].Temperature;
+				esc.esc[i].esc_temperature = static_cast<float>(Motor[i].Temperature);
 				esc.esc[i].esc_state = (uint16_t) Motor[i].State;
 				esc.esc[i].esc_errorcount = (uint16_t) 0;
 
@@ -739,7 +733,6 @@ MK::mk_servo_set(unsigned int chan, short val)
 	_retries = 0;
 	uint8_t result[3] = { 0, 0, 0 };
 	uint8_t msg[2] = { 0, 0 };
-	uint8_t rod = 0;
 	uint8_t bytesToSendBL2 = 2;
 
 	tmpVal = val;
@@ -828,7 +821,7 @@ MK::mk_servo_set(unsigned int chan, short val)
 		if (debugCounter == 2000) {
 			debugCounter = 0;
 
-			for (int i = 0; i < _num_outputs; i++) {
+			for (unsigned int i = 0; i < _num_outputs; i++) {
 				if (Motor[i].State & MOTOR_STATE_PRESENT_MASK) {
 					fprintf(stderr, "[mkblctrl] #%i:\tVer: %i\tVal: %i\tCurr: %i\tMaxPWM: %i\tTemp: %i\tState: %i\n", i, Motor[i].Version, Motor[i].SetPoint, Motor[i].Current, Motor[i].MaxPWM, Motor[i].Temperature, Motor[i].State);
 				}
@@ -1015,7 +1008,7 @@ MK::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 
 	case PWM_SERVO_GET(0) ... PWM_SERVO_GET(_max_actuators - 1):
 		/* copy the current output value from the channel */
-		*(servo_position_t *)arg = Motor[cmd - PWM_SERVO_SET(0)].RawPwmValue;
+		*(servo_position_t *)arg = Motor[cmd - PWM_SERVO_GET(0)].RawPwmValue;
 
 		break;
 
@@ -1173,7 +1166,7 @@ mk_new_mode(int update_rate, int motorcount, bool motortest, int px4mode, int fr
 }
 
 int
-mk_start(unsigned motors, char *device_path)
+mk_start(unsigned motors, const char *device_path)
 {
 	int ret;
 
@@ -1232,7 +1225,7 @@ mkblctrl_main(int argc, char *argv[])
 	bool overrideSecurityChecks = false;
 	bool showHelp = false;
 	bool newMode = false;
-	char *devicepath = "";
+	const char *devicepath = "";
 
 	/*
 	 * optional parameters

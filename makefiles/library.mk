@@ -93,7 +93,7 @@ $(info %% LIBRARY_MK          = $(LIBRARY_MK))
 #
 # Get the board/toolchain config
 #
-include $(VRX_MK_DIR)/board_$(BOARD).mk
+include $(PX4_MK_DIR)/board_$(BOARD).mk
 
 #
 # Get the library's config

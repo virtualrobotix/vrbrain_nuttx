@@ -118,6 +118,7 @@ controls_init(void)
 	c_gather_dsm = perf_alloc(PC_ELAPSED, "c_gather_dsm");
 	c_gather_sbus = perf_alloc(PC_ELAPSED, "c_gather_sbus");
 	c_gather_ppm = perf_alloc(PC_ELAPSED, "c_gather_ppm");
+	c_gather_pwm = perf_alloc(PC_ELAPSED, "c_gather_pwm");
 }
 
 void
@@ -171,7 +172,7 @@ controls_tick() {
 #if CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
 	perf_begin(c_gather_sbus);
 
-	bool sbus_status = (r_status_flags & PX4IO_P_STATUS_FLAGS_RC_SBUS);
+//	bool sbus_status = (r_status_flags & PX4IO_P_STATUS_FLAGS_RC_SBUS);
 
 	bool sbus_failsafe, sbus_frame_drop;
 	sbus_updated = sbus_input(r_raw_rc_values, &r_raw_rc_count, &sbus_failsafe, &sbus_frame_drop, PX4IO_RC_INPUT_CHANNELS);

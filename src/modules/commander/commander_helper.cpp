@@ -1,9 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2013 PX4 Development Team. All rights reserved.
- *   Author: Thomas Gubler <thomasgubler@student.ethz.ch>
- *           Julian Oes <joes@student.ethz.ch>
- *           Anton Babushkin <anton.babushkin@me.com>
+ *   Copyright (c) 2013, 2014 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,6 +34,11 @@
 /**
  * @file commander_helper.cpp
  * Commander helper functions implementations
+ *
+ * @author Thomas Gubler <thomasgubler@student.ethz.ch>
+ * @author Julian Oes <julian@oes.ch>
+ * @author Anton Babushkin <anton.babushkin@me.com>
+ *
  */
 
 #include <stdio.h>
@@ -70,16 +72,16 @@ static const int ERROR = -1;
 
 bool is_multirotor(const struct vehicle_status_s *current_status)
 {
-	return ((current_status->system_type == VEHICLE_TYPE_QUADROTOR) ||
-		(current_status->system_type == VEHICLE_TYPE_HEXAROTOR) ||
-		(current_status->system_type == VEHICLE_TYPE_OCTOROTOR) ||
-		(current_status->system_type == VEHICLE_TYPE_TRICOPTER));
+	return ((current_status->system_type == vehicle_status_s::VEHICLE_TYPE_QUADROTOR) ||
+		(current_status->system_type == vehicle_status_s::VEHICLE_TYPE_HEXAROTOR) ||
+		(current_status->system_type == vehicle_status_s::VEHICLE_TYPE_OCTOROTOR) ||
+		(current_status->system_type == vehicle_status_s::VEHICLE_TYPE_TRICOPTER));
 }
 
 bool is_rotary_wing(const struct vehicle_status_s *current_status)
 {
-	return is_multirotor(current_status) || (current_status->system_type == VEHICLE_TYPE_HELICOPTER)
-	       || (current_status->system_type == VEHICLE_TYPE_COAXIAL);
+	return is_multirotor(current_status) || (current_status->system_type == vehicle_status_s::VEHICLE_TYPE_HELICOPTER)
+	       || (current_status->system_type == vehicle_status_s::VEHICLE_TYPE_COAXIAL);
 }
 
 static int buzzer = -1;
@@ -98,7 +100,7 @@ int buzzer_init()
 	tune_durations[TONE_NOTIFY_NEUTRAL_TUNE] = 500000;
 	tune_durations[TONE_ARMING_WARNING_TUNE] = 3000000;
 
-	buzzer = open(TONEALARM_DEVICE_PATH, O_WRONLY);
+	buzzer = open(TONEALARM0_DEVICE_PATH, O_WRONLY);
 
 	if (buzzer < 0) {
 		warnx("Buzzer: open fail\n");
@@ -113,17 +115,22 @@ void buzzer_deinit()
 	close(buzzer);
 }
 
-void set_tune(int tune) {
+void set_tune(int tune)
+{
 	unsigned int new_tune_duration = tune_durations[tune];
+
 	/* don't interrupt currently playing non-repeating tune by repeating */
 	if (tune_end == 0 || new_tune_duration != 0 || hrt_absolute_time() > tune_end) {
 		/* allow interrupting current non-repeating tune by the same tune */
 		if (tune != tune_current || new_tune_duration != 0) {
 			ioctl(buzzer, TONE_SET_ALARM, tune);
 		}
+
 		tune_current = tune;
+
 		if (new_tune_duration != 0) {
 			tune_end = hrt_absolute_time() + new_tune_duration;
+
 		} else {
 			tune_end = 0;
 		}
@@ -138,6 +145,7 @@ void tune_positive(bool use_buzzer)
 	blink_msg_end = hrt_absolute_time() + BLINK_MSG_TIME;
 	rgbled_set_color(RGBLED_COLOR_GREEN);
 	rgbled_set_mode(RGBLED_MODE_BLINK_FAST);
+
 	if (use_buzzer) {
 		set_tune(TONE_NOTIFY_POSITIVE_TUNE);
 	}
@@ -151,6 +159,7 @@ void tune_neutral(bool use_buzzer)
 	blink_msg_end = hrt_absolute_time() + BLINK_MSG_TIME;
 	rgbled_set_color(RGBLED_COLOR_WHITE);
 	rgbled_set_mode(RGBLED_MODE_BLINK_FAST);
+
 	if (use_buzzer) {
 		set_tune(TONE_NOTIFY_NEUTRAL_TUNE);
 	}
@@ -164,6 +173,7 @@ void tune_negative(bool use_buzzer)
 	blink_msg_end = hrt_absolute_time() + BLINK_MSG_TIME;
 	rgbled_set_color(RGBLED_COLOR_RED);
 	rgbled_set_mode(RGBLED_MODE_BLINK_FAST);
+
 	if (use_buzzer) {
 		set_tune(TONE_NOTIFY_NEGATIVE_TUNE);
 	}
@@ -191,37 +201,33 @@ int led_init()
 	blink_msg_end = 0;
 
 	/* first open normal LEDs */
-	leds = open(LED_DEVICE_PATH, 0);
+	leds = open(LED0_DEVICE_PATH, 0);
 
 	if (leds < 0) {
 		warnx("LED: open fail\n");
 		return ERROR;
 	}
 
-	/* the blue LED is only available on FMUv1 but not FMUv2 */
-#ifdef CONFIG_ARCH_BOARD_PX4FMU_V1
+	/* the blue LED is only available on FMUv1 & AeroCore but not FMUv2 */
+	(void)ioctl(leds, LED_ON, LED_BLUE);
 
-	if (ioctl(leds, LED_ON, LED_BLUE)) {
-		warnx("Blue LED: ioctl fail\n");
-		return ERROR;
-	}
+	/* switch blue off */
+	led_off(LED_BLUE);
 
-#endif
-
+	/* we consider the amber led mandatory */
 	if (ioctl(leds, LED_ON, LED_AMBER)) {
 		warnx("Amber LED: ioctl fail\n");
 		return ERROR;
 	}
 
+	/* switch amber off */
+	led_off(LED_AMBER);
+
 	/* then try RGB LEDs, this can fail on FMUv1*/
-	rgbleds = open(RGBLED_DEVICE_PATH, 0);
+	rgbleds = open(RGBLED0_DEVICE_PATH, 0);
 
 	if (rgbleds == -1) {
-#ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
-		errx(1, "Unable to open " RGBLED_DEVICE_PATH);
-#else
-		warnx("No RGB LED found");
-#endif
+		warnx("No RGB LED found at " RGBLED0_DEVICE_PATH);
 	}
 
 	return 0;
@@ -254,33 +260,38 @@ int led_off(int led)
 void rgbled_set_color(rgbled_color_t color)
 {
 
-	if (rgbleds != -1)
+	if (rgbleds != -1) {
 		ioctl(rgbleds, RGBLED_SET_COLOR, (unsigned long)color);
+	}
 }
 
 void rgbled_set_mode(rgbled_mode_t mode)
 {
 
-	if (rgbleds != -1)
+	if (rgbleds != -1) {
 		ioctl(rgbleds, RGBLED_SET_MODE, (unsigned long)mode);
+	}
 }
 
 void rgbled_set_pattern(rgbled_pattern_t *pattern)
 {
 
-	if (rgbleds != -1)
+	if (rgbleds != -1) {
 		ioctl(rgbleds, RGBLED_SET_PATTERN, (unsigned long)pattern);
+	}
 }
 
-float battery_remaining_estimate_voltage(float voltage, float discharged)
+float battery_remaining_estimate_voltage(float voltage, float discharged, float throttle_normalized)
 {
 	float ret = 0;
 	static param_t bat_v_empty_h;
 	static param_t bat_v_full_h;
 	static param_t bat_n_cells_h;
 	static param_t bat_capacity_h;
-	static float bat_v_empty = 3.2f;
-	static float bat_v_full = 4.0f;
+	static param_t bat_v_load_drop_h;
+	static float bat_v_empty = 3.4f;
+	static float bat_v_full = 4.2f;
+	static float bat_v_load_drop = 0.06f;
 	static int bat_n_cells = 3;
 	static float bat_capacity = -1.0f;
 	static bool initialized = false;
@@ -288,27 +299,31 @@ float battery_remaining_estimate_voltage(float voltage, float discharged)
 
 	if (!initialized) {
 		bat_v_empty_h = param_find("BAT_V_EMPTY");
-		bat_v_full_h = param_find("BAT_V_FULL");
+		bat_v_full_h = param_find("BAT_V_CHARGED");
 		bat_n_cells_h = param_find("BAT_N_CELLS");
 		bat_capacity_h = param_find("BAT_CAPACITY");
+		bat_v_load_drop_h = param_find("BAT_V_LOAD_DROP");
 		initialized = true;
 	}
 
 	if (counter % 100 == 0) {
 		param_get(bat_v_empty_h, &bat_v_empty);
 		param_get(bat_v_full_h, &bat_v_full);
+		param_get(bat_v_load_drop_h, &bat_v_load_drop);
 		param_get(bat_n_cells_h, &bat_n_cells);
 		param_get(bat_capacity_h, &bat_capacity);
 	}
 
 	counter++;
 
-	/* remaining charge estimate based on voltage */
-	float remaining_voltage = (voltage - bat_n_cells * bat_v_empty) / (bat_n_cells * (bat_v_full - bat_v_empty));
+	/* remaining charge estimate based on voltage and internal resistance (drop under load) */
+	float bat_v_full_dynamic = bat_v_full - (bat_v_load_drop * throttle_normalized);
+	float remaining_voltage = (voltage - (bat_n_cells * bat_v_empty)) / (bat_n_cells * (bat_v_full_dynamic - bat_v_empty));
 
 	if (bat_capacity > 0.0f) {
 		/* if battery capacity is known, use discharged current for estimate, but don't show more than voltage estimate */
 		ret = fminf(remaining_voltage, 1.0f - discharged / bat_capacity);
+
 	} else {
 		/* else use voltage */
 		ret = remaining_voltage;

@@ -48,26 +48,24 @@
 #include <systemlib/err.h>
 
 ECL_RollController::ECL_RollController() :
-	_last_run(0),
-	_tc(0.1f),
-	_k_p(0.0f),
-	_k_i(0.0f),
-	_k_ff(0.0f),
-	_integrator_max(0.0f),
-	_max_rate(0.0f),
-	_last_output(0.0f),
-	_integrator(0.0f),
-	_rate_error(0.0f),
-	_rate_setpoint(0.0f),
-	_bodyrate_setpoint(0.0f)
+	ECL_Controller("roll")
 {
 }
 
-float ECL_RollController::control_attitude(float roll_setpoint, float roll)
+ECL_RollController::~ECL_RollController()
 {
+}
+
+float ECL_RollController::control_attitude(const struct ECL_ControlData &ctl_data)
+{
+	/* Do not calculate control signal with bad inputs */
+	if (!(isfinite(ctl_data.roll_setpoint) && isfinite(ctl_data.roll))) {
+		perf_count(_nonfinite_input_perf);
+		return _rate_setpoint;
+	}
 
 	/* Calculate error */
-	float roll_error = roll_setpoint - roll;
+	float roll_error = ctl_data.roll_setpoint - ctl_data.roll;
 
 	/* Apply P controller */
 	_rate_setpoint = roll_error / _tc;
@@ -81,49 +79,55 @@ float ECL_RollController::control_attitude(float roll_setpoint, float roll)
 	return _rate_setpoint;
 }
 
-float ECL_RollController::control_bodyrate(float pitch,
-		float roll_rate, float yaw_rate,
-		float yaw_rate_setpoint,
-		float airspeed_min, float airspeed_max, float airspeed, float scaler, bool lock_integrator)
+float ECL_RollController::control_bodyrate(const struct ECL_ControlData &ctl_data)
 {
+	/* Do not calculate control signal with bad inputs */
+	if (!(isfinite(ctl_data.pitch) &&
+				isfinite(ctl_data.roll_rate) &&
+				isfinite(ctl_data.yaw_rate) &&
+				isfinite(ctl_data.yaw_rate_setpoint) &&
+				isfinite(ctl_data.airspeed_min) &&
+				isfinite(ctl_data.airspeed_max) &&
+				isfinite(ctl_data.scaler))) {
+		perf_count(_nonfinite_input_perf);
+		return math::constrain(_last_output, -1.0f, 1.0f);
+	}
+
 	/* get the usual dt estimate */
 	uint64_t dt_micros = ecl_elapsed_time(&_last_run);
 	_last_run = ecl_absolute_time();
 	float dt = (float)dt_micros * 1e-6f;
 
 	/* lock integral for long intervals */
+	bool lock_integrator = ctl_data.lock_integrator;
 	if (dt_micros > 500000)
 		lock_integrator = true;
 
-//	float k_ff = math::max((_k_p - _k_i * _tc) * _tc - _k_d, 0.0f);
-	float k_ff = 0; //xxx: param
-
 	/* input conditioning */
-//	warnx("airspeed pre %.4f", (double)airspeed);
+	float airspeed = ctl_data.airspeed;
 	if (!isfinite(airspeed)) {
 		/* airspeed is NaN, +- INF or not available, pick center of band */
-		airspeed = 0.5f * (airspeed_min + airspeed_max);
-	} else if (airspeed < airspeed_min) {
-		airspeed = airspeed_min;
+		airspeed = 0.5f * (ctl_data.airspeed_min + ctl_data.airspeed_max);
+	} else if (airspeed < ctl_data.airspeed_min) {
+		airspeed = ctl_data.airspeed_min;
 	}
 
+	/* Transform setpoint to body angular rates (jacobian) */
+	_bodyrate_setpoint = _rate_setpoint - sinf(ctl_data.pitch) * ctl_data.yaw_rate_setpoint;
 
-	/* Transform setpoint to body angular rates */
-	_bodyrate_setpoint = _rate_setpoint - sinf(pitch) * yaw_rate_setpoint; //jacobian
-
-	/* Transform estimation to body angular rates */
-	float roll_bodyrate = roll_rate - sinf(pitch) * yaw_rate; //jacobian
+	/* Transform estimation to body angular rates (jacobian) */
+	float roll_bodyrate = ctl_data.roll_rate - sinf(ctl_data.pitch) * ctl_data.yaw_rate;
 
 	/* Calculate body angular rate error */
 	_rate_error = _bodyrate_setpoint - roll_bodyrate; //body angular rate error
 
-	if (!lock_integrator && _k_i > 0.0f && airspeed > 0.5f * airspeed_min) {
+	if (!lock_integrator && _k_i > 0.0f && airspeed > 0.5f * ctl_data.airspeed_min) {
 
-		float id = _rate_error * dt;
+		float id = _rate_error * dt * ctl_data.scaler;
 
 		/*
-		 * anti-windup: do not allow integrator to increase if actuator is at limit
-		 */
+		* anti-windup: do not allow integrator to increase if actuator is at limit
+		*/
 		if (_last_output < -1.0f) {
 			/* only allow motion to center: increase value */
 			id = math::max(id, 0.0f);
@@ -141,13 +145,9 @@ float ECL_RollController::control_bodyrate(float pitch,
 	//warnx("roll: _integrator: %.4f, _integrator_max: %.4f", (double)_integrator, (double)_integrator_max);
 
 	/* Apply PI rate controller and store non-limited output */
-	_last_output = (_bodyrate_setpoint * _k_ff + _rate_error * _k_p + integrator_constrained) * scaler * scaler;  //scaler is proportional to 1/airspeed
+	_last_output = _bodyrate_setpoint * _k_ff * ctl_data.scaler +
+		_rate_error * _k_p * ctl_data.scaler * ctl_data.scaler
+		+ integrator_constrained;  //scaler is proportional to 1/airspeed
 
 	return math::constrain(_last_output, -1.0f, 1.0f);
 }
-
-void ECL_RollController::reset_integrator()
-{
-	_integrator = 0.0f;
-}
-

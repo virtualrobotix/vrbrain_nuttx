@@ -89,7 +89,7 @@
 
 /* Device limits */
 #define LL40LS_MIN_DISTANCE (0.00f)
-#define LL40LS_MAX_DISTANCE (14.00f)
+#define LL40LS_MAX_DISTANCE (60.00f)
 
 #define LL40LS_CONVERSION_INTERVAL 100000 /* 100ms */
 
@@ -206,8 +206,8 @@ LL40LS::LL40LS(int bus, const char *path, int address) :
 	_sensor_ok(false),
 	_measure_ticks(0),
 	_collect_phase(false),
-	_range_finder_topic(-1),
 	_class_instance(-1),
+	_range_finder_topic(-1),
 	_sample_perf(perf_alloc(PC_ELAPSED, "ll40ls_read")),
 	_comms_errors(perf_alloc(PC_COUNT, "ll40ls_comms_errors")),
 	_buffer_overflows(perf_alloc(PC_COUNT, "ll40ls_buffer_overflows")),
@@ -233,11 +233,11 @@ LL40LS::~LL40LS()
 	if (_reports != nullptr) {
 		delete _reports;
 	}
-	
+
 	if (_class_instance != -1) {
-		unregister_class_devname(RANGE_FINDER_DEVICE_PATH, _class_instance);
+		unregister_class_devname(RANGE_FINDER_BASE_DEVICE_PATH, _class_instance);
 	}
-	
+
 	// free perf counters
 	perf_free(_sample_perf);
 	perf_free(_comms_errors);
@@ -261,9 +261,9 @@ LL40LS::init()
 		goto out;
 	}
 
-	_class_instance = register_class_devname(RANGE_FINDER_DEVICE_PATH);
+	_class_instance = register_class_devname(RANGE_FINDER_BASE_DEVICE_PATH);
 
-	if (_class_instance == CLASS_DEVICE_PRIMARY) {	
+	if (_class_instance == CLASS_DEVICE_PRIMARY) {
 		/* get a publish handle on the range finder topic */
 		struct range_finder_report rf_report;
 		measure();
@@ -314,9 +314,9 @@ LL40LS::probe()
 			goto ok;
 		}
 
-		debug("WHO_AM_I byte mismatch 0x%02x should be 0x%02x val=0x%02x\n", 
-		      (unsigned)who_am_i, 
-		      LL40LS_WHO_AM_I_REG_VAL, 
+		debug("WHO_AM_I byte mismatch 0x%02x should be 0x%02x val=0x%02x\n",
+		      (unsigned)who_am_i,
+		      LL40LS_WHO_AM_I_REG_VAL,
 		      (unsigned)val);
 	}
 
@@ -581,6 +581,8 @@ LL40LS::collect()
 	report.timestamp = hrt_absolute_time();
 	report.error_count = perf_event_count(_comms_errors);
 	report.distance = si_units;
+	report.minimum_distance = get_minimum_distance();
+	report.maximum_distance = get_maximum_distance();
 	if (si_units > get_minimum_distance() && si_units < get_maximum_distance()) {
 		report.valid = 1;
 	}
@@ -704,7 +706,7 @@ LL40LS::print_info()
 	perf_print_counter(_buffer_overflows);
 	printf("poll interval:  %u ticks\n", _measure_ticks);
 	_reports->print_info("report queue");
-	printf("distance: %ucm (0x%04x)\n", 
+	printf("distance: %ucm (0x%04x)\n",
 	       (unsigned)_last_distance, (unsigned)_last_distance);
 }
 
@@ -737,13 +739,16 @@ void
 start(int bus)
 {
 	/* create the driver, attempt expansion bus first */
-	if (bus == -1 || bus == PX4_I2C_BUS_EXPANSION) {
+	if (bus == -1 || bus == I2C_BUS_LL40LS) {
 		if (g_dev_ext != nullptr)
 			errx(0, "already started external");
-		g_dev_ext = new LL40LS(PX4_I2C_BUS_EXPANSION, LL40LS_DEVICE_PATH_EXT);
+		g_dev_ext = new LL40LS(I2C_BUS_LL40LS, LL40LS_DEVICE_PATH_EXT);
 		if (g_dev_ext != nullptr && OK != g_dev_ext->init()) {
 			delete g_dev_ext;
 			g_dev_ext = nullptr;
+			if (bus == I2C_BUS_LL40LS) {
+				goto fail;
+			}
 		}
 	}
 
@@ -796,11 +801,13 @@ start(int bus)
 	exit(0);
 
 fail:
+#ifdef PX4_I2C_BUS_ONBOARD
 	if (g_dev_int != nullptr && (bus == -1 || bus == PX4_I2C_BUS_ONBOARD)) {
 		delete g_dev_int;
 		g_dev_int = nullptr;
 	}
-	if (g_dev_ext != nullptr && (bus == -1 || bus == PX4_I2C_BUS_EXPANSION)) {
+#endif
+	if (g_dev_ext != nullptr && (bus == -1 || bus == I2C_BUS_LL40LS)) {
 		delete g_dev_ext;
 		g_dev_ext = nullptr;
 	}
@@ -813,7 +820,7 @@ fail:
  */
 void stop(int bus)
 {
-	LL40LS **g_dev = (bus == PX4_I2C_BUS_ONBOARD?&g_dev_int:&g_dev_ext);
+	LL40LS **g_dev = (bus == I2C_BUS_LL40LS?&g_dev_ext:&g_dev_int);
 	if (*g_dev != nullptr) {
 		delete *g_dev;
 		*g_dev = nullptr;
@@ -836,7 +843,7 @@ test(int bus)
 	struct range_finder_report report;
 	ssize_t sz;
 	int ret;
-	const char *path = (bus==PX4_I2C_BUS_ONBOARD?LL40LS_DEVICE_PATH_INT:LL40LS_DEVICE_PATH_EXT);
+	const char *path = (bus==I2C_BUS_LL40LS?LL40LS_DEVICE_PATH_EXT:LL40LS_DEVICE_PATH_INT);
 
 	int fd = open(path, O_RDONLY);
 
@@ -899,7 +906,7 @@ test(int bus)
 void
 reset(int bus)
 {
-	const char *path = (bus==PX4_I2C_BUS_ONBOARD?LL40LS_DEVICE_PATH_INT:LL40LS_DEVICE_PATH_EXT);
+	const char *path = (bus==I2C_BUS_LL40LS?LL40LS_DEVICE_PATH_EXT:LL40LS_DEVICE_PATH_INT);
 	int fd = open(path, O_RDONLY);
 
 	if (fd < 0) {
@@ -923,7 +930,7 @@ reset(int bus)
 void
 info(int bus)
 {
-	LL40LS *g_dev = (bus == PX4_I2C_BUS_ONBOARD?g_dev_int:g_dev_ext);
+	LL40LS *g_dev = (bus == I2C_BUS_LL40LS?g_dev_ext:g_dev_int);
 	if (g_dev == nullptr) {
 		errx(1, "driver not running");
 	}
@@ -961,7 +968,7 @@ ll40ls_main(int argc, char *argv[])
 			break;
 #endif
 		case 'X':
-			bus = PX4_I2C_BUS_EXPANSION;
+			bus = I2C_BUS_LL40LS;
 			break;
 		default:
 			ll40ls::usage();
@@ -969,8 +976,8 @@ ll40ls_main(int argc, char *argv[])
 		}
 	}
 
-	const char *verb = argv[optind];	
-	
+	const char *verb = argv[optind];
+
 	/*
 	 * Start/load the driver.
 	 */

@@ -150,28 +150,32 @@ __BEGIN_DECLS
 #define GPIO_SPI_CS_EEPROM       GPIO_SPI_CS_RAMTRON
 #endif
 
-#define SPI_BUS_AT45BD		 3
-#define SPI_BUS_RAMTRON		 3
 #define SPI_BUS_MS5611		 1
-#define SPI_BUS_IMU_MS5611	 2
 #define SPI_BUS_EXP_MS5611	 1
-#define SPI_BUS_MPU6000 	 2
-#define SPI_BUS_IMU_MPU6000	 2
 #define SPI_BUS_EXP_MPU6000	 1
-#define SPI_BUS_SDCARD		 3
-#define SPI_BUS_IMU_HMC5983	 2
 #define SPI_BUS_EXP_HMC5983	 1
-#define SPI_BUS_IMU_EEPROM	 2
 #define SPI_BUS_EXP_WIFI	 1
 #define SPI_BUS_EXP_EEPROM	 1
+#define SPI_BUS_MPU6000 	 2
+#define SPI_BUS_IMU_MS5611	 2
+#define SPI_BUS_IMU_MPU6000	 2
+#define SPI_BUS_IMU_HMC5983	 2
+#define SPI_BUS_IMU_EEPROM	 2
+#define SPI_BUS_AT45BD		 3
+#define SPI_BUS_RAMTRON		 3
+#define SPI_BUS_SDCARD		 3
+
+//#define PX4_SPI_BUS_SENSORS	 1
+//#define PX4_SPIDEV_GYRO      1
+//#define PX4_SPIDEV_ACCEL_MAG 1
 
 /*
  * Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI1
  */
-#define SPIDEV_MS5611		50
-#define SPIDEV_EXP_MS5611	51
-#define SPIDEV_EXP_MPU6000	52
-#define SPIDEV_EXP_HMC5983	53
+#define SPIDEV_MS5611		1
+#define SPIDEV_EXP_MS5611	2
+#define SPIDEV_EXP_MPU6000	3
+#define SPIDEV_EXP_HMC5983	4
 
 
 
@@ -181,11 +185,10 @@ __BEGIN_DECLS
 /*
  * Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI2
  */
-#define SPIDEV_MPU6000  	54
-#define SPIDEV_IMU_MS5611	55
-#define SPIDEV_IMU_MPU6000	56
-#define SPIDEV_IMU_HMC5983	57
-#define SPIDEV_IMU_EEPROM	58
+#define SPIDEV_MPU6000  	1
+#define SPIDEV_IMU_MS5611	2
+#define SPIDEV_IMU_MPU6000	3
+#define SPIDEV_IMU_HMC5983	4
 
 /*
  * Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI3
@@ -196,17 +199,29 @@ __BEGIN_DECLS
  */
 #define I2C_BUS_HMC5883			2
 #define I2C_BUS_EXT_HMC5883		1
+
+//#define PX4_I2C_BUS_EXPANSION   1
+//#define PX4_I2C_BUS_DEFAULT     2
+
 #define I2C_BUS_MEAS_AIRSPEED	1
 #define I2C_BUS_MB12XX          1
 #define I2C_BUS_RGBLED          1
-
-
+#define I2C_BUS_BLINKM          1
+#define I2C_BUS_ETS_AIRSPEED    1
+#define I2C_BUS_LL40LS          1
+#define I2C_BUS_PX4FLOW         1
+#define I2C_BUS_OREOLED         1
+#define I2C_BUS_TRONE           1
+#define I2C_BUS_PCA8574         1
+#define I2C_BUS_PCA9685         1
+#define I2C_BUS_BATT_SMBUS      1
 /*
  * Devices on the onboard bus.
  *
  * Note that these are unshifted addresses.
  */
-#define I2CDEV_HMC5883    0x1E
+#define PX4_I2C_OBDEV_LED        0x55
+#define PX4_I2C_OBDEV_HMC5883    0x1E
 
 /* User GPIOs ********************/
 #if !APM_BUILD_TYPE(APM_BUILD_ArduPlane)
@@ -222,8 +237,6 @@ __BEGIN_DECLS
 
 /* WIFI **************************/
 
-#define GPIO_EXP_WIFI_EN  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN7)
-#define GPIO_EXP_WIFI_INT (GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTE|GPIO_PIN8)
 
 /* SBUS **************************/
 
@@ -315,6 +328,29 @@ enum BusSensor {
  ****************************************************************************************************/
 
 extern void stm32_spiinitialize(void);
+
+extern void stm32_usbinitialize(void);
+
+/****************************************************************************
+ * Name: nsh_archinitialize
+ *
+ * Description:
+ *   Perform architecture specific initialization for NSH.
+ *
+ *   CONFIG_NSH_ARCHINIT=y :
+ *     Called from the NSH library
+ *
+ *   CONFIG_BOARD_INITIALIZE=y, CONFIG_NSH_LIBRARY=y, &&
+ *   CONFIG_NSH_ARCHINIT=n :
+ *     Called from board_initialize().
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_NSH_LIBRARY
+int nsh_archinitialize(void);
+#endif
+
+int usbmsc_archinitialize(void);
 
 #endif /* __ASSEMBLY__ */
 

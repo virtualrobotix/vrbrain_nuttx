@@ -65,10 +65,9 @@ int test_ppm_loopback(int argc, char *argv[])
 	int _rc_sub = orb_subscribe(ORB_ID(input_rc));
 
 	int servo_fd, result;
-	servo_position_t data[PWM_OUTPUT_MAX_CHANNELS];
 	servo_position_t pos;
 
-	servo_fd = open(PWM_OUTPUT_DEVICE_PATH, O_RDWR);
+	servo_fd = open(PWM_OUTPUT0_DEVICE_PATH, O_RDWR);
 
 	if (servo_fd < 0) {
 		printf("failed opening /dev/pwm_servo\n");

@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2013 Estimation and Control Library (ECL). All rights reserved.
+ *   Copyright (c) 2013, 2014 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name ECL nor the names of its contributors may be
+ * 3. Neither the name PX4 nor the names of its contributors may be
  *    used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -30,12 +30,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-
 /**
  * @file launchDetection.cpp
  * Auto Detection for different launch methods (e.g. catapult)
  *
- * Authors and acknowledgements in header.
+ * @author Thomas Gubler <thomasgubler@gmail.com>
  */
 
 #include "LaunchDetector.h"
@@ -47,6 +46,7 @@ namespace launchdetection
 
 LaunchDetector::LaunchDetector() :
 	SuperBlock(NULL, "LAUN"),
+	activeLaunchDetectionMethodIndex(-1),
 	launchdetection_on(this, "ALL_ON"),
 	throttlePreTakeoff(this, "THR_PRE")
 {
@@ -66,7 +66,14 @@ LaunchDetector::~LaunchDetector()
 void LaunchDetector::reset()
 {
 	/* Reset all detectors */
-	launchMethods[0]->reset();
+	for (uint8_t i = 0; i < sizeof(launchMethods)/sizeof(LaunchMethod); i++) {
+		launchMethods[i]->reset();
+	}
+
+	/* Reset active launchdetector */
+	activeLaunchDetectionMethodIndex  = -1;
+
+
 }
 
 void LaunchDetector::update(float accel_x)
@@ -78,17 +85,44 @@ void LaunchDetector::update(float accel_x)
 	}
 }
 
-bool LaunchDetector::getLaunchDetected()
+LaunchDetectionResult LaunchDetector::getLaunchDetected()
 {
 	if (launchdetection_on.get() == 1) {
-		for (uint8_t i = 0; i < sizeof(launchMethods)/sizeof(LaunchMethod); i++) {
-			if(launchMethods[i]->getLaunchDetected()) {
-				return true;
+		if (activeLaunchDetectionMethodIndex < 0) {
+		/* None of the active launchmethods has detected a launch, check all launchmethods */
+			for (uint8_t i = 0; i < sizeof(launchMethods)/sizeof(LaunchMethod); i++) {
+				if(launchMethods[i]->getLaunchDetected() != LAUNCHDETECTION_RES_NONE) {
+					warnx("selecting launchmethod %d", i);
+					activeLaunchDetectionMethodIndex = i; // from now on only check this method
+					return launchMethods[i]->getLaunchDetected();
+				}
 			}
+		} else {
+			return launchMethods[activeLaunchDetectionMethodIndex]->getLaunchDetected();
 		}
 	}
 
-	return false;
+	return LAUNCHDETECTION_RES_NONE;
 }
+
+float LaunchDetector::getPitchMax(float pitchMaxDefault) {
+	if (!launchdetection_on.get()) {
+		return pitchMaxDefault;
+	}
+
+	/* if a lauchdetectionmethod is active or only one exists return the pitch limit from this method,
+	 * otherwise use the default limit */
+	if (activeLaunchDetectionMethodIndex < 0) {
+		if (sizeof(launchMethods)/sizeof(LaunchMethod) > 1) {
+			return pitchMaxDefault;
+		} else {
+			return launchMethods[0]->getPitchMax(pitchMaxDefault);
+		}
+	} else {
+		return launchMethods[activeLaunchDetectionMethodIndex]->getPitchMax(pitchMaxDefault);
+	}
+
+}
+
 
 }

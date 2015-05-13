@@ -42,9 +42,9 @@ SRCS			 = test_adc.c \
 			   test_hrt.c \
 			   test_led.c \
 			   test_sensors.c \
+			   test_mathlib.cpp \
 			   tests_main.c \
 			   test_rc.c \
-			   test_mtd.c \
 			   test_buzzer.c \
 			   test_uart_bridge.c
 endif
@@ -54,9 +54,9 @@ SRCS			 = test_adc.c \
 			   test_hrt.c \
 			   test_led.c \
 			   test_sensors.c \
+			   test_mathlib.cpp \
 			   tests_main.c \
 			   test_rc.c \
-			   test_mtd.c \
 			   test_buzzer.c \
 			   test_uart_bridge.c
 endif
@@ -66,18 +66,11 @@ SRCS			 = test_adc.c \
 			   test_hrt.c \
 			   test_led.c \
 			   test_sensors.c \
+			   test_mathlib.cpp \
 			   tests_main.c \
 			   test_rc.c \
-			   test_mtd.c \
 			   test_buzzer.c \
 			   test_uart_bridge.c
 endif
 
-ifneq ($(findstring VRHERO_V1, $(CONFIG_BOARD)),)
-SRCS			 = test_adc.c \
-			   test_hrt.c \
-			   test_led.c \
-			   test_sensors.c \
-			   test_mtd.c \
-			   tests_main.c
-endif
+EXTRACXXFLAGS = -Wframe-larger-than=2500 -Wno-float-equal -Wno-double-promotion

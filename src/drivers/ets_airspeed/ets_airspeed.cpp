@@ -155,7 +155,6 @@ ETSAirspeed::collect()
 	}
 
 	uint16_t diff_pres_pa_raw = val[1] << 8 | val[0];
-	uint16_t diff_pres_pa;
         if (diff_pres_pa_raw == 0) {
 		// a zero value means the pressure sensor cannot give us a
 		// value. We need to return, and not report a value or the
@@ -166,24 +165,22 @@ ETSAirspeed::collect()
 		return -1;
         }
 
-	if (diff_pres_pa_raw < _diff_pres_offset + MIN_ACCURATE_DIFF_PRES_PA) {
-		diff_pres_pa = 0;
-	} else {
-		diff_pres_pa = diff_pres_pa_raw - _diff_pres_offset;
-	}
+	// The raw value still should be compensated for the known offset
+	diff_pres_pa_raw -= _diff_pres_offset;
 
 	// Track maximum differential pressure measured (so we can work out top speed).
-	if (diff_pres_pa > _max_differential_pressure_pa) {
-		_max_differential_pressure_pa = diff_pres_pa;
+	if (diff_pres_pa_raw > _max_differential_pressure_pa) {
+		_max_differential_pressure_pa = diff_pres_pa_raw;
 	}
 
-	// XXX we may want to smooth out the readings to remove noise.
 	differential_pressure_s report;
 	report.timestamp = hrt_absolute_time();
         report.error_count = perf_event_count(_comms_errors);
-	report.differential_pressure_pa = (float)diff_pres_pa;
-	report.differential_pressure_raw_pa = (float)diff_pres_pa_raw;
-	report.voltage = 0;
+
+	// XXX we may want to smooth out the readings to remove noise.
+	report.differential_pressure_filtered_pa = diff_pres_pa_raw;
+	report.differential_pressure_raw_pa = diff_pres_pa_raw;
+	report.temperature = -1000.0f;
 	report.max_differential_pressure_pa = _max_differential_pressure_pa;
 
 	if (_airspeed_pub > 0 && !(_pub_blocked)) {
@@ -206,14 +203,18 @@ ETSAirspeed::collect()
 void
 ETSAirspeed::cycle()
 {
+	int ret;
+
 	/* collection phase? */
 	if (_collect_phase) {
 
 		/* perform collection */
-		if (OK != collect()) {
+		ret = collect();
+		if (OK != ret) {
 			perf_count(_comms_errors);
 			/* restart the measurement state machine */
 			start();
+			_sensor_ok = false;
 			return;
 		}
 
@@ -237,8 +238,12 @@ ETSAirspeed::cycle()
 	}
 
 	/* measurement phase */
-	if (OK != measure())
-		log("measure error");
+	ret = measure();
+	if (OK != ret) {
+		debug("measure error");
+	}
+
+	_sensor_ok = (ret == OK);
 
 	/* next phase is collection */
 	_collect_phase = true;
@@ -273,6 +278,9 @@ void	info();
 
 /**
  * Start the driver.
+ *
+ * This function only returns if the sensor is up and running
+ * or could not be detected successfully.
  */
 void
 start(int i2c_bus)
@@ -341,10 +349,10 @@ test()
 	ssize_t sz;
 	int ret;
 
-	int fd = open(AIRSPEED_DEVICE_PATH, O_RDONLY);
+	int fd = open(ETS_PATH, O_RDONLY);
 
 	if (fd < 0)
-		err(1, "%s open failed (try 'ets_airspeed start' if the driver is not running", AIRSPEED_DEVICE_PATH);
+		err(1, "%s open failed (try 'ets_airspeed start' if the driver is not running", ETS_PATH);
 
 	/* do a simple demand read */
 	sz = read(fd, &report, sizeof(report));
@@ -353,7 +361,7 @@ test()
 		err(1, "immediate read failed");
 
 	warnx("single read");
-	warnx("diff pressure: %d pa", report.differential_pressure_pa);
+	warnx("diff pressure: %f pa", (double)report.differential_pressure_filtered_pa);
 
 	/* start the sensor polling at 2Hz */
 	if (OK != ioctl(fd, SENSORIOCSPOLLRATE, 2))
@@ -378,7 +386,7 @@ test()
 			err(1, "periodic read failed");
 
 		warnx("periodic read %u", i);
-		warnx("diff pressure: %d pa", report.differential_pressure_pa);
+		warnx("diff pressure: %f pa", (double)report.differential_pressure_filtered_pa);
 	}
 
 	/* reset the sensor polling to its default rate */
@@ -394,7 +402,7 @@ test()
 void
 reset()
 {
-	int fd = open(AIRSPEED_DEVICE_PATH, O_RDONLY);
+	int fd = open(ETS_PATH, O_RDONLY);
 
 	if (fd < 0)
 		err(1, "failed ");
@@ -431,7 +439,7 @@ ets_airspeed_usage()
 {
 	warnx("usage: ets_airspeed command [options]");
 	warnx("options:");
-	warnx("\t-b --bus i2cbus (%d)", PX4_I2C_BUS_DEFAULT);
+	warnx("\t-b --bus i2cbus (%d)", I2C_BUS_ETS_AIRSPEED);
 	warnx("command:");
 	warnx("\tstart|stop|reset|test|info");
 }
@@ -439,7 +447,7 @@ ets_airspeed_usage()
 int
 ets_airspeed_main(int argc, char *argv[])
 {
-	int i2c_bus = PX4_I2C_BUS_DEFAULT;
+	int i2c_bus = I2C_BUS_ETS_AIRSPEED;
 
 	int i;
 

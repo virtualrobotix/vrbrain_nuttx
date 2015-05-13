@@ -2,7 +2,7 @@
 # Rules and tools for uploading firmware to various PX4 boards.
 #
 
-UPLOADER		 = $(VRX_BASE)/Tools/px_uploader.py
+UPLOADER		 = $(PX4_BASE)/Tools/px_uploader.py
 
 SYSTYPE			:= $(shell uname -s)
 
@@ -29,6 +29,11 @@ upload-serial-px4fmu-v1:	$(BUNDLE) $(UPLOADER)
 
 upload-serial-px4fmu-v2:	$(BUNDLE) $(UPLOADER)
 	$(Q) $(PYTHON) -u $(UPLOADER) --port $(SERIAL_PORTS) $(BUNDLE)
+
+upload-serial-aerocore:
+	openocd -f $(PX4_BASE)/makefiles/gumstix-aerocore.cfg -c 'init; reset halt; flash write_image erase $(PX4_BASE)/../Bootloader/px4aerocore_bl.bin 0x08000000; flash write_image erase $(PX4_BASE)/Build/aerocore_default.build/firmware.bin 0x08004000; reset run; exit'
+
+
 
 #
 # JTAG firmware uploading with OpenOCD

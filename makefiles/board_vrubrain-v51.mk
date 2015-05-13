@@ -8,4 +8,4 @@
 CONFIG_ARCH			 = CORTEXM4F
 CONFIG_BOARD		 = VRUBRAIN_V51
 
-include $(VRX_MK_DIR)/toolchain_gnu-arm-eabi.mk
+include $(PX4_MK_DIR)/toolchain_gnu-arm-eabi.mk

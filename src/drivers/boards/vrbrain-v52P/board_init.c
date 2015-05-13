@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2012, 2013 PX4 Development Team. All rights reserved.
+ *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -58,9 +58,9 @@
 #include <nuttx/mmcsd.h>
 #include <nuttx/analog/adc.h>
 
-#include "stm32.h"
+#include <stm32.h>
 #include "board_config.h"
-#include "stm32_uart.h"
+#include <stm32_uart.h>
 
 #include <arch/board/board.h>
 
@@ -92,11 +92,18 @@
 #  endif
 #endif
 
+/*
+ * Ideally we'd be able to get these from up_internal.h,
+ * but since we want to be able to disable the NuttX use
+ * of leds for system indication at will and there is no
+ * separate switch, we need to build independent of the
+ * CONFIG_ARCH_LEDS configuration switch.
+ */
 __BEGIN_DECLS
-extern void led_init();
+extern void led_init(void);
 extern void led_on(int led);
 extern void led_off(int led);
-extern void buzzer_init();
+extern void buzzer_init(void);
 extern void buzzer_on(int buzzer);
 extern void buzzer_off(int buzzer);
 __END_DECLS
@@ -119,11 +126,9 @@ __END_DECLS
  *
  ************************************************************************************/
 
-__EXPORT void stm32_boardinitialize(void)
+__EXPORT void
+stm32_boardinitialize(void)
 {
-	/* enable sys logs */
-	//syslog_enable(true);
-
 	/* configure SPI interfaces */
 	stm32_spiinitialize();
 
@@ -176,16 +181,16 @@ __EXPORT int matherr(struct exception *e)
 }
 #endif
 
-__EXPORT int composite_archinitialize(void)
-{
-  return OK;
-}
-
-__EXPORT int cdcacm_archinitialize(void)
-{
-  return OK;
-}
-
+//__EXPORT int composite_archinitialize(void)
+//{
+//  return OK;
+//}
+//
+//__EXPORT int cdcacm_archinitialize(void)
+//{
+//  return OK;
+//}
+//
 __EXPORT int usbmsc_archinitialize(void)
 {
   return OK;
@@ -211,7 +216,7 @@ __EXPORT int nsh_archinitialize(void)
 	stm32_configgpio(GPIO_ADC1_IN11);
 
 	stm32_configgpio(GPIO_UART_SBUS_INVERTER);
-#ifdef CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
+#if CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
 	stm32_gpiowrite(GPIO_UART_SBUS_INVERTER, 1);
 #else
 	stm32_gpiowrite(GPIO_UART_SBUS_INVERTER, 0);
@@ -271,17 +276,15 @@ __EXPORT int nsh_archinitialize(void)
 	SPI_SETFREQUENCY(spi1, 10000000);
 	SPI_SETBITS(spi1, 8);
 	SPI_SETMODE(spi1, SPIDEV_MODE3);
-	SPI_SELECT(spi1, GPIO_SPI_CS_MS5611, false);
-	SPI_SELECT(spi1, GPIO_SPI_CS_EXP_MS5611, false);
-	SPI_SELECT(spi1, GPIO_SPI_CS_EXP_MPU6000, false);
-	SPI_SELECT(spi1, GPIO_SPI_CS_EXP_HMC5983, false);
-	SPI_SELECT(spi1, GPIO_SPI_CS_EXP_WIFI_EEPROM, false);
+	SPI_SELECT(spi1, SPIDEV_WIRELESS, false);
+	SPI_SELECT(spi1, SPIDEV_FLASH, false);
+	SPI_SELECT(spi1, SPIDEV_MS5611, false);
+	SPI_SELECT(spi1, SPIDEV_EXP_MS5611, false);
+	SPI_SELECT(spi1, SPIDEV_EXP_MPU6000, false);
+	SPI_SELECT(spi1, SPIDEV_EXP_HMC5983, false);
 	up_udelay(20);
 
 	message("[boot] Successfully initialized SPI port 1\r\n");
-
-//	message("[boot] Initializing Wireless Module\n");
-//	wireless_archinitialize();
 
 	message("[boot] Initializing SPI port 2\n");
 	spi2 = up_spiinitialize(2);
@@ -296,11 +299,11 @@ __EXPORT int nsh_archinitialize(void)
 	SPI_SETFREQUENCY(spi2, 10000000);
 	SPI_SETBITS(spi2, 8);
 	SPI_SETMODE(spi2, SPIDEV_MODE3);
-	SPI_SELECT(spi2, GPIO_SPI_CS_MPU6000, false);
-	SPI_SELECT(spi2, GPIO_SPI_CS_IMU_MS5611, false);
-	SPI_SELECT(spi2, GPIO_SPI_CS_IMU_MPU6000, false);
-	SPI_SELECT(spi2, GPIO_SPI_CS_IMU_HMC5983, false);
-	SPI_SELECT(spi2, GPIO_SPI_CS_IMU_EEPROM, false);
+	SPI_SELECT(spi2, SPIDEV_MPU6000, false);
+	SPI_SELECT(spi2, SPIDEV_IMU_MS5611, false);
+	SPI_SELECT(spi2, SPIDEV_IMU_MPU6000, false);
+	SPI_SELECT(spi2, SPIDEV_IMU_HMC5983, false);
+	SPI_SELECT(spi2, SPIDEV_FLASH, false);
 
 	message("[boot] Successfully initialized SPI port 2\n");
 
@@ -319,9 +322,8 @@ __EXPORT int nsh_archinitialize(void)
 	SPI_SETFREQUENCY(spi3, 10000000);
 	SPI_SETBITS(spi3, 8);
 	SPI_SETMODE(spi3, SPIDEV_MODE3);
-	SPI_SELECT(spi3, GPIO_SPI_CS_DATAFLASH, false);
-	SPI_SELECT(spi3, GPIO_SPI_CS_EEPROM, false);
-	SPI_SELECT(spi3, GPIO_SPI_CS_SDCARD, false);
+	SPI_SELECT(spi3, SPIDEV_MMCSD, false);
+	SPI_SELECT(spi3, SPIDEV_FLASH, false);
 
 	message("[boot] Successfully initialized SPI port 3\n");
 

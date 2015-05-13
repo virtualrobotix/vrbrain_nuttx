@@ -46,8 +46,8 @@
 
 // forward declaration
 namespace uORB {
-	class SubscriptionBase;
-	class PublicationBase;
+	class SubscriptionNode;
+	class PublicationNode;
 }
 
 namespace control
@@ -83,16 +83,21 @@ public:
 protected:
 // accessors
 	SuperBlock *getParent() { return _parent; }
-	List<uORB::SubscriptionBase *> & getSubscriptions() { return _subscriptions; }
-	List<uORB::PublicationBase *> & getPublications() { return _publications; }
+	List<uORB::SubscriptionNode *> & getSubscriptions() { return _subscriptions; }
+	List<uORB::PublicationNode *> & getPublications() { return _publications; }
 	List<BlockParamBase *> & getParams() { return _params; }
 // attributes
 	const char *_name;
 	SuperBlock *_parent;
 	float _dt;
-	List<uORB::SubscriptionBase *> _subscriptions;
-	List<uORB::PublicationBase *> _publications;
+	List<uORB::SubscriptionNode *> _subscriptions;
+	List<uORB::PublicationNode *> _publications;
 	List<BlockParamBase *> _params;
+
+private:
+	/* this class has pointer data members and should not be copied (private constructor) */
+	Block(const control::Block&);
+	Block operator=(const control::Block&);
 };
 
 class __EXPORT SuperBlock :

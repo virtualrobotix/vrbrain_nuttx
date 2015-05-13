@@ -37,35 +37,39 @@
 # Some useful paths.
 #
 # Note that in general we always keep directory paths with the separator
-# at the end, and join paths without explicit separators. This reduces 
+# at the end, and join paths without explicit separators. This reduces
 # the number of duplicate slashes we have lying around in paths,
 # and is consistent with joining the results of $(dir) and $(notdir).
 #
-export VRX_INCLUDE_DIR	= $(abspath $(VRX_BASE)/src/include)/
-export VRX_MODULE_SRC	= $(abspath $(VRX_BASE)/src)/
-export VRX_LIB_DIR	= $(abspath $(VRX_BASE)/src/lib)/
-export VRX_MK_DIR	= $(abspath $(VRX_BASE)/makefiles)/
-export NUTTX_SRC	= $(abspath $(VRX_BASE)/NuttX/nuttx)/
-export NUTTX_APP_SRC	= $(abspath $(VRX_BASE)/NuttX/apps)/
-export MAVLINK_SRC	= $(abspath $(VRX_BASE)/mavlink)/
-export ROMFS_SRC	= $(abspath $(VRX_BASE)/ROMFS)/
-export IMAGE_DIR	= $(abspath $(VRX_BASE)/Images)/
-export BUILD_DIR	= $(abspath $(VRX_BASE)/Build)/
-export ARCHIVE_DIR	= $(abspath $(VRX_BASE)/Archives)/
+export PX4_INCLUDE_DIR	 = $(abspath $(PX4_BASE)/src/include)/
+export PX4_MODULE_SRC	 = $(abspath $(PX4_BASE)/src)/
+export PX4_LIB_DIR	 = $(abspath $(PX4_BASE)/src/lib)/
+export PX4_PLATFORMS_DIR = $(abspath $(PX4_BASE)/src/platforms)/
+export PX4_MK_DIR	 = $(abspath $(PX4_BASE)/makefiles)/
+export NUTTX_SRC	 = $(abspath $(PX4_BASE)/NuttX/nuttx)/
+export MAVLINK_SRC	 = $(abspath $(PX4_BASE)/mavlink/include/mavlink/v1.0)/
+export NUTTX_APP_SRC	 = $(abspath $(PX4_BASE)/NuttX/apps)/
+export MAVLINK_SRC	 = $(abspath $(PX4_BASE)/mavlink)/
+export UAVCAN_DIR	 = $(abspath $(PX4_BASE)/uavcan)/
+export ROMFS_SRC	 = $(abspath $(PX4_BASE)/ROMFS)/
+export IMAGE_DIR	 = $(abspath $(PX4_BASE)/Images)/
+export BUILD_DIR	 = $(abspath $(PX4_BASE)/Build)/
+export ARCHIVE_DIR	 = $(abspath $(PX4_BASE)/Archives)/
 
 #
 # Default include paths
 #
-export INCLUDE_DIRS	:= $(VRX_MODULE_SRC) \
-			   $(VRX_MODULE_SRC)/modules/ \
-			   $(VRX_INCLUDE_DIR) \
-			   $(VRX_LIB_DIR)
+export INCLUDE_DIRS	:= $(PX4_MODULE_SRC) \
+			   $(PX4_MODULE_SRC)/modules/ \
+			   $(PX4_INCLUDE_DIR) \
+			   $(PX4_LIB_DIR) \
+			   $(PX4_PLATFORMS_DIR)
 
 #
 # Tools
 #
-export MKFW		 = $(VRX_BASE)/Tools/px_mkfw.py
-export UPLOADER		 = $(VRX_BASE)/Tools/px_uploader.py
+export MKFW		 = $(PX4_BASE)/Tools/px_mkfw.py
+export UPLOADER		 = $(PX4_BASE)/Tools/px_uploader.py
 export COPY		 = cp
 export COPYDIR		 = cp -Rf
 export REMOVE		 = rm -f
@@ -78,6 +82,7 @@ export ECHO		 = echo
 export UNZIP_CMD	 = unzip
 export PYTHON		 = python
 export OPENOCD		 = openocd
+export GREP		 = grep
 
 #
 # Host-specific paths, hacks and fixups

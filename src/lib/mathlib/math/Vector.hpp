@@ -45,7 +45,14 @@
 
 #include <stdio.h>
 #include <math.h>
+
+#ifdef CONFIG_ARCH_ARM
 #include "../CMSIS/Include/arm_math.h"
+#else
+#include <platforms/ros/eigen_math.h>
+#endif
+
+#include <platforms/px4_defines.h>
 
 namespace math
 {
@@ -65,29 +72,41 @@ public:
 	/**
 	 * struct for using arm_math functions, represents column vector
 	 */
+	#ifdef CONFIG_ARCH_ARM
 	arm_matrix_instance_f32 arm_col;
+	#else
+	eigen_matrix_instance arm_col;
+	#endif
+
 
 	/**
 	 * trivial ctor
-	 * note that this ctor will not initialize elements
+	 * initializes elements to zero
 	 */
-	VectorBase() {
-		arm_col = {N, 1, &data[0]};
+	VectorBase() :
+		data{},
+		arm_col{N, 1, &data[0]}
+	{
+
 	}
+
+	virtual ~VectorBase() {};
 
 	/**
 	 * copy ctor
 	 */
-	VectorBase(const VectorBase<N> &v) {
-		arm_col = {N, 1, &data[0]};
+	VectorBase(const VectorBase<N> &v) :
+		arm_col{N, 1, &data[0]}
+	{
 		memcpy(data, v.data, sizeof(data));
 	}
 
 	/**
 	 * setting ctor
 	 */
-	VectorBase(const float d[N]) {
-		arm_col = {N, 1, &data[0]};
+	VectorBase(const float d[N]) :
+		arm_col{N, 1, &data[0]}
+	{
 		memcpy(data, d, sizeof(data));
 	}
 

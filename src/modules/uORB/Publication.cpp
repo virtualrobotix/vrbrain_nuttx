@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2012-2015 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -46,16 +46,19 @@
 #include "topics/vehicle_attitude_setpoint.h"
 #include "topics/vehicle_rates_setpoint.h"
 #include "topics/actuator_outputs.h"
+#include "topics/actuator_direct.h"
 #include "topics/encoders.h"
+#include "topics/tecs_status.h"
+#include "topics/rc_channels.h"
 
 namespace uORB {
 
 template<class T>
 Publication<T>::Publication(
-	List<PublicationBase *> * list,
-	const struct orb_metadata *meta) :
+	const struct orb_metadata *meta,
+	List<PublicationNode *> * list) :
 	T(), // initialize data structure to zero
-	PublicationBase(list, meta) {
+	PublicationNode(meta, list) {
 }
 
 template<class T>
@@ -75,6 +78,9 @@ template class __EXPORT Publication<vehicle_global_velocity_setpoint_s>;
 template class __EXPORT Publication<vehicle_attitude_setpoint_s>;
 template class __EXPORT Publication<vehicle_rates_setpoint_s>;
 template class __EXPORT Publication<actuator_outputs_s>;
+template class __EXPORT Publication<actuator_direct_s>;
 template class __EXPORT Publication<encoders_s>;
+template class __EXPORT Publication<tecs_status_s>;
+template class __EXPORT Publication<rc_channels_s>;
 
 }

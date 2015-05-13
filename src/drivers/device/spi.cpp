@@ -69,11 +69,11 @@ SPI::SPI(const char *name,
 	// protected
 	locking_mode(LOCK_PREEMPTION),
 	// private
-	_bus(bus),
 	_device(device),
 	_mode(mode),
 	_frequency(frequency),
-	_dev(nullptr)
+	_dev(nullptr),
+	_bus(bus)
 {
 	// fill in _device_id fields for a SPI device
 	_device_id.devid_s.bus_type = DeviceBusType_SPI;
@@ -123,7 +123,7 @@ SPI::init()
 	}
 
 	/* tell the workd where we are */
-	log("on SPI bus %d at %d", _bus, _device);
+	log("on SPI bus %d at %d (%u KHz)", _bus, _device, _frequency / 1000);
 
 out:
 	return ret;

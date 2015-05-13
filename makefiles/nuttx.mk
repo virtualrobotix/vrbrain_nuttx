@@ -39,7 +39,7 @@
 #
 NUTTX_ARCHIVE		:= $(wildcard $(ARCHIVE_DIR)$(BOARD).export)
 ifeq ($(NUTTX_ARCHIVE),)
-$(error The NuttX export archive for $(BOARD) is missing from $(ARCHIVE_DIR) - try 'make archives' in $(VRX_BASE))
+$(error The NuttX export archive for $(BOARD) is missing from $(ARCHIVE_DIR) - try 'make archives' in $(PX4_BASE))
 endif
 
 #
@@ -64,6 +64,7 @@ LDSCRIPT		+= $(NUTTX_EXPORT_DIR)build/ld.script
 # Add directories from the NuttX export to the relevant search paths
 #
 INCLUDE_DIRS		+= $(NUTTX_EXPORT_DIR)include \
+			   $(NUTTX_EXPORT_DIR)include/cxx \
 			   $(NUTTX_EXPORT_DIR)arch/chip \
 			   $(NUTTX_EXPORT_DIR)arch/common
 

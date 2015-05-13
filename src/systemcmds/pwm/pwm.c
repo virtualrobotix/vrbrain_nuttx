@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2013 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2013, 2014 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -70,38 +70,38 @@ usage(const char *reason)
 {
 	if (reason != NULL)
 		warnx("%s", reason);
-	errx(1, 
+	errx(1,
 		"usage:\n"
 		"pwm arm|disarm|rate|failsafe|disarmed|min|max|test|info  ...\n"
 		"\n"
-		"  arm                      Arm output\n"
-		"  disarm                   Disarm output\n"
+		"arm\t\t\t\tArm output\n"
+		"disarm\t\t\t\tDisarm output\n"
 		"\n"
-		"  rate ...                 Configure PWM rates\n"
-		"    [-g <channel group>]   Channel group that should update at the alternate rate\n"
-		"    [-m <chanmask> ]       Directly supply channel mask\n"
-		"    [-a]                   Configure all outputs\n"
-		"    -r <alt_rate>          PWM rate (50 to 400 Hz)\n"
+		"rate ...\t\t\tConfigure PWM rates\n"
+		"\t[-g <channel group>]\t(e.g. 0,1,2)\n"
+		"\t[-m <channel mask> ]\t(e.g. 0xF)\n"
+		"\t[-a]\t\t\tConfigure all outputs\n"
+		"\t-r <alt_rate>\t\tPWM rate (50 to 400 Hz)\n"
 		"\n"
-		"  failsafe ...      	    Configure failsafe PWM values\n"
-		"  disarmed ...      	    Configure disarmed PWM values\n"
-		"  min ...           	    Configure minimum PWM values\n"
-		"  max ...           	    Configure maximum PWM values\n"
-		"    [-c <channels>]        Supply channels (e.g. 1234)\n"
-		"    [-m <chanmask> ]       Directly supply channel mask (e.g. 0xF)\n"
-		"    [-a]                   Configure all outputs\n"
-		"    -p <pwm value>         PWM value\n"
+		"failsafe ...\t\t\tFailsafe PWM\n"
+		"disarmed ...\t\t\tDisarmed PWM\n"
+		"min ...\t\t\t\tMinimum PWM\n"
+		"max ...\t\t\t\tMaximum PWM\n"
+		"\t[-c <channels>]\t\t(e.g. 1234)\n"
+		"\t[-m <channel mask> ]\t(e.g. 0xF)\n"
+		"\t[-a]\t\t\tConfigure all outputs\n"
+		"\t-p <pwm value>\t\tPWM value\n"
 		"\n"
-		"  test ...                 Directly set PWM values\n"
-		"    [-c <channels>]        Supply channels (e.g. 1234)\n"
-		"    [-m <chanmask> ]       Directly supply channel mask (e.g. 0xF)\n"
-		"    [-a]                   Configure all outputs\n"
-		"    -p <pwm value>         PWM value\n"
+		"test ...\t\t\tDirectly set PWM\n"
+		"\t[-c <channels>]\t\t(e.g. 1234)\n"
+		"\t[-m <channel mask> ]\t(e.g. 0xF)\n"
+		"\t[-a]\t\t\tConfigure all outputs\n"
+		"\t-p <pwm value>\t\tPWM value\n"
 		"\n"
-		"  info                     Print information about the PWM device\n"
+		"info\t\t\t\tPrint information\n"
 		"\n"
-		"    -v                     Print verbose information\n"
-		"    -d <device>            PWM output device (defaults to " PWM_OUTPUT_DEVICE_PATH ")\n"
+		"\t-v\t\t\tVerbose\n"
+		"\t-d <dev>\t\t(default " PWM_OUTPUT0_DEVICE_PATH ")\n"
 		);
 
 }
@@ -109,7 +109,7 @@ usage(const char *reason)
 int
 pwm_main(int argc, char *argv[])
 {
-	const char *dev = PWM_OUTPUT_DEVICE_PATH;
+	const char *dev = PWM_OUTPUT0_DEVICE_PATH;
 	unsigned alt_rate = 0;
 	uint32_t alt_channel_groups = 0;
 	bool alt_channels_set = false;
@@ -123,7 +123,7 @@ pwm_main(int argc, char *argv[])
 	unsigned single_ch = 0;
 	unsigned pwm_value = 0;
 
-	if (argc < 1)
+	if (argc < 2)
 		usage(NULL);
 
 	while ((ch = getopt(argc-1, &argv[1], "d:vc:g:m:ap:r:")) != EOF) {
@@ -165,7 +165,7 @@ pwm_main(int argc, char *argv[])
 			/* Read in mask directly */
 			set_mask = strtoul(optarg, &ep, 0);
 			if (*ep != '\0')
-				usage("bad set_mask value");
+				usage("BAD set_mask VAL");
 			break;
 
 		case 'a':
@@ -176,12 +176,12 @@ pwm_main(int argc, char *argv[])
 		case 'p':
 			pwm_value = strtoul(optarg, &ep, 0);
 			if (*ep != '\0')
-				usage("bad PWM value provided");
+				usage("BAD PWM VAL");
 			break;
 		case 'r':
 			alt_rate = strtoul(optarg, &ep, 0);
 			if (*ep != '\0')
-				usage("bad alternative rate provided");
+				usage("BAD rate VAL");
 			break;
 		default:
 			break;
@@ -189,7 +189,7 @@ pwm_main(int argc, char *argv[])
 	}
 
 	if (print_verbose && set_mask > 0) {
-		warnx("Chose channels: ");
+		warnx("Channels: ");
 		printf("    ");
 		for (unsigned i = 0; i<PWM_OUTPUT_MAX_CHANNELS; i++) {
 			if (set_mask & 1<<i)
@@ -364,7 +364,7 @@ pwm_main(int argc, char *argv[])
 			usage("no channels set");
 		}
 		if (pwm_value == 0)
-			usage("no PWM value provided");
+			usage("no PWM provided");
 
 		struct pwm_output_values pwm_values = {.values = {0}, .channel_count = 0};
 
@@ -383,7 +383,7 @@ pwm_main(int argc, char *argv[])
 
 			ret = ioctl(fd, PWM_SERVO_SET_FAILSAFE_PWM, (long unsigned int)&pwm_values);
 			if (ret != OK)
-				errx(ret, "failed setting failsafe values");
+				errx(ret, "BAD input VAL");
 		}
 		exit(0);
 
@@ -393,7 +393,7 @@ pwm_main(int argc, char *argv[])
 			usage("no channels set");
 		}
 		if (pwm_value == 0)
-			usage("no PWM value provided");
+			usage("no PWM provided");
 
 		/* get current servo values */
 		struct pwm_output_values last_spos;
@@ -441,6 +441,111 @@ pwm_main(int argc, char *argv[])
 								}
 					warnx("User abort\n");
 					exit(0);
+				}
+			}
+			usleep(2000);
+		}
+		exit(0);
+
+
+	} else if (!strcmp(argv[1], "steps")) {
+
+		if (set_mask == 0) {
+			usage("no channels set");
+		}
+
+		/* get current servo values */
+		struct pwm_output_values last_spos;
+
+		for (unsigned i = 0; i < servo_count; i++) {
+
+			ret = ioctl(fd, PWM_SERVO_GET(i), (unsigned long)&last_spos.values[i]);
+			if (ret != OK)
+				err(1, "PWM_SERVO_GET(%d)", i);
+		}
+
+		/* perform PWM output */
+
+		/* Open console directly to grab CTRL-C signal */
+		struct pollfd fds;
+		fds.fd = 0; /* stdin */
+		fds.events = POLLIN;
+
+		warnx("Running 5 steps. WARNING! Motors will be live in 5 seconds\nPress any key to abort now.");
+		sleep(5);
+
+		unsigned off = 900;
+		unsigned idle = 1300;
+		unsigned full = 2000;
+		unsigned steps_timings_us[] = {2000, 5000, 20000, 50000};
+
+		unsigned phase = 0;
+		unsigned phase_counter = 0;
+		unsigned const phase_maxcount = 20;
+
+		for (	unsigned steps_timing_index = 0;
+			steps_timing_index < sizeof(steps_timings_us) / sizeof(steps_timings_us[0]);
+			steps_timing_index++ ) {
+
+			warnx("Step input (0 to 100%%) over %u us ramp", steps_timings_us[steps_timing_index]);
+
+			while (1) {
+				for (unsigned i = 0; i < servo_count; i++) {
+					if (set_mask & 1<<i) {
+
+						unsigned val;
+
+						if (phase == 0) {
+							val = idle;
+						} else if (phase == 1) {
+							/* ramp - depending how steep it is this ramp will look instantaneous on the output */
+							val = idle + (full - idle) * (phase_maxcount / (float)phase_counter);
+						} else {
+							val = off;
+						}
+
+						ret = ioctl(fd, PWM_SERVO_SET(i), val);
+						if (ret != OK)
+							err(1, "PWM_SERVO_SET(%d)", i);
+					}
+				}
+
+				/* abort on user request */
+				char c;
+				ret = poll(&fds, 1, 0);
+				if (ret > 0) {
+
+					ret = read(0, &c, 1);
+
+					if (ret > 0) {
+						/* reset output to the last value */
+						for (unsigned i = 0; i < servo_count; i++) {
+										if (set_mask & 1<<i) {
+											ret = ioctl(fd, PWM_SERVO_SET(i), last_spos.values[i]);
+											if (ret != OK)
+												err(1, "PWM_SERVO_SET(%d)", i);
+										}
+									}
+						warnx("User abort\n");
+						exit(0);
+					}
+				}
+				if (phase == 1) {
+					usleep(steps_timings_us[steps_timing_index] / phase_maxcount);
+
+				} else if (phase == 0) {
+					usleep(50000);
+				} else if (phase == 2) {
+					usleep(50000);
+				} else {
+					break;
+				}
+
+				phase_counter++;
+
+				if (phase_counter > phase_maxcount) {
+					phase++;
+					phase_counter = 0;
 				}
 			}
 		}
@@ -530,8 +635,47 @@ pwm_main(int argc, char *argv[])
 		}
 		exit(0);
 
+	} else if (!strcmp(argv[1], "forcefail")) {
+
+		if (argc < 3) {
+			errx(1, "arg missing [on|off]");
+		} else {
+
+			if (!strcmp(argv[2], "on")) {
+				/* force failsafe */
+				ret = ioctl(fd, PWM_SERVO_SET_FORCE_FAILSAFE, 1);
+			} else {
+				/* force failsafe */
+				ret = ioctl(fd, PWM_SERVO_SET_FORCE_FAILSAFE, 0);
+			}
+
+			if (ret != OK) {
+				warnx("FAILED setting forcefail %s", argv[2]);
+			}
+		}
+		exit(0);
+	} else if (!strcmp(argv[1], "terminatefail")) {
+
+		if (argc < 3) {
+			errx(1, "arg missing [on|off]");
+		} else {
+
+			if (!strcmp(argv[2], "on")) {
+				/* force failsafe */
+				ret = ioctl(fd, PWM_SERVO_SET_TERMINATION_FAILSAFE, 1);
+			} else {
+				/* force failsafe */
+				ret = ioctl(fd, PWM_SERVO_SET_TERMINATION_FAILSAFE, 0);
+			}
+
+			if (ret != OK) {
+				warnx("FAILED setting termination failsafe %s", argv[2]);
+			}
+		}
+		exit(0);
 	}
-	usage("specify arm|disarm|rate|failsafe|disarmed|min|max|test|info");
+
+	usage(NULL);
 	return 0;
 }
 

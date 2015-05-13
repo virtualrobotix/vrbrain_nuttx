@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 ############################################################################
 #
-#   Copyright (C) 2012, 2013 PX4 Development Team. All rights reserved.
+#   Copyright (C) 2012-2015 PX4 Development Team. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -160,6 +160,8 @@ class uploader(object):
         GET_CRC         = b'\x29'     # rev3+
         GET_OTP         = b'\x2a'     # rev4+  , get a word from OTP area
         GET_SN          = b'\x2b'     # rev4+  , get a word from SN area
+        GET_CHIP        = b'\x2c'     # rev5+  , get chip version
+        SET_BOOT_DELAY  = b'\x2d'     # rev5+  , set boot delay
         REBOOT          = b'\x30'
         
         INFO_BL_REV     = b'\x01'        # bootloader protocol revision
@@ -195,7 +197,7 @@ class uploader(object):
         def __recv(self, count=1):
                 c = self.port.read(count)
                 if len(c) < 1:
-                        raise RuntimeError("timeout waiting for data")
+                        raise RuntimeError("timeout waiting for data (%u bytes)" % count)
 #               print("recv " + binascii.hexlify(c))
                 return c
 
@@ -227,16 +229,21 @@ class uploader(object):
                             + uploader.EOC)
                 self.__getSync()
 
-#       def __trySync(self):
-#               c = self.__recv()
-#               if (c != self.INSYNC):
-#                       #print("unexpected 0x%x instead of INSYNC" % ord(c))
-#                       return False;
-#               c = self.__recv()
-#               if (c != self.OK):
-#                       #print("unexpected 0x%x instead of OK" % ord(c))
-#                       return False
-#               return True
+        def __trySync(self):
+                try:
+                    self.port.flush()
+                    if (self.__recv() != self.INSYNC):
+                            #print("unexpected 0x%x instead of INSYNC" % ord(c))
+                            return False;
+
+                    if (self.__recv() != self.OK):
+                            #print("unexpected 0x%x instead of OK" % ord(c))
+                            return False
+                    return True
+
+                except RuntimeError:
+                    #timeout, no response yet
+                    return False
 
         # send the GET_DEVICE command and wait for an info parameter
         def __getInfo(self, param):
@@ -253,7 +260,7 @@ class uploader(object):
                 self.__getSync()
                 return value
 
-        # send the GET_OTP command and wait for an info parameter
+        # send the GET_SN command and wait for an info parameter
         def __getSN(self, param):
                 t = struct.pack("I", param) # int param as 32bit ( 4 byte ) char array.
                 self.__send(uploader.GET_SN + t + uploader.EOC)
@@ -261,19 +268,45 @@ class uploader(object):
                 self.__getSync()
                 return value
 
+        # send the GET_CHIP command
+        def __getCHIP(self):
+                self.__send(uploader.GET_CHIP + uploader.EOC)
+                value = self.__recv_int()
+                self.__getSync()
+                return value
+
+        def __drawProgressBar(self, label, progress, maxVal):
+                if maxVal < progress:
+                    progress = maxVal
+
+                percent = (float(progress) / float(maxVal)) * 100.0
+
+                sys.stdout.write("\r%s: [%-20s] %.1f%%" % (label, '='*int(percent/5.0), percent))
+                sys.stdout.flush()
+
+
         # send the CHIP_ERASE command and wait for the bootloader to become ready
-        def __erase(self):
+        def __erase(self, label):
+                print("\n", end='')
                 self.__send(uploader.CHIP_ERASE
                             + uploader.EOC)
+
                 # erase is very slow, give it 20s
-                deadline = time.time() + 20
+                deadline = time.time() + 20.0
                 while time.time() < deadline:
-                        try:
-                                self.__getSync()
-                                return
-                        except RuntimeError:
-                                # we timed out, that's OK
-                                continue
+
+                        #Draw progress bar (erase usually takes about 9 seconds to complete)
+                        estimatedTimeRemaining = deadline-time.time()
+                        if estimatedTimeRemaining >= 9.0:
+                            self.__drawProgressBar(label, 20.0-estimatedTimeRemaining, 9.0)
+                        else:
+                            self.__drawProgressBar(label, 10.0, 10.0)
+                            sys.stdout.write(" (timeout: %d seconds) " % int(deadline-time.time()) )
+                            sys.stdout.flush()
+
+                        if self.__trySync():
+                            self.__drawProgressBar(label, 10.0, 10.0)
+                            return;
 
                 raise RuntimeError("timed out waiting for erase")
 
@@ -326,33 +359,58 @@ class uploader(object):
                 return [seq[i:i+length] for i in range(0, len(seq), length)]
 
         # upload code
-        def __program(self, fw):
+        def __program(self, label, fw):
+                print("\n", end='')
                 code = fw.image
                 groups = self.__split_len(code, uploader.PROG_MULTI_MAX)
+
+                uploadProgress = 0
                 for bytes in groups:
                         self.__program_multi(bytes)
 
+                        #Print upload progress (throttled, so it does not delay upload progress)
+                        uploadProgress += 1
+                        if uploadProgress % 256 == 0:
+                            self.__drawProgressBar(label, uploadProgress, len(groups))
+                self.__drawProgressBar(label, 100, 100)
+
         # verify code
-        def __verify_v2(self, fw):
+        def __verify_v2(self, label, fw):
+                print("\n", end='')
                 self.__send(uploader.CHIP_VERIFY
                             + uploader.EOC)
                 self.__getSync()
                 code = fw.image
                 groups = self.__split_len(code, uploader.READ_MULTI_MAX)
+                verifyProgress = 0
                 for bytes in groups:
+                        verifyProgress += 1
+                        if verifyProgress % 256 == 0:
+                            self.__drawProgressBar(label, verifyProgress, len(groups))
                         if (not self.__verify_multi(bytes)):
                                 raise RuntimeError("Verification failed")
+                self.__drawProgressBar(label, 100, 100)
 
-        def __verify_v3(self, fw):
-                expect_crc = fw.crc(self.fw_maxsize)
+        def __verify_v3(self, label, fw):
+                print("\n", end='')
+                self.__drawProgressBar(label, 1, 100)
+                expect_crc = fw.crc(self.fw_maxsize)                
                 self.__send(uploader.GET_CRC
                             + uploader.EOC)
                 report_crc = self.__recv_int()
                 self.__getSync()
+                verifyProgress = 0
                 if report_crc != expect_crc:
                         print("Expected 0x%x" % expect_crc)
                         print("Got      0x%x" % report_crc)
                         raise RuntimeError("Program CRC failed")
+                self.__drawProgressBar(label, 100, 100)
+
+        def __set_boot_delay(self, boot_delay):
+                self.__send(uploader.SET_BOOT_DELAY
+                            + struct.pack("b", boot_delay)
+                            + uploader.EOC)
+                self.__getSync()
 
         # get basic data about the board
         def identify(self):
@@ -373,7 +431,12 @@ class uploader(object):
         def upload(self, fw):
                 # Make sure we are doing the right thing
                 if self.board_type != fw.property('board_id'):
-                        raise RuntimeError("Firmware not suitable for this board")
+                        msg = "Firmware not suitable for this board (board_type=%u board_id=%u)" % (
+                                self.board_type, fw.property('board_id'))
+                        if args.force:
+                                print("WARNING: %s" % msg)
+                        else:
+                                raise RuntimeError(msg)
                 if self.fw_maxsize < fw.property('image_size'):
                         raise RuntimeError("Firmware image is too large for this board")
 
@@ -403,22 +466,23 @@ class uploader(object):
                                     self.sn  = self.sn + x
                                     print(binascii.hexlify(x).decode('Latin-1'), end='') # show user
                             print('')
+                            print("chip: %08x" % self.__getCHIP())
                     except Exception:
                             # ignore bad character encodings
                             pass
-                print("erase...")
-                self.__erase()
+                
+                self.__erase("Erase  ")
+                self.__program("Program", fw)
 
-                print("program...")
-                self.__program(fw)
-
-                print("verify...")
                 if self.bl_rev == 2:
-                        self.__verify_v2(fw)
+                        self.__verify_v2("Verify ", fw)
                 else:
-                        self.__verify_v3(fw)
+                        self.__verify_v3("Verify ", fw)
 
-                print("done, rebooting.")
+                if args.boot_delay is not None:
+                        self.__set_boot_delay(args.boot_delay)
+
+                print("\nRebooting.\n")
                 self.__reboot()
                 self.port.close()
                 
@@ -434,8 +498,7 @@ class uploader(object):
                     self.__send(uploader.MAVLINK_REBOOT_ID0)
                 except:
                     return
-                
-                
+
 
 # Detect python version
 if sys.version_info[0] < 3:
@@ -447,18 +510,21 @@ else:
 parser = argparse.ArgumentParser(description="Firmware uploader for the PX autopilot system.")
 parser.add_argument('--port', action="store", required=True, help="Serial port(s) to which the FMU may be attached")
 parser.add_argument('--baud', action="store", type=int, default=115200, help="Baud rate of the serial port (default is 115200), only required for true serial ports.")
+parser.add_argument('--force', action='store_true', default=False, help='Override board type check and continue loading')
+parser.add_argument('--boot-delay', type=int, default=None, help='minimum boot delay to store in flash')
 parser.add_argument('firmware', action="store", help="Firmware file to be uploaded")
 args = parser.parse_args()
 
 # warn people about ModemManager which interferes badly with Pixhawk
 if os.path.exists("/usr/sbin/ModemManager"):
-        print("=======================================================================")
-        print("WARNING: You should uninstall ModemManager as it conflicts with Pixhawk")
-        print("=======================================================================")
+        print("==========================================================================================================")
+        print("WARNING: You should uninstall ModemManager as it conflicts with any non-modem serial device (like Pixhawk)")
+        print("==========================================================================================================")
 
 # Load the firmware file
 fw = firmware(args.firmware)
-print("Loaded firmware for %x,%x, waiting for the bootloader..." % (fw.property('board_id'), fw.property('board_revision')))
+print("Loaded firmware for %x,%x, size: %d bytes, waiting for the bootloader..." % (fw.property('board_id'), fw.property('board_revision'), fw.property('image_size')))
+print("If the board does not respond within 1-2 seconds, unplug and re-plug the USB connector.")
 
 # Spin waiting for a device to show up
 while True:
@@ -508,9 +574,14 @@ while True:
                 except Exception:
                         # most probably a timeout talking to the port, no bootloader, try to reboot the board
                         print("attempting reboot on %s..." % port)
+                        print("if the board does not respond, unplug and re-plug the USB connector.")
                         up.send_reboot()
+
                         # wait for the reboot, without we might run into Serial I/O Error 5 
                         time.sleep(0.5)
+
+                        # always close the port
+                        up.close()
                         continue
 
                 try:
@@ -520,7 +591,7 @@ while True:
                 except RuntimeError as ex:
 
                         # print the error
-                        print("ERROR: %s" % ex.args)
+                        print("\nERROR: %s" % ex.args)
 
                 finally:
                         # always close the port
