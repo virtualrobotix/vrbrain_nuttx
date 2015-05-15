@@ -209,7 +209,7 @@ __BEGIN_DECLS
 #define I2C_BUS_BLINKM          1
 #define I2C_BUS_ETS_AIRSPEED    1
 #define I2C_BUS_LL40LS          1
-#define I2C_BUS_PX4FLOW         1
+#define I2C_BUS_PX4FLOW         2
 #define I2C_BUS_OREOLED         1
 #define I2C_BUS_TRONE           1
 #define I2C_BUS_PCA8574         1
