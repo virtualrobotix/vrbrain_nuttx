@@ -1586,7 +1586,7 @@ VRINPUT::io_get_raw_rc_input(rc_input_values &input_rc)
 	input_rc.rc_ppm_frame_length = regs[PX4IO_P_RAW_RC_DATA];
 	input_rc.rssi = regs[PX4IO_P_RAW_RC_NRSSI];
 	input_rc.rc_failsafe = (regs[PX4IO_P_RAW_RC_FLAGS] & PX4IO_P_RAW_RC_FLAGS_FAILSAFE);
-
+	input_rc.rc_lost = !(regs[PX4IO_P_RAW_RC_FLAGS] & PX4IO_P_RAW_RC_FLAGS_RC_OK);
 	input_rc.rc_lost_frame_count = regs[PX4IO_P_RAW_LOST_FRAME_COUNT];
 	input_rc.rc_total_frame_count = regs[PX4IO_P_RAW_FRAME_COUNT];
 	input_rc.channel_count = channel_count;

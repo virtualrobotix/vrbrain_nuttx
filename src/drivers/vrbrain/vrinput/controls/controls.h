@@ -76,20 +76,20 @@ __BEGIN_DECLS
 /*
  * Registers.
  */
-__EXPORT extern uint16_t			r_page_status[];	/* PX4IO_PAGE_STATUS */
-__EXPORT extern uint16_t			r_page_actuators[];	/* PX4IO_PAGE_ACTUATORS */
-__EXPORT extern uint16_t			r_page_servos[];	/* PX4IO_PAGE_SERVOS */
-__EXPORT extern uint16_t			r_page_raw_rc_input[];	/* PX4IO_PAGE_RAW_RC_INPUT */
-__EXPORT extern uint16_t			r_page_rc_input[];	/* PX4IO_PAGE_RC_INPUT */
-__EXPORT extern uint16_t			r_page_adc[];		/* PX4IO_PAGE_RAW_ADC_INPUT */
+extern uint16_t			r_page_status[];	/* PX4IO_PAGE_STATUS */
+extern uint16_t			r_page_actuators[];	/* PX4IO_PAGE_ACTUATORS */
+extern uint16_t			r_page_servos[];	/* PX4IO_PAGE_SERVOS */
+extern uint16_t			r_page_raw_rc_input[];	/* PX4IO_PAGE_RAW_RC_INPUT */
+extern uint16_t			r_page_rc_input[];	/* PX4IO_PAGE_RC_INPUT */
+extern uint16_t			r_page_adc[];		/* PX4IO_PAGE_RAW_ADC_INPUT */
 
-__EXPORT extern volatile uint16_t	r_page_setup[];		/* PX4IO_PAGE_SETUP */
-__EXPORT extern volatile uint16_t	r_page_controls[];	/* PX4IO_PAGE_CONTROLS */
-__EXPORT extern uint16_t			r_page_rc_input_config[]; /* PX4IO_PAGE_RC_INPUT_CONFIG */
-__EXPORT extern uint16_t			r_page_servo_failsafe[]; /* PX4IO_PAGE_FAILSAFE_PWM */
-__EXPORT extern uint16_t			r_page_servo_control_min[]; /* PX4IO_PAGE_CONTROL_MIN_PWM */
-__EXPORT extern uint16_t			r_page_servo_control_max[]; /* PX4IO_PAGE_CONTROL_MAX_PWM */
-__EXPORT extern uint16_t			r_page_servo_disarmed[];	/* PX4IO_PAGE_DISARMED_PWM */
+extern volatile uint16_t	r_page_setup[];		/* PX4IO_PAGE_SETUP */
+extern volatile uint16_t	r_page_controls[];	/* PX4IO_PAGE_CONTROLS */
+extern uint16_t			r_page_rc_input_config[]; /* PX4IO_PAGE_RC_INPUT_CONFIG */
+extern uint16_t			r_page_servo_failsafe[]; /* PX4IO_PAGE_FAILSAFE_PWM */
+extern uint16_t			r_page_servo_control_min[]; /* PX4IO_PAGE_CONTROL_MIN_PWM */
+extern uint16_t			r_page_servo_control_max[]; /* PX4IO_PAGE_CONTROL_MAX_PWM */
+extern uint16_t			r_page_servo_disarmed[];	/* PX4IO_PAGE_DISARMED_PWM */
 
 /*
  * Register aliases.
@@ -132,12 +132,12 @@ struct sys_state_s {
 
 };
 
-__EXPORT extern struct sys_state_s system_state;
+extern struct sys_state_s system_state;
 
 /*
  * PWM limit structure
  */
-__EXPORT extern pwm_limit_t pwm_limit;
+extern pwm_limit_t pwm_limit;
 
 /*
  * GPIO handling.
@@ -256,56 +256,56 @@ __EXPORT extern pwm_limit_t pwm_limit;
 /*
  * Mixer
  */
-__EXPORT void	mixer_tick(void);
-__EXPORT int	mixer_handle_text(const void *buffer, size_t length);
+extern void	mixer_tick(void);
+extern int	mixer_handle_text(const void *buffer, size_t length);
 
 /**
  * Safety switch/LED.
  */
-__EXPORT void	safety_init(void);
-__EXPORT void	failsafe_led_init(void);
+extern void	safety_init(void);
+extern void	failsafe_led_init(void);
 
 /**
  * FMU communications
  */
-__EXPORT void	interface_init(void);
-__EXPORT void	interface_tick(void);
+extern void	interface_init(void);
+extern void	interface_tick(void);
 
 /**
  * Register space
  */
-__EXPORT int	registers_set(uint8_t page, uint8_t offset, const uint16_t *values, unsigned num_values);
-__EXPORT int	registers_get(uint8_t page, uint8_t offset, uint16_t **values, unsigned *num_values);
+extern int	registers_set(uint8_t page, uint8_t offset, const uint16_t *values, unsigned num_values);
+extern int	registers_get(uint8_t page, uint8_t offset, uint16_t **values, unsigned *num_values);
 
 /**
  * Sensors/misc inputs
  */
-__EXPORT int	adc_init(void);
-__EXPORT uint16_t	adc_measure(unsigned channel);
+extern int	adc_init(void);
+extern uint16_t	adc_measure(unsigned channel);
 
 /**
  * R/C receiver handling.
  *
  * Input functions return true when they receive an update from the RC controller.
  */
-__EXPORT void	controls_init(void);
-__EXPORT void	controls_tick(void);
-__EXPORT int	dsm_init(const char *device);
-__EXPORT bool	dsm_input(uint16_t *values, uint16_t *num_values, uint8_t *n_bytes, uint8_t **bytes);
-__EXPORT void	dsm_bind(uint16_t cmd, int pulses);
-__EXPORT int	sbus_init(const char *device);
-__EXPORT bool	sbus_input(uint16_t *values, uint16_t *num_values, bool *sbus_failsafe, bool *sbus_frame_drop, uint16_t max_channels);
-__EXPORT void	sbus1_output(uint16_t *values, uint16_t num_values);
-__EXPORT void	sbus2_output(uint16_t *values, uint16_t num_values);
+extern void	controls_init(void);
+extern void	controls_tick(void);
+extern int	dsm_init(const char *device);
+extern bool	dsm_input(uint16_t *values, uint16_t *num_values, uint8_t *n_bytes, uint8_t **bytes);
+extern void	dsm_bind(uint16_t cmd, int pulses);
+extern int	sbus_init(const char *device);
+extern bool	sbus_input(uint16_t *values, uint16_t *num_values, bool *sbus_failsafe, bool *sbus_frame_drop, uint16_t max_channels);
+extern void	sbus1_output(uint16_t *values, uint16_t num_values);
+extern void	sbus2_output(uint16_t *values, uint16_t num_values);
 
 /** global debug level for isr_debug() */
-__EXPORT extern volatile uint8_t debug_level;
+extern volatile uint8_t debug_level;
 
 /** send a debug message to the console */
-__EXPORT void	isr_debug(uint8_t level, const char *fmt, ...);
+extern void	isr_debug(uint8_t level, const char *fmt, ...);
 
 /** schedule a reboot */
-__EXPORT void schedule_reboot(uint32_t time_delta_usec);
+extern void schedule_reboot(uint32_t time_delta_usec);
 
 __END_DECLS
 
