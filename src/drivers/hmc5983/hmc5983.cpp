@@ -987,15 +987,15 @@ HMC5983::collect()
 
 	} else if (_bustype == TYPE_BUS_SENSOR_EXTERNAL) {
 
-		new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+		new_report.x = ((-report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
 		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+		new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
 
 	} else if (_bustype == TYPE_BUS_SENSOR_IMU) {
 
-		new_report.x = ((report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
+		new_report.x = ((-report.y * _range_scale) - _scale.x_offset) * _scale.x_scale;
 		new_report.y = ((report.x * _range_scale) - _scale.y_offset) * _scale.y_scale;
-		new_report.z = ((-report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
+		new_report.z = ((report.z * _range_scale) - _scale.z_offset) * _scale.z_scale;
 
 	}
 
