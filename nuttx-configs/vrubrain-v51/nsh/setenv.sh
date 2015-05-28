@@ -1,5 +1,5 @@
 #!/bin/bash
-# configs/vrubrain-v51/nsh/setenv.sh
+# configs/board/nsh/setenv.sh
 #
 #   Copyright (C) 2013 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

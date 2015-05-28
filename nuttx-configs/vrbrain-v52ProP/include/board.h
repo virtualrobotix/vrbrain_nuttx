@@ -1,5 +1,5 @@
 /************************************************************************************
- * configs/vrbrain-v52ProP/include/board.h
+ * configs/board/include/board.h
  * include/arch/board/board.h
  *
  *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
@@ -175,6 +175,9 @@
 
 #define GPIO_USART6_RX	GPIO_USART6_RX_1
 #define GPIO_USART6_TX	GPIO_USART6_TX_1
+
+
+
 /*
  * I2C
  *

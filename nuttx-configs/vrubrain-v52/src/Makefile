@@ -1,5 +1,5 @@
 ############################################################################
-# configs/vrubrain-v52/src/Makefile
+# configs/board/src/Makefile
 #
 #   Copyright (C) 2013 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

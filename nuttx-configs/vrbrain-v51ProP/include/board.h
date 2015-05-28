@@ -1,5 +1,5 @@
 /************************************************************************************
- * configs/vrbrain-v51ProP/include/board.h
+ * configs/board/include/board.h
  * include/arch/board/board.h
  *
  *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
@@ -172,6 +172,9 @@
 
 #define GPIO_USART3_RX	GPIO_USART3_RX_3
 #define GPIO_USART3_TX	GPIO_USART3_TX_3
+
+
+
 
 
 

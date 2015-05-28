@@ -1,5 +1,5 @@
 ############################################################################
-# configs/vrbrain-v51P/src/Makefile
+# configs/board/src/Makefile
 #
 #   Copyright (C) 2013 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
