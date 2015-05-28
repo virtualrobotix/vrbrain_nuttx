@@ -112,9 +112,69 @@ __END_DECLS
  * Protected Functions
  ****************************************************************************/
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /************************************************************************************
  * Name: stm32_boardinitialize
@@ -217,6 +277,9 @@ __EXPORT int nsh_archinitialize(void)
 
 	/* configure the high-resolution time/callout interface */
 	hrt_init();
+
+
+
 
 	/* configure CPU load estimation */
 #ifdef CONFIG_SCHED_INSTRUMENTATION
