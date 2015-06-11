@@ -203,15 +203,15 @@ __BEGIN_DECLS
 //#define PX4_I2C_BUS_EXPANSION   1
 //#define PX4_I2C_BUS_DEFAULT     2
 
-#define I2C_BUS_MEAS_AIRSPEED	1
-#define I2C_BUS_MB12XX          1
+#define I2C_BUS_MEAS_AIRSPEED	2
+#define I2C_BUS_MB12XX          2
 #define I2C_BUS_RGBLED          1
 #define I2C_BUS_BLINKM          1
-#define I2C_BUS_ETS_AIRSPEED    1
-#define I2C_BUS_LL40LS          1
+#define I2C_BUS_ETS_AIRSPEED    2
+#define I2C_BUS_LL40LS          2
 #define I2C_BUS_PX4FLOW         2
 #define I2C_BUS_OREOLED         1
-#define I2C_BUS_TRONE           1
+#define I2C_BUS_TRONE           2
 #define I2C_BUS_PCA8574         1
 #define I2C_BUS_PCA9685         1
 #define I2C_BUS_BATT_SMBUS      1
