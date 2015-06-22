@@ -206,9 +206,12 @@ __EXPORT int nsh_archinitialize(void)
 	message("\n");
 
 	/* configure always-on ADC pins */
-	stm32_configgpio(GPIO_ADC1_IN0);
 	stm32_configgpio(GPIO_ADC1_IN10);
 	stm32_configgpio(GPIO_ADC1_IN11);
+#if APM_BUILD_TYPE(APM_BUILD_ArduPlane)
+	stm32_configgpio(GPIO_GPIO0_INPUT);
+	stm32_configgpio(GPIO_ADC1_IN14);
+#endif
 
 	stm32_configgpio(GPIO_UART_SBUS_INVERTER);
 #ifdef CONFIG_RC_INPUTS_TYPE(RC_INPUT_SBUS)
