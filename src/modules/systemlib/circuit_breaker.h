@@ -58,6 +58,7 @@
 #define CBRK_GPSFAIL_KEY	240024
 
 #include <stdbool.h>
+#include <stdint.h>
 
 __BEGIN_DECLS
 
