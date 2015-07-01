@@ -6,6 +6,7 @@ MODULE_COMMAND		 = tests
 MODULE_STACKSIZE	 = 12000
 MAXOPTIMIZATION		 = -Os
 
+ifneq ($(findstring PX4, $(CONFIG_BOARD)),)
 SRCS			 = test_adc.c \
 			   test_bson.c \
 			   test_float.c \
@@ -34,6 +35,43 @@ SRCS			 = test_adc.c \
 			   test_conv.cpp \
 			   test_mount.c \
 			   test_eigen.cpp
+endif
+
+ifneq ($(findstring VRBRAIN_V4, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   test_mathlib.cpp \
+			   tests_main.c \
+			   test_rc.c \
+			   test_buzzer.c \
+			   test_uart_bridge.c
+endif
+
+ifneq ($(findstring VRBRAIN_V5, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   test_mathlib.cpp \
+			   tests_main.c \
+			   test_rc.c \
+			   test_buzzer.c \
+			   test_uart_bridge.c
+endif
+
+ifneq ($(findstring VRUBRAIN_V5, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   test_mathlib.cpp \
+			   tests_main.c \
+			   test_rc.c \
+			   test_buzzer.c \
+			   test_uart_bridge.c
+endif
 
 EXTRACXXFLAGS = -Wframe-larger-than=2500 -Wno-float-equal -Wno-double-promotion -Wno-error=logical-op
 

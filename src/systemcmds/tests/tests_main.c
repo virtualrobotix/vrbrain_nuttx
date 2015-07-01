@@ -63,9 +63,11 @@
  ****************************************************************************/
 
 static int test_help(int argc, char *argv[]);
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 static int test_all(int argc, char *argv[]);
 static int test_perf(int argc, char *argv[]);
 static int test_jig(int argc, char *argv[]);
+#endif
 
 /****************************************************************************
  * Private Data
@@ -80,15 +82,22 @@ const struct {
 #define OPT_NOJIGTEST	(1<<2)
 } tests[] = {
 	{"led",			test_led,	0},
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	{"int",			test_int,	0},
 	{"float",		test_float,	0},
+#endif
 	{"sensors",		test_sensors,	0},
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	{"gpio",		test_gpio,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#endif
 	{"hrt",			test_hrt,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	{"ppm",			test_ppm,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"servo",		test_servo,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"ppm_loopback",	test_ppm_loopback,	OPT_NOALLTEST},
+#endif
 	{"adc",			test_adc,	OPT_NOJIGTEST},
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	{"jig_voltages",	test_jig_voltages,	OPT_NOALLTEST},
 	{"uart_loopback",	test_uart_loopback,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"uart_baudchange",	test_uart_baudchange,	OPT_NOJIGTEST | OPT_NOALLTEST},
@@ -106,13 +115,22 @@ const struct {
 	{"file",		test_file,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"file2",		test_file2,	OPT_NOJIGTEST},
 	{"mixer",		test_mixer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#endif
 	{"rc",			test_rc,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	{"conv",		test_conv,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"mount",		test_mount,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#endif
 #ifndef TESTS_MATHLIB_DISABLE
 	{"mathlib",		test_mathlib,	0},
 #endif
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	{"eigen",		test_eigen,	OPT_NOJIGTEST},
+#endif
+#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
+	{"buzzer",		test_buzzer,	OPT_NOJIGTEST | OPT_NOALLTEST},
+	{"uart_bridge",	test_uart_bridge,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#endif
 	{"help",		test_help,	OPT_NOALLTEST | OPT_NOHELP | OPT_NOJIGTEST},
 	{NULL,			NULL, 		0}
 };
@@ -133,6 +151,7 @@ test_help(int argc, char *argv[])
 	return 0;
 }
 
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 static int
 test_all(int argc, char *argv[])
 {
@@ -329,6 +348,7 @@ int test_jig(int argc, char *argv[])
 
 	return 0;
 }
+#endif
 
 __EXPORT int tests_main(int argc, char *argv[]);
 

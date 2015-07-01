@@ -85,14 +85,19 @@
 __BEGIN_DECLS
 
 extern int	test_sensors(int argc, char *argv[]);
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 extern int	test_gpio(int argc, char *argv[]);
+#endif
 extern int	test_hrt(int argc, char *argv[]);
 extern int	test_tone(int argc, char *argv[]);
 extern int	test_led(int argc, char *argv[]);
 extern int	test_adc(int argc, char *argv[]);
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 extern int	test_int(int argc, char *argv[]);
 extern int	test_float(int argc, char *argv[]);
+#endif
 extern int	test_ppm(int argc, char *argv[]);
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 extern int	test_servo(int argc, char *argv[]);
 extern int	test_ppm_loopback(int argc, char *argv[]);
 extern int	test_uart_loopback(int argc, char *argv[]);
@@ -109,11 +114,20 @@ extern int	test_bson(int argc, char *argv[]);
 extern int	test_file(int argc, char *argv[]);
 extern int	test_file2(int argc, char *argv[]);
 extern int	test_mixer(int argc, char *argv[]);
+#endif
 extern int	test_rc(int argc, char *argv[]);
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 extern int	test_conv(int argc, char *argv[]);
 extern int	test_mount(int argc, char *argv[]);
+#endif
 extern int	test_mathlib(int argc, char *argv[]);
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 extern int	test_eigen(int argc, char *argv[]);
+#endif
+#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
+extern int	test_buzzer(int argc, char *argv[]);
+extern int	test_uart_bridge(int argc, char *argv[]);
+#endif
 
 __END_DECLS
 
