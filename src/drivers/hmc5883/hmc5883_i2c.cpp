@@ -59,16 +59,12 @@
 
 #include "board_config.h"
 
-#ifdef PX4_I2C_OBDEV_HMC5883
-
-#define HMC5883L_ADDRESS		PX4_I2C_OBDEV_HMC5883
-
-device::Device *HMC5883_I2C_interface(int bus);
+device::Device *HMC5883_I2C_interface(int bus, uint16_t address, bool is_external);
 
 class HMC5883_I2C : public device::I2C
 {
 public:
-	HMC5883_I2C(int bus);
+	HMC5883_I2C(int bus, uint16_t address, bool is_external);
 	virtual ~HMC5883_I2C();
 
 	virtual int	init();
@@ -80,16 +76,19 @@ public:
 protected:
 	virtual int	probe();
 
+	bool _is_external;
+
 };
 
 device::Device *
-HMC5883_I2C_interface(int bus)
+HMC5883_I2C_interface(int bus, uint16_t address, bool is_external)
 {
-	return new HMC5883_I2C(bus);
+	return new HMC5883_I2C(bus, address, is_external);
 }
 
-HMC5883_I2C::HMC5883_I2C(int bus) :
-	I2C("HMC5883_I2C", nullptr, bus, HMC5883L_ADDRESS, 100000)
+HMC5883_I2C::HMC5883_I2C(int bus, uint16_t address, bool is_external) :
+	I2C("HMC5883_I2C", nullptr, bus, address, 100000),
+	_is_external(is_external)
 {
 	_device_id.devid_s.devtype = DRV_MAG_DEVTYPE_HMC5883;
 }
@@ -113,17 +112,7 @@ HMC5883_I2C::ioctl(unsigned operation, unsigned &arg)
 	switch (operation) {
 
 	case MAGIOCGEXTERNAL:
-// On PX4v1 the MAG can be on an internal I2C
-// On everything else its always external
-#ifdef CONFIG_ARCH_BOARD_PX4FMU_V1
-		if (_bus == PX4_I2C_BUS_EXPANSION) {
-			return 1;
-		} else {
-			return 0;
-		}
-#else
-                return 1;
-#endif
+		return _is_external;
 
 	case DEVIOCGDEVICEID:
 		return CDev::ioctl(nullptr, operation, arg);
@@ -182,5 +171,3 @@ HMC5883_I2C::read(unsigned address, void *data, unsigned count)
 	uint8_t cmd = address;
 	return transfer(&cmd, 1, (uint8_t *)data, count);
 }
-
-#endif /* PX4_I2C_OBDEV_HMC5883 */

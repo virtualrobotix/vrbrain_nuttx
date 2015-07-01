@@ -120,7 +120,8 @@ enum HMC5883_BUS {
 	HMC5883_BUS_ALL = 0,
 	HMC5883_BUS_I2C_INTERNAL,
 	HMC5883_BUS_I2C_EXTERNAL,
-	HMC5883_BUS_SPI
+	HMC5883_BUS_SPI_EXTERNAL,
+	HMC5883_BUS_SPI_IMU
 };
 
 /* oddly, ERROR is not defined for c++ */
@@ -951,6 +952,26 @@ HMC5883::collect()
 	 * to align the sensor axes with the board, x and y need to be flipped
 	 * and y needs to be negated
 	 */
+#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
+
+	// XXX revisit for SPI part, might require a bus type IOCTL
+	unsigned dummy;
+	sensor_is_onboard = !_interface->ioctl(MAGIOCGEXTERNAL, dummy);
+	if (sensor_is_onboard) {
+
+		new_report.x_raw = report.y;
+		new_report.y_raw = report.x;
+		new_report.z_raw = -report.z;
+
+	} else {
+
+		new_report.x_raw = -report.y;
+		new_report.y_raw = report.x;
+		new_report.z_raw = report.z;
+
+	}
+
+#else
 	new_report.x_raw = report.y;
 	new_report.y_raw = -report.x;
 	/* z remains z */
@@ -968,12 +989,31 @@ HMC5883::collect()
 		report.x = -report.x;
         }
 
-        /* the standard external mag by 3DR has x pointing to the
+#endif
+
+    /* the standard external mag by 3DR has x pointing to the
 	 * right, y pointing backwards, and z down, therefore switch x
 	 * and y and invert y */
-        xraw_f = -report.y;
+#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
+
+	sensor_is_onboard = !_interface->ioctl(MAGIOCGEXTERNAL, dummy);
+	if (sensor_is_onboard) {
+		xraw_f = report.y;
+		yraw_f = report.x;
+		zraw_f = -report.z;
+	} else {
+		xraw_f = -report.y;
+		yraw_f = report.x;
+		zraw_f = report.z;
+	}
+
+#else
+
+	xraw_f = -report.y;
 	yraw_f = report.x;
 	zraw_f = report.z;
+
+#endif
 
 	// apply user specified rotation
 	rotate_3f(_rotation, xraw_f, yraw_f, zraw_f);
@@ -1408,14 +1448,21 @@ struct hmc5883_bus_option {
 	const char *devpath;
 	HMC5883_constructor interface_constructor;
 	uint8_t busnum;
+	uint16_t address;
+	bool is_external;
 	HMC5883	*dev;
 } bus_options[] = {
-	{ HMC5883_BUS_I2C_EXTERNAL, "/dev/hmc5883_ext", &HMC5883_I2C_interface, PX4_I2C_BUS_EXPANSION, NULL },
-#ifdef PX4_I2C_BUS_ONBOARD
-	{ HMC5883_BUS_I2C_INTERNAL, "/dev/hmc5883_int", &HMC5883_I2C_interface, PX4_I2C_BUS_ONBOARD, NULL },
+#ifdef I2C_BUS_EXT_HMC5883
+	{ HMC5883_BUS_I2C_EXTERNAL, "/dev/hmc5883_i2c_ext", &HMC5883_I2C_interface, I2C_BUS_EXT_HMC5883, PX4_I2C_OBDEV_HMC5883, true, NULL },
 #endif
-#ifdef PX4_SPIDEV_HMC
-	{ HMC5883_BUS_SPI, "/dev/hmc5883_spi", &HMC5883_SPI_interface, PX4_SPI_BUS_SENSORS, NULL },
+#ifdef I2C_BUS_HMC5883
+	{ HMC5883_BUS_I2C_INTERNAL, "/dev/hmc5883_i2c_int", &HMC5883_I2C_interface, I2C_BUS_HMC5883, PX4_I2C_OBDEV_HMC5883, false, NULL },
+#endif
+#ifdef SPI_BUS_EXP_HMC5983
+	{ HMC5883_BUS_SPI_EXTERNAL, "/dev/hmc5883_spi_ext", &HMC5883_SPI_interface, SPI_BUS_EXP_HMC5983, SPIDEV_EXP_HMC5983, true, NULL },
+#endif
+#ifdef SPI_BUS_IMU_HMC5983
+	{ HMC5883_BUS_SPI_IMU, "/dev/hmc5883_spi_imu", &HMC5883_SPI_interface, SPI_BUS_IMU_HMC5983, SPIDEV_IMU_HMC5983, true, NULL },
 #endif
 };
 #define NUM_BUS_OPTIONS (sizeof(bus_options)/sizeof(bus_options[0]))
@@ -1439,7 +1486,7 @@ start_bus(struct hmc5883_bus_option &bus, enum Rotation rotation)
 	if (bus.dev != nullptr)
 		errx(1,"bus option already started");
 
-	device::Device *interface = bus.interface_constructor(bus.busnum);
+	device::Device *interface = bus.interface_constructor(bus.busnum, bus.address, bus.is_external);
 	if (interface->init() != OK) {
 		delete interface;
 		warnx("no device on bus %u", (unsigned)bus.busid);
@@ -1704,10 +1751,10 @@ usage()
 	warnx("options:");
 	warnx("    -R rotation");
 	warnx("    -C calibrate on start");
-	warnx("    -X only external bus");
-#if (PX4_I2C_BUS_ONBOARD || PX4_SPIDEV_HMC)
-	warnx("    -I only internal bus");
-#endif
+	warnx("    -X only external I2C bus");
+	warnx("    -I only internal I2C bus");
+	warnx("    -x only external SPI bus");
+	warnx("    -u only external IMU SPI bus");
 }
 
 } // namespace
@@ -1721,21 +1768,22 @@ hmc5883_main(int argc, char *argv[])
         bool calibrate = false;
 	bool temp_compensation = false;
 
-	while ((ch = getopt(argc, argv, "XISR:CT")) != EOF) {
+	while ((ch = getopt(argc, argv, "XIxuR:CT")) != EOF) {
 		switch (ch) {
 		case 'R':
 			rotation = (enum Rotation)atoi(optarg);
 			break;
-#if (PX4_I2C_BUS_ONBOARD || PX4_SPIDEV_HMC)
 		case 'I':
 			busid = HMC5883_BUS_I2C_INTERNAL;
 			break;
-#endif
 		case 'X':
 			busid = HMC5883_BUS_I2C_EXTERNAL;
 			break;
-		case 'S':
-			busid = HMC5883_BUS_SPI;
+		case 'x':
+			busid = HMC5883_BUS_SPI_EXTERNAL;
+			break;
+		case 'u':
+			busid = HMC5883_BUS_SPI_IMU;
 			break;
 		case 'C':
 			calibrate = true;
