@@ -423,6 +423,38 @@ adc_main(int argc, char *argv[])
 		/* XXX this hardcodes the default channel set for AeroCore - should be configurable */
 		g_adc = new ADC((1 << 10) | (1 << 11) | (1 << 12) | (1 << 13));
 #endif
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V45
+		/* XXX this hardcodes the default channel set for VRBRAINv45 - should be configurable */
+#if APM_BUILD_TYPE(APM_BUILD_ArduPlane)
+		g_adc = new ADC((1 <<  0) | (1 << 10) | (1 << 11));
+#else
+		g_adc = new ADC((1 << 10) | (1 << 11));
+#endif
+#endif
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V51
+		/* XXX this hardcodes the default channel set for VRBRAINv51 - should be configurable */
+#if APM_BUILD_TYPE(APM_BUILD_ArduPlane)
+		g_adc = new ADC((1 << 10) | (1 << 11) | (1 << 14));
+#else
+		g_adc = new ADC((1 << 10) | (1 << 11));
+#endif
+#endif
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V52
+		/* XXX this hardcodes the default channel set for VRBRAINv51 - should be configurable */
+#if APM_BUILD_TYPE(APM_BUILD_ArduPlane)
+		g_adc = new ADC((1 << 10) | (1 << 11) | (1 << 14));
+#else
+		g_adc = new ADC((1 << 10) | (1 << 11));
+#endif
+#endif
+#ifdef CONFIG_ARCH_BOARD_VRUBRAIN_V51
+		/* XXX this hardcodes the default channel set for VRUBRAINv51 - should be configurable */
+		g_adc = new ADC((1 << 10));
+#endif
+#ifdef CONFIG_ARCH_BOARD_VRUBRAIN_V52
+		/* XXX this hardcodes the default channel set for VRUBRAINv51 - should be configurable */
+		g_adc = new ADC((1 << 1) | (1 << 2) | (1 << 3) | (1 << 10));
+#endif
 
 		if (g_adc == nullptr)
 			errx(1, "couldn't allocate the ADC driver");
