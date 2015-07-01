@@ -115,9 +115,9 @@ ifeq ($(PX4_TARGET_OS),nuttx)
 #
 # Built products
 #
-DESIRED_FIRMWARES 	 = $(foreach config,$(CONFIGS),$(IMAGE_DIR)$(config).px4)
-STAGED_FIRMWARES	 = $(foreach config,$(KNOWN_CONFIGS),$(IMAGE_DIR)$(config).px4)
-FIRMWARES		 = $(foreach config,$(KNOWN_CONFIGS),$(BUILD_DIR)$(config).build/firmware.px4)
+DESIRED_FIRMWARES 	 = $(foreach config,$(CONFIGS),$(IMAGE_DIR)$(config).vrx)
+STAGED_FIRMWARES	 = $(foreach config,$(KNOWN_CONFIGS),$(IMAGE_DIR)$(config).vrx)
+FIRMWARES		 = $(foreach config,$(KNOWN_CONFIGS),$(BUILD_DIR)$(config).build/firmware.vrx)
 
 all:	$(DESIRED_FIRMWARES)
 
@@ -125,21 +125,22 @@ all:	$(DESIRED_FIRMWARES)
 # Copy FIRMWARES into the image directory.
 #
 # XXX copying the .bin files is a hack to work around the PX4IO uploader
-#     not supporting .px4 files, and it should be deprecated onced that
+#     not supporting .vrx files, and it should be deprecated onced that 
 #     is taken care of.
 #
-$(STAGED_FIRMWARES): $(IMAGE_DIR)%.px4: $(BUILD_DIR)%.build/firmware.px4
+$(STAGED_FIRMWARES): $(IMAGE_DIR)%.vrx: $(BUILD_DIR)%.build/firmware.vrx
 	@$(ECHO) %% Copying $@
 	$(Q) $(COPY) $< $@
-	$(Q) $(COPY) $(patsubst %.px4,%.bin,$<) $(patsubst %.px4,%.bin,$@)
+	$(Q) $(COPY) $(patsubst %.vrx,%.bin,$<) $(patsubst %.vrx,%.bin,$@)
+	$(Q) $(COPY) $(patsubst %.vrx,%.hex,$<) $(patsubst %.vrx,%.hex,$@)
 
 #
 # Generate FIRMWARES.
 #
 .PHONY: $(FIRMWARES)
-$(BUILD_DIR)%.build/firmware.px4: config   = $(patsubst $(BUILD_DIR)%.build/firmware.px4,%,$@)
-$(BUILD_DIR)%.build/firmware.px4: work_dir = $(BUILD_DIR)$(config).build/
-$(FIRMWARES): $(BUILD_DIR)%.build/firmware.px4:	generateuorbtopicheaders checksubmodules
+$(BUILD_DIR)%.build/firmware.vrx: config   = $(patsubst $(BUILD_DIR)%.build/firmware.vrx,%,$@)
+$(BUILD_DIR)%.build/firmware.vrx: work_dir = $(BUILD_DIR)$(config).build/
+$(FIRMWARES): $(BUILD_DIR)%.build/firmware.vrx:	generateuorbtopicheaders checksubmodules
 	@$(ECHO) %%%%
 	@$(ECHO) %%%% Building $(config) in $(work_dir)
 	@$(ECHO) %%%%
@@ -150,18 +151,18 @@ $(FIRMWARES): $(BUILD_DIR)%.build/firmware.px4:	generateuorbtopicheaders checksu
 		WORK_DIR=$(work_dir) \
 		$(FIRMWARE_GOAL)
 
-#
-# Make FMU firmwares depend on the corresponding IO firmware.
-#
-# This is a pretty vile hack, since it hard-codes knowledge of the FMU->IO dependency
-# and forces the _default config in all cases. There has to be a better way to do this...
-#
-FMU_VERSION		 = $(patsubst px4fmu-%,%,$(word 1, $(subst _, ,$(1))))
-define FMU_DEP
-$(BUILD_DIR)$(1).build/firmware.px4: $(IMAGE_DIR)px4io-$(call FMU_VERSION,$(1))_default.px4
-endef
-FMU_CONFIGS		:= $(filter px4fmu%,$(CONFIGS))
-$(foreach config,$(FMU_CONFIGS),$(eval $(call FMU_DEP,$(config))))
+
+
+
+
+
+
+
+
+
+
+
+
 
 #
 # Build the NuttX export archives.
@@ -319,12 +320,11 @@ clean:
 	@echo > /dev/null
 	$(Q) $(RMDIR) $(BUILD_DIR)*.build
 	$(Q) $(REMOVE) $(BUILD_DIR)git_version.*
-	$(Q) $(REMOVE) $(IMAGE_DIR)*.px4
+	$(Q) $(REMOVE) $(IMAGE_DIR)*.vrx
 
 .PHONY:	distclean
 distclean: clean
 	@echo > /dev/null
-	$(Q) $(REMOVE) $(ARCHIVE_DIR)*.export
 	$(Q) $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) distclean
 	$(Q) (cd $(NUTTX_SRC)/configs && $(FIND) . -maxdepth 1 -type l -delete)
 
@@ -334,7 +334,7 @@ distclean: clean
 .PHONY: help
 help:
 	@$(ECHO) ""
-	@$(ECHO) " PX4 firmware builder"
+	@$(ECHO) " VRX firmware builder"
 	@$(ECHO) " ===================="
 	@$(ECHO) ""
 	@$(ECHO) "  Available targets:"
