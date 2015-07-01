@@ -71,10 +71,9 @@
 
 enum MS5611_BUS {
 	MS5611_BUS_ALL = 0,
-	MS5611_BUS_I2C_INTERNAL,
-	MS5611_BUS_I2C_EXTERNAL,
 	MS5611_BUS_SPI_INTERNAL,
-	MS5611_BUS_SPI_EXTERNAL
+	MS5611_BUS_SPI_EXTERNAL,
+	MS5611_BUS_SPI_IMU
 };
 
 /* oddly, ERROR is not defined for c++ */
@@ -100,8 +99,6 @@ static const int ERROR = -1;
 /* internal conversion time: 9.17 ms, so should not be read at rates higher than 100 Hz */
 #define MS5611_CONVERSION_INTERVAL	10000	/* microseconds */
 #define MS5611_MEASUREMENT_RATIO	3	/* pressure measurements per temperature measurement */
-#define MS5611_BARO_DEVICE_PATH_EXT	"/dev/ms5611_ext"
-#define MS5611_BARO_DEVICE_PATH_INT	"/dev/ms5611_int"
 
 class MS5611 : public device::CDev
 {
@@ -800,19 +797,18 @@ struct ms5611_bus_option {
 	const char *devpath;
 	MS5611_constructor interface_constructor;
 	uint8_t busnum;
+	uint16_t address;
+	bool is_external;
 	MS5611 *dev;
 } bus_options[] = {
-#if defined(PX4_SPIDEV_EXT_BARO) && defined(PX4_SPI_BUS_EXT)
-	{ MS5611_BUS_SPI_EXTERNAL, "/dev/ms5611_spi_ext", &MS5611_spi_interface, PX4_SPI_BUS_EXT, NULL },
+#ifdef SPI_BUS_MS5611
+	{ MS5611_BUS_SPI_INTERNAL, "/dev/ms5611_spi_int", &MS5611_spi_interface, SPI_BUS_MS5611, SPIDEV_MS5611, false, NULL },
 #endif
-#ifdef PX4_SPIDEV_BARO
-	{ MS5611_BUS_SPI_INTERNAL, "/dev/ms5611_spi_int", &MS5611_spi_interface, PX4_SPI_BUS_SENSORS, NULL },
+#ifdef SPI_BUS_EXP_MS5611
+	{ MS5611_BUS_SPI_EXTERNAL, "/dev/ms5611_spi_exp", &MS5611_spi_interface, SPI_BUS_EXP_MS5611, SPIDEV_EXP_MS5611, true, NULL },
 #endif
-#ifdef PX4_I2C_BUS_ONBOARD
-	{ MS5611_BUS_I2C_INTERNAL, "/dev/ms5611_int", &MS5611_i2c_interface, PX4_I2C_BUS_ONBOARD, NULL },
-#endif
-#ifdef PX4_I2C_BUS_EXPANSION
-	{ MS5611_BUS_I2C_EXTERNAL, "/dev/ms5611_ext", &MS5611_i2c_interface, PX4_I2C_BUS_EXPANSION, NULL },
+#ifdef SPI_BUS_IMU_MS5611
+	{ MS5611_BUS_SPI_IMU, "/dev/ms5611_spi_imu", &MS5611_spi_interface, SPI_BUS_IMU_MS5611, SPIDEV_IMU_MS5611, true, NULL },
 #endif
 };
 #define NUM_BUS_OPTIONS (sizeof(bus_options)/sizeof(bus_options[0]))
@@ -883,7 +879,7 @@ start_bus(struct ms5611_bus_option &bus)
 		errx(1,"bus option already started");
 
 	prom_u prom_buf;
-	device::Device *interface = bus.interface_constructor(prom_buf, bus.busnum);
+	device::Device *interface = bus.interface_constructor(prom_buf, bus.busnum, bus.address, bus.is_external);
 	if (interface->init() != OK) {
 		delete interface;
 		warnx("no device on bus %u", (unsigned)bus.busid);
@@ -1142,10 +1138,9 @@ usage()
 {
 	warnx("missing command: try 'start', 'info', 'test', 'test2', 'reset', 'calibrate'");
 	warnx("options:");
-	warnx("    -X    (external I2C bus)");
-	warnx("    -I    (intternal I2C bus)");
-	warnx("    -S    (external SPI bus)");
-	warnx("    -s    (internal SPI bus)");
+	warnx("    -X only external SPI bus");
+	warnx("    -U only external SPI IMU");
+	warnx("    -I only internal SPI bus");
 }
 
 } // namespace
@@ -1157,19 +1152,16 @@ ms5611_main(int argc, char *argv[])
 	int ch;
 
 	/* jump over start/off/etc and look at options first */
-	while ((ch = getopt(argc, argv, "XISs")) != EOF) {
+	while ((ch = getopt(argc, argv, "XUIxiu")) != EOF) {
 		switch (ch) {
 		case 'X':
-			busid = MS5611_BUS_I2C_EXTERNAL;
-			break;
-		case 'I':
-			busid = MS5611_BUS_I2C_INTERNAL;
-			break;
-		case 'S':
 			busid = MS5611_BUS_SPI_EXTERNAL;
 			break;
-		case 's':
+		case 'I':
 			busid = MS5611_BUS_SPI_INTERNAL;
+			break;
+		case 'U':
+			busid = MS5611_BUS_SPI_IMU;
 			break;
 		default:
 			ms5611::usage();
