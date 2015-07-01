@@ -49,6 +49,8 @@
 
 #define BARO_BASE_DEVICE_PATH	"/dev/baro"
 #define BARO0_DEVICE_PATH	"/dev/baro0"
+#define BARO1_DEVICE_PATH	"/dev/baro1"
+#define BARO2_DEVICE_PATH	"/dev/baro2"
 
 /**
  * baro report structure.  Reads from the device must be in multiples of this
