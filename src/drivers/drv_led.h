@@ -48,10 +48,55 @@
 #define _LED_BASE		0x2800
 
 /* PX4 LED colour codes */
+#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
+#define LED_YELLOW		0
+#define LED_BLUE		0
+#define LED_AMBER		1
+#define LED_RED			1
+#define LED_GREEN		2
+#define LED_EXT1		3
+#define LED_EXT2		4
+#define LED_EXT3		5
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
+#define LED_YELLOW		1
+#define LED_BLUE		1
+#define LED_AMBER		2
+#define LED_RED			2
+#define LED_GREEN		0
+#define LED_EXT1		3
+#define LED_EXT2		4
+#define LED_EXT3		5
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V52)
+#define LED_YELLOW		1
+#define LED_BLUE		1
+#define LED_AMBER		2
+#define LED_RED			2
+#define LED_GREEN		0
+#define LED_EXT1		3
+#define LED_EXT2		4
+#define LED_EXT3		5
+#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+#define LED_YELLOW		1
+#define LED_BLUE		1
+#define LED_AMBER		2
+#define LED_RED			2
+#define LED_GREEN		0
+#define LED_EXT1		3
+#define LED_EXT2		4
+#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
+#define LED_YELLOW		1
+#define LED_BLUE		1
+#define LED_AMBER		2
+#define LED_RED			2
+#define LED_GREEN		0
+#define LED_EXT1		3
+#define LED_EXT2		4
+#else
 #define LED_AMBER		1
 #define LED_RED			1	/* some boards have red rather than amber */
 #define LED_BLUE		0
 #define LED_SAFETY		2
+#endif
 
 #define LED_ON			_PX4_IOC(_LED_BASE, 0)
 #define LED_OFF			_PX4_IOC(_LED_BASE, 1)
