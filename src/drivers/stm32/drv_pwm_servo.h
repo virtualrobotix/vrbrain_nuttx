@@ -40,10 +40,15 @@
 #pragma once
 
 #include <drivers/drv_pwm_output.h>
+#include <board_config.h>
 
 /* configuration limits */
-#define PWM_SERVO_MAX_TIMERS	4
+#define PWM_SERVO_MAX_TIMERS	5
+#if !CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
+#define PWM_SERVO_MAX_CHANNELS	12
+#else
 #define PWM_SERVO_MAX_CHANNELS	8
+#endif
 
 /* array of timers dedicated to PWM servo use */
 struct pwm_servo_timer {
