@@ -94,6 +94,56 @@
 
 #endif
 
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V45
+
+/**
+ * Device paths for things that support the GPIO ioctl protocol.
+ */
+# define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
+# define VRINPUT_DEVICE_PATH	"/dev/vrinput"
+
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V51
+
+/**
+ * Device paths for things that support the GPIO ioctl protocol.
+ */
+# define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
+# define VRINPUT_DEVICE_PATH	"/dev/vrinput"
+
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRBRAIN_V52
+
+/**
+ * Device paths for things that support the GPIO ioctl protocol.
+ */
+# define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
+# define VRINPUT_DEVICE_PATH	"/dev/vrinput"
+
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRUBRAIN_V51
+
+/**
+ * Device paths for things that support the GPIO ioctl protocol.
+ */
+# define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
+# define VRINPUT_DEVICE_PATH	"/dev/vrinput"
+
+#endif
+
+#ifdef CONFIG_ARCH_BOARD_VRUBRAIN_V52
+
+/**
+ * Device paths for things that support the GPIO ioctl protocol.
+ */
+# define VROUTPUT_DEVICE_PATH	"/dev/vroutput"
+# define VRINPUT_DEVICE_PATH	"/dev/vrinput"
+
+#endif
+
 #ifdef CONFIG_ARCH_BOARD_AEROCORE
 /*
  * AeroCore GPIO numbers and configuration.
@@ -121,7 +171,9 @@
 #if !defined(CONFIG_ARCH_BOARD_PX4IO_V1) && !defined(CONFIG_ARCH_BOARD_PX4IO_V2)  && \
 	!defined(CONFIG_ARCH_BOARD_PX4FMU_V1) && !defined(CONFIG_ARCH_BOARD_PX4FMU_V2) && \
 	!defined(CONFIG_ARCH_BOARD_AEROCORE) && !defined(CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY) && \
-	!defined(CONFIG_ARCH_BOARD_POSIXTEST)
+	!defined(CONFIG_ARCH_BOARD_POSIXTEST) && \
+	!defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && \
+	!defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 # error No CONFIG_ARCH_BOARD_xxxx set
 #endif
 /*
