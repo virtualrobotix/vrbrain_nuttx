@@ -249,12 +249,9 @@ endif
 
 .PHONY: checksubmodules
 checksubmodules:
-	$(Q) ($(PX4_BASE)/Tools/check_submodules.sh)
 
 .PHONY: updatesubmodules
 updatesubmodules:
-	$(Q) (git submodule init)
-	$(Q) (git submodule update)
 
 MSG_DIR = $(PX4_BASE)msg
 UORB_TEMPLATE_DIR = $(PX4_BASE)msg/templates/uorb
