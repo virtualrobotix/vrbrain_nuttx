@@ -10,4 +10,5 @@ SRCS		 = board_can.c \
 		   board_usb.c \
 		   board_led.c \
 		   board_buzzer.c
-		   
+
+MAXOPTIMIZATION	 = -Os
