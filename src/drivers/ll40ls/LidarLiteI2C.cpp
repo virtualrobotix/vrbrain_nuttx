@@ -72,6 +72,11 @@ LidarLiteI2C::LidarLiteI2C(int bus, const char *path, int address) :
 	_zero_counter(0),
 	_acquire_time_usec(0),
 	_pause_measurements(false),
+	_hw_version(0),
+	_sw_version(0),
+	_v2_hardware(false),
+	_reset_complete(false),
+	_same_value_counter(0),
 	_bus(bus)
 {
 	// up the retries since the device misses the first measure attempts
@@ -146,7 +151,30 @@ out:
 
 int LidarLiteI2C::read_reg(uint8_t reg, uint8_t &val)
 {
-	return transfer(&reg, 1, &val, 1);
+	return lidar_transfer(&reg, 1, &val, 1);
+}
+
+int LidarLiteI2C::write_reg(uint8_t reg, uint8_t val)
+{
+	const uint8_t cmd[2] = { reg, val };
+	return transfer(&cmd[0], 2, NULL, 0);
+}
+
+/*
+  LidarLite specific transfer() function that avoids a stop condition
+  with SCL low
+ */
+int LidarLiteI2C::lidar_transfer(const uint8_t *send, unsigned send_len, uint8_t *recv, unsigned recv_len)
+{
+	if (send != NULL && send_len > 0) {
+		int ret = transfer(send, send_len, NULL, 0);
+		if (ret != OK)
+			return ret;
+	}
+	if (recv != NULL && recv_len > 0) {
+		return transfer(NULL, 0, recv, recv_len);
+	}
+	return OK;
 }
 
 int LidarLiteI2C::probe()
@@ -158,39 +186,29 @@ int LidarLiteI2C::probe()
 	_retries = 10;
 
 	for (uint8_t i = 0; i < sizeof(addresses); i++) {
-		uint8_t who_am_i = 0, max_acq_count = 0;
-
-		// set the I2C bus address
-		set_address(addresses[i]);
-
-		/* register 2 defaults to 0x80. If this matches it is
-		   almost certainly a ll40ls */
-		if (read_reg(LL40LS_MAX_ACQ_COUNT_REG, max_acq_count) == OK && max_acq_count == 0x80) {
-			// very likely to be a ll40ls. This is the
-			// default max acquisition counter
+		/*
+		  check for hw and sw versions. It would be better if
+		  we had a proper WHOAMI register
+		 */
+		if (read_reg(LL40LS_HW_VERSION, _hw_version) == OK && _hw_version > 0 &&
+		    read_reg(LL40LS_SW_VERSION, _sw_version) == OK && _sw_version > 0) {
 			goto ok;
 		}
 
-		if (read_reg(LL40LS_WHO_AM_I_REG, who_am_i) == OK && who_am_i == LL40LS_WHO_AM_I_REG_VAL) {
-			// it is responding correctly to a
-			// WHO_AM_I. This works with older sensors (pre-production)
-			goto ok;
-		}
-
-		debug("probe failed reg11=0x%02x reg2=0x%02x\n",
-		      (unsigned)who_am_i,
-		      (unsigned)max_acq_count);
+		debug("probe failed hw_version=0x%02x sw_version=0x%02x\n",
+                      (unsigned)_hw_version,
+                      (unsigned)_sw_version);
 	}
 
 	// not found on any address
 	return -EIO;
 
 ok:
+	// "blue label" V2 lidars have hw version 0x15
+	_v2_hardware = (_hw_version >= 0x15);
 	_retries = 3;
-
-	// reset the sensor to ensure it is in a known state with
-	// correct settings
-	return reset_sensor();
+	_reset_complete = false;
+	return OK;
 }
 
 int LidarLiteI2C::ioctl(struct file *filp, int cmd, unsigned long arg)
@@ -290,6 +308,13 @@ ssize_t LidarLiteI2C::read(struct file *filp, char *buffer, size_t buflen)
 
 int LidarLiteI2C::measure()
 {
+	if (_v2_hardware) {
+		// we use continuous mode for V2 hardware so there is
+		// no measure() phase. Experiments show that
+		// non-continuous mode is not reliable, often gives
+		// false values for distance
+		return OK;
+	}
 	int ret;
 
 	if (_pause_measurements) {
@@ -300,10 +325,19 @@ int LidarLiteI2C::measure()
 	}
 
 	/*
+	  see if the reset of the sensor is complete. If it isn't
+	  complete yet then don't do the measure() cycle this time.
+	 */
+	if (! _reset_complete) {
+		ret = reset_sensor();
+		if (ret != OK)
+			return ret;
+	}
+
+	/*
 	 * Send the command to begin a measurement.
 	 */
-	const uint8_t cmd[2] = { LL40LS_MEASURE_REG, LL40LS_MSRREG_ACQUIRE };
-	ret = transfer(cmd, sizeof(cmd), nullptr, 0);
+	ret = write_reg(LL40LS_MEASURE_REG, LL40LS_MSRREG_ACQUIRE);
 
 	if (OK != ret) {
 		perf_count(_comms_errors);
@@ -312,8 +346,7 @@ int LidarLiteI2C::measure()
 		// if we are getting lots of I2C transfer errors try
 		// resetting the sensor
 		if (perf_event_count(_comms_errors) % 10 == 0) {
-			perf_count(_sensor_resets);
-			reset_sensor();
+			_reset_complete = false;
 		}
 
 		return ret;
@@ -328,13 +361,77 @@ int LidarLiteI2C::measure()
 }
 
 /*
-  reset the sensor to power on defaults
+  a table of settings for a lidar
+ */
+struct settings_table {
+	uint8_t reg;
+	uint8_t value;
+};
+
+/*
+  register setup table for V1 Lidar
+ */
+static const struct settings_table settings_v1[] = {
+	{ LL40LS_MEASURE_REG, LL40LS_MSRREG_RESET },
+};
+
+/*
+  register setup table for V2 Lidar
+ */
+static const struct settings_table settings_v2[] = {
+	{ LL40LS_INTERVAL, 0x28 }, // 0x28 == 50Hz
+	{ LL40LS_COUNT, LL40LS_COUNT_CONTINUOUS },
+	{ LL40LS_MEASURE_REG, LL40LS_MSRREG_ACQUIRE },
+};
+
+/*
+  reset the sensor to required settings. This is done by incrementally
+  setting all register values according to the hw version. It may take
+  multiple tries to get the sensor fully reset, as the sensor may not
+  respond immediately
  */
 int LidarLiteI2C::reset_sensor()
 {
-	const uint8_t cmd[2] = { LL40LS_MEASURE_REG, LL40LS_MSRREG_RESET };
-	int ret = transfer(cmd, sizeof(cmd), nullptr, 0);
-	return ret;
+	perf_count(_sensor_resets);
+
+	// force _reset_complete here so when called via the ioctl it
+	// will keep trying the reset
+	_reset_complete = false;
+
+	const struct settings_table *table;
+	uint8_t num_settings;
+	if (_v2_hardware) {
+		table = settings_v2;
+		num_settings = sizeof(settings_v2)/sizeof(settings_table);
+	} else {
+		table = settings_v1;
+		num_settings = sizeof(settings_v1)/sizeof(settings_table);
+	}
+
+	/*
+	  we accept the sensor as reset when all registers have taken
+	  on their expected values.
+	 */
+	for (uint8_t i=0; i<num_settings; i++) {
+		uint8_t val;
+		int ret;
+		ret = read_reg(table[i].reg, val);
+		if (ret != OK)
+			return ret;
+		if (val == table[i].value)
+			continue;
+		ret = write_reg(table[i].reg, table[i].value);
+		if (ret != OK)
+			return ret;
+		ret = read_reg(table[i].reg, val);
+		if (ret != OK)
+			return ret;
+		if (val != table[i].value)
+			return -EIO;
+	}
+
+	_reset_complete = true;
+	return OK;
 }
 
 /*
@@ -349,7 +446,7 @@ void LidarLiteI2C::print_registers()
 
 	for (uint8_t reg = 0; reg <= 0x67; reg++) {
 		uint8_t val = 0;
-		int ret = transfer(&reg, 1, &val, 1);
+		int ret = read_reg(reg, val);
 
 		if (ret != OK) {
 			printf("%02x:XX ", (unsigned)reg);
@@ -371,16 +468,28 @@ int LidarLiteI2C::collect()
 {
 	int ret = -EIO;
 
+	/*
+	  see if the reset of the sensor is complete. If it isn't
+	  complete yet then don't do the collect cycle this time.
+	 */
+	if (! _reset_complete) {
+		ret = reset_sensor();
+		if (ret != OK)
+			return ret;
+	}
+
 	/* read from the sensor */
 	uint8_t val[2] = {0, 0};
 
 	perf_begin(_sample_perf);
 
 	// read the high and low byte distance registers
-	uint8_t distance_reg = LL40LS_DISTHIGH_REG;
-	ret = transfer(&distance_reg, 1, &val[0], sizeof(val));
+	uint8_t distance_reg = LL40LS_DISTHIGH_REG | LL40LS_AUTO_INCREMENT;
+	ret = lidar_transfer(&distance_reg, 1, &val[0], sizeof(val));
 
-	if (ret < 0) {
+	// if the transfer failed or if the high bit of distance is
+	// set then the distance is invalid
+	if (ret < 0 || (val[0] & 0x80)) {
 		if (hrt_absolute_time() - _acquire_time_usec > LL40LS_CONVERSION_TIMEOUT) {
 			/*
 			  NACKs from the sensor are expected when we
@@ -391,8 +500,7 @@ int LidarLiteI2C::collect()
 			perf_count(_comms_errors);
 
 			if (perf_event_count(_comms_errors) % 10 == 0) {
-				perf_count(_sensor_resets);
-				reset_sensor();
+				_reset_complete = false;
 			}
 		}
 
@@ -420,14 +528,29 @@ int LidarLiteI2C::collect()
 			_zero_counter = 0;
 			perf_end(_sample_perf);
 			perf_count(_sensor_zero_resets);
-			return reset_sensor();
+			_reset_complete = false;
+			return -EIO;
 		}
 
 	} else {
 		_zero_counter = 0;
 	}
 
-	_last_distance = distance_m;
+	if (_last_distance == distance_cm) {
+		_same_value_counter++;
+		if (_same_value_counter >= 200) {
+			/*
+			  we are getting continuous identical values,
+			  the sensor may need to be reset
+			 */
+			_reset_complete = false;
+			_same_value_counter = 0;
+		}
+	} else {
+		_same_value_counter = 0;
+	}
+	_last_distance = distance_cm;
+	
 
 	/* this should be fairly close to the end of the measurement, so the best approximation of the time */
 	report.timestamp = hrt_absolute_time();
