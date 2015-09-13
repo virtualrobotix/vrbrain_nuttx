@@ -145,7 +145,7 @@ $(FIRMWARES): $(BUILD_DIR)%.build/firmware.vrx:	generateuorbtopicheaders checksu
 	@$(ECHO) %%%% Building $(config) in $(work_dir)
 	@$(ECHO) %%%%
 	$(Q) $(MKDIR) -p $(work_dir)
-	$(Q) $(MAKE) -r -C $(work_dir) \
+	$(Q)+ $(MAKE) -r -C $(work_dir) \
 		-f $(PX4_MK_DIR)firmware.mk \
 		CONFIG=$(config) \
 		WORK_DIR=$(work_dir) \
@@ -179,24 +179,16 @@ NUTTX_ARCHIVES		 = $(foreach board,$(BOARDS),$(ARCHIVE_DIR)$(board).export)
 .PHONY:			archives
 archives:		checksubmodules $(NUTTX_ARCHIVES)
 
-# We cannot build these parallel; note that we also force -j1 for the
-# sub-make invocations.
-ifneq ($(filter archives,$(MAKECMDGOALS)),)
-.NOTPARALLEL:
-endif
-
-J?=1
-
 $(ARCHIVE_DIR)%.export:	board = $(notdir $(basename $@))
 $(ARCHIVE_DIR)%.export:	configuration = nsh
 $(NUTTX_ARCHIVES): $(ARCHIVE_DIR)%.export: $(NUTTX_SRC)
 	@$(ECHO) %% Configuring NuttX for $(board)
 	$(Q) (cd $(NUTTX_SRC) && $(RMDIR) nuttx-export)
-	$(Q) $(MAKE) -r -j$(J) -C $(NUTTX_SRC) -r $(MQUIET) distclean
+	$(Q)+ $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) distclean
 	$(Q) (cd $(NUTTX_SRC)/configs && $(COPYDIR) $(PX4_BASE)nuttx-configs/$(board) .)
 	$(Q) (cd $(NUTTX_SRC)tools && ./configure.sh $(board)/$(configuration))
 	@$(ECHO) %% Exporting NuttX for $(board)
-	$(Q) $(MAKE) -r -j$(J) -C $(NUTTX_SRC) -r $(MQUIET) CONFIG_ARCH_BOARD=$(board) export
+	$(Q)+ $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) CONFIG_ARCH_BOARD=$(board) export
 	$(Q) $(MKDIR) -p $(dir $@)
 	$(Q) $(COPY) $(NUTTX_SRC)nuttx-export.zip $@
 	$(Q) (cd $(NUTTX_SRC)/configs && $(RMDIR) $(board))
@@ -213,11 +205,11 @@ BOARD			 = $(BOARDS)
 menuconfig: $(NUTTX_SRC)
 	@$(ECHO) %% Configuring NuttX for $(BOARD)
 	$(Q) (cd $(NUTTX_SRC) && $(RMDIR) nuttx-export)
-	$(Q) $(MAKE) -r -j$(J) -C $(NUTTX_SRC) -r $(MQUIET) distclean
+	$(Q)+ $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) distclean
 	$(Q) (cd $(NUTTX_SRC)/configs && $(COPYDIR) $(PX4_BASE)nuttx-configs/$(BOARD) .)
 	$(Q) (cd $(NUTTX_SRC)tools && ./configure.sh $(BOARD)/nsh)
 	@$(ECHO) %% Running menuconfig for $(BOARD)
-	$(Q) $(MAKE) -r -j$(J) -C $(NUTTX_SRC) -r $(MQUIET) menuconfig
+	$(Q)+ $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) menuconfig
 	@$(ECHO) %% Saving configuration file
 	$(Q)$(COPY) $(NUTTX_SRC).config $(PX4_BASE)nuttx-configs/$(BOARD)/nsh/defconfig
 else
@@ -285,7 +277,7 @@ testbuild:
 
 nuttx posix qurt: 
 ifeq ($(GOALS),)
-	make PX4_TARGET_OS=$@ $(GOALS)
+	+$(MAKE) PX4_TARGET_OS=$@ $(GOALS)
 else
 	export PX4_TARGET_OS=$@
 endif
@@ -294,7 +286,7 @@ posixrun:
 	Tools/posix_run.sh
 
 qurtrun:
-	make PX4_TARGET_OS=qurt sim
+	$(MAKE) PX4_TARGET_OS=qurt sim
 
 #
 # Unittest targets. Builds and runs the host-level
@@ -322,7 +314,12 @@ clean:
 .PHONY:	distclean
 distclean: clean
 	@echo > /dev/null
+<<<<<<< HEAD
 	$(Q) $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) distclean
+=======
+	$(Q) $(REMOVE) $(ARCHIVE_DIR)*.export
+	$(Q)+ $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) distclean
+>>>>>>> 1623d18... build: parallelize build
 	$(Q) (cd $(NUTTX_SRC)/configs && $(FIND) . -maxdepth 1 -type l -delete)
 
 #
