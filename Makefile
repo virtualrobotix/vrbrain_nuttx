@@ -314,12 +314,7 @@ clean:
 .PHONY:	distclean
 distclean: clean
 	@echo > /dev/null
-<<<<<<< HEAD
-	$(Q) $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) distclean
-=======
-	$(Q) $(REMOVE) $(ARCHIVE_DIR)*.export
 	$(Q)+ $(MAKE) -C $(NUTTX_SRC) -r $(MQUIET) distclean
->>>>>>> 1623d18... build: parallelize build
 	$(Q) (cd $(NUTTX_SRC)/configs && $(FIND) . -maxdepth 1 -type l -delete)
 
 #
