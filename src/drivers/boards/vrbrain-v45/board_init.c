@@ -105,9 +105,69 @@ __END_DECLS
  * Protected Functions
  ****************************************************************************/
 
+#if defined(CONFIG_FAT_DMAMEMORY)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#else
+
+# define dma_alloc_init()
+
+#endif
 
 /************************************************************************************
  * Name: stm32_boardinitialize
@@ -121,9 +181,6 @@ __END_DECLS
 
 __EXPORT void stm32_boardinitialize(void)
 {
-	/* enable sys logs */
-	//syslog_enable(true);
-
 	/* configure SPI interfaces */
 	stm32_spiinitialize();
 
@@ -221,27 +278,30 @@ __EXPORT int nsh_archinitialize(void)
 	/* configure the high-resolution time/callout interface */
 	hrt_init();
 
+	/* configure the DMA allocator */
+	dma_alloc_init();
+
 	/* configure CPU load estimation */
 #ifdef CONFIG_SCHED_INSTRUMENTATION
 	cpuload_initialize_once();
 #endif
 
+	/* set up the serial DMA polling */
+	static struct hrt_call serial_dma_call;
+	struct timespec ts;
 
+	/*
+	 * Poll at 1ms intervals for received bytes that have not triggered
+	 * a DMA event.
+	 */
+	ts.tv_sec = 0;
+	ts.tv_nsec = 1000000;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	hrt_call_every(&serial_dma_call,
+		       ts_to_abstime(&ts),
+		       ts_to_abstime(&ts),
+		       (hrt_callout)stm32_serial_dma_poll,
+		       NULL);
 
 	/* initial BUZZER state */
 	drv_buzzer_start();

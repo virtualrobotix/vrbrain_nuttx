@@ -105,9 +105,69 @@ __END_DECLS
  * Protected Functions
  ****************************************************************************/
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /************************************************************************************
  * Name: stm32_boardinitialize
@@ -121,9 +181,6 @@ __END_DECLS
 
 __EXPORT void stm32_boardinitialize(void)
 {
-	/* enable sys logs */
-	//syslog_enable(true);
-
 	/* configure SPI interfaces */
 	stm32_spiinitialize();
 
@@ -220,6 +277,9 @@ __EXPORT int nsh_archinitialize(void)
 
 	/* configure the high-resolution time/callout interface */
 	hrt_init();
+
+
+
 
 	/* configure CPU load estimation */
 #ifdef CONFIG_SCHED_INSTRUMENTATION

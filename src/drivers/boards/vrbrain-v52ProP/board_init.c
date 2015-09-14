@@ -105,9 +105,69 @@ __END_DECLS
  * Protected Functions
  ****************************************************************************/
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /************************************************************************************
  * Name: stm32_boardinitialize
@@ -121,9 +181,6 @@ __END_DECLS
 
 __EXPORT void stm32_boardinitialize(void)
 {
-	/* enable sys logs */
-	//syslog_enable(true);
-
 	/* configure SPI interfaces */
 	stm32_spiinitialize();
 
@@ -223,6 +280,9 @@ __EXPORT int nsh_archinitialize(void)
 	/* configure the high-resolution time/callout interface */
 	hrt_init();
 
+
+
+
 	/* configure CPU load estimation */
 #ifdef CONFIG_SCHED_INSTRUMENTATION
 	cpuload_initialize_once();
@@ -282,9 +342,6 @@ __EXPORT int nsh_archinitialize(void)
 	up_udelay(20);
 
 	message("[boot] Successfully initialized SPI port 1\r\n");
-
-//	message("[boot] Initializing Wireless Module\n");
-//	wireless_archinitialize();
 
 	message("[boot] Initializing SPI port 2\n");
 	spi2 = up_spiinitialize(2);
