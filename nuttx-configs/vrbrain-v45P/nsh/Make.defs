@@ -1,5 +1,5 @@
 ############################################################################
-# configs/vrbrain-v45P/nsh/Make.defs
+# configs/board/nsh/Make.defs
 #
 #   Copyright (C) 2011 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
