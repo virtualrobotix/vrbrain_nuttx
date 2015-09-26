@@ -55,14 +55,18 @@ __END_DECLS
 
 __EXPORT void buzzer_init(void)
 {
+#if defined(GPIO_BUZZER)
 	stm32_configgpio(GPIO_BUZZER);
+#endif
 }
 
 __EXPORT void buzzer_on(int buzzer)
 {
 	if (buzzer == 0)
 	{
+#if defined(GPIO_BUZZER)
 		stm32_gpiowrite(GPIO_BUZZER, true);
+#endif
 	}
 }
 
@@ -70,7 +74,9 @@ __EXPORT void buzzer_off(int buzzer)
 {
 	if (buzzer == 0)
 	{
+#if defined(GPIO_BUZZER)
 		stm32_gpiowrite(GPIO_BUZZER, false);
+#endif
 	}
 }
 
@@ -78,9 +84,11 @@ __EXPORT void buzzer_toggle(int buzzer)
 {
 	if (buzzer == 0)
 	{
+#if defined(GPIO_BUZZER)
 		if (stm32_gpioread(GPIO_BUZZER))
 			stm32_gpiowrite(GPIO_BUZZER, false);
 		else
 			stm32_gpiowrite(GPIO_BUZZER, true);
+#endif
 	}
 }
