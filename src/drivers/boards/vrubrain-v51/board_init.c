@@ -273,6 +273,9 @@ __EXPORT int nsh_archinitialize(void)
 	/* configure always-on ADC pins */
 	stm32_configgpio(GPIO_ADC1_IN10);
 
+#if !CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
+    stm32_configgpio(GPIO_GPIO5_OUTPUT);
+#endif
 
 	/* configure the high-resolution time/callout interface */
 	hrt_init();

@@ -284,6 +284,9 @@ __EXPORT int nsh_archinitialize(void)
 #else
 	stm32_gpiowrite(GPIO_UART_SBUS_INVERTER, 0);
 #endif
+#if !CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
+    stm32_configgpio(GPIO_GPIO5_OUTPUT);
+#endif
 
 	/* configure the high-resolution time/callout interface */
 	hrt_init();

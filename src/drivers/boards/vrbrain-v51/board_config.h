@@ -223,6 +223,7 @@ __BEGIN_DECLS
 #endif
 #if !CONFIG_RC_INPUTS_TYPE(RC_INPUT_PWM)
 #define GPIO_GPIO1_OUTPUT   (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTC|GPIO_PIN9)
+#define GPIO_GPIO5_OUTPUT   (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN6)
 #endif
 
 /* USB Present */
@@ -288,6 +289,11 @@ __BEGIN_DECLS
 #define PPMSUM_CHANNEL		3	/* use capture/compare channel 3 */
 #define GPIO_PPM_IN			(GPIO_ALT|GPIO_AF3|GPIO_SPEED_50MHz|GPIO_PULLUP|GPIO_PORTC|GPIO_PIN8)
 #endif
+
+/* PWM input driver. Use FMU AUX5 pins attached to timer4 channel 2 */
+#define PWMIN_TIMER		    9
+#define PWMIN_TIMER_CHANNEL	1
+#define GPIO_PWM_IN		    GPIO_TIM9_CH1IN_2
 
 /****************************************************************************************************
  * Public Types
