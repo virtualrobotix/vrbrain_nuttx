@@ -44,7 +44,7 @@ MODULES		+= drivers/meas_airspeed
 MODULES		+= drivers/px4flow
 #MODULES		+= drivers/oreoled
 #MODULES		+= drivers/gimbal
-#MODULES		+= drivers/pwm_input
+MODULES		+= drivers/pwm_input
 
 MODULES		+= drivers/buzzer
 MODULES		+= drivers/boards/vrbrain-v52Pro
