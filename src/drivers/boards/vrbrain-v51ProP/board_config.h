@@ -62,6 +62,8 @@ __BEGIN_DECLS
 
 #define UDID_START		0x1FFF7A10
 
+#define CONFIG_SUBTYPE_BOARD_VRBRAIN_V51PROP
+
 #define APM_BUILD_APMrover2      1
 #define APM_BUILD_ArduCopter     2
 #define APM_BUILD_ArduPlane      3

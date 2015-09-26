@@ -50,6 +50,7 @@ MODULES		+= drivers/buzzer
 MODULES		+= drivers/boards/vrbrain-v51Pro
 MODULES		+= drivers/vrbrain/vroutput
 MODULES		+= drivers/vrbrain/vrinput
+MODULES		+= drivers/vrbrain/boardinfo
 
 #
 # System commands

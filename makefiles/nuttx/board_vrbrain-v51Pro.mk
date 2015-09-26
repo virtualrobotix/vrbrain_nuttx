@@ -7,5 +7,6 @@
 #
 CONFIG_ARCH			 = CORTEXM4F
 CONFIG_BOARD		 = VRBRAIN_V51
+CONFIG_SUBTYPE_BOARD = $(CONFIG_BOARD)PRO
 
 include $(PX4_MK_DIR)/toolchain_gnu-arm-eabi.mk
