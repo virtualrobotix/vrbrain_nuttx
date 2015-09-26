@@ -73,7 +73,6 @@
 #include <board_config.h>
 
 /* Configuration Constants */
-#define TRONE_BUS           PX4_I2C_BUS_EXPANSION
 #define TRONE_BASEADDR      0x30 /* 7-bit address */
 #define TRONE_DEVICE_PATH   	"/dev/trone"
 
@@ -103,7 +102,7 @@ static const int ERROR = -1;
 class TRONE : public device::I2C
 {
 public:
-	TRONE(int bus = TRONE_BUS, int address = TRONE_BASEADDR);
+	TRONE(int bus, int address = TRONE_BASEADDR);
 	virtual ~TRONE();
 
 	virtual int 		init();
@@ -319,10 +318,16 @@ TRONE::probe()
 	uint8_t who_am_i=0;
 
 	const uint8_t cmd = TRONE_WHO_AM_I_REG;
-	if (transfer(&cmd, 1, &who_am_i, 1) == OK && who_am_i == TRONE_WHO_AM_I_REG_VAL) {
-		// it is responding correctly to a WHO_AM_I
-		return measure();
-	}
+    
+    // set the I2C bus address
+    set_address(TRONE_BASEADDR);
+        
+    // can't use a single transfer as TROne need a bit of time for internal processing
+	if (transfer(&cmd, 1, nullptr, 0) == OK) {
+        if ( transfer(nullptr, 0, &who_am_i, 1) == OK && who_am_i == TRONE_WHO_AM_I_REG_VAL){
+            return measure();
+        }
+	}     
 
 	debug("WHO_AM_I byte mismatch 0x%02x should be 0x%02x\n",
 		(unsigned)who_am_i,
@@ -736,15 +741,24 @@ start()
 	}
 
 	/* create the driver */
-	g_dev = new TRONE(TRONE_BUS);
-
+	g_dev = new TRONE(PX4_I2C_BUS_EXPANSION);
 
 	if (g_dev == nullptr) {
 		goto fail;
 	}
 
 	if (OK != g_dev->init()) {
-		goto fail;
+		delete g_dev;
+		/* try 2nd bus */
+		g_dev = new TRONE(PX4_I2C_BUS_ONBOARD);
+
+		if (g_dev == nullptr) {
+			goto fail;
+		}
+
+		if (OK != g_dev->init()) {
+			goto fail;
+		}
 	}
 
 	/* set the poll rate to default, starts automatic data collection */
