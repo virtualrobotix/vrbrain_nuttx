@@ -250,8 +250,8 @@ private:
 	bool _timer_started;
 
 	perf_counter_t _perf_reset;
+    perf_counter_t _perf_read;
 	perf_counter_t _perf_interrupt;
-	perf_counter_t _perf_read;
 
 	void _timer_init(void);
 };
