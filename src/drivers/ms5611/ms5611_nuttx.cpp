@@ -1136,7 +1136,7 @@ calibrate(unsigned altitude, enum MS5611_BUS busid)
 void
 usage()
 {
-	warnx("missing command: try 'start', 'info', 'test', 'test2', 'reset', 'calibrate'");
+	warnx("missing command: try 'start', 'info', 'test', 'reset', 'calibrate'");
 	warnx("options:");
 	warnx("    -X only external SPI bus");
 	warnx("    -U only external SPI IMU");
