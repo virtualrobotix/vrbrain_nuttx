@@ -1207,5 +1207,6 @@ ms5611_main(int argc, char *argv[])
 		ms5611::calibrate(altitude, busid);
 	}
 
-	errx(1, "unrecognised command, try 'start', 'test', 'reset' or 'info'");
+	ms5611::usage();
+	errx(1, "unrecognised command");
 }
