@@ -104,7 +104,11 @@ const struct {
 	{"uart_send",		test_uart_send,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"uart_console",	test_uart_console,	OPT_NOJIGTEST | OPT_NOALLTEST},
 	{"hott_telemetry",	test_hott_telemetry,	OPT_NOJIGTEST | OPT_NOALLTEST},
+#endif
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
 	{"tone",		test_tone,	0},
+#endif
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	{"sleep",		test_sleep,	OPT_NOJIGTEST},
 	{"time",		test_time,	OPT_NOJIGTEST},
 	{"perf",		test_perf,	OPT_NOJIGTEST},
