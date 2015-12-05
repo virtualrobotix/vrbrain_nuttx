@@ -118,8 +118,6 @@
 #include <systemlib/err.h>
 
 /* Tone alarm configuration */
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
-
 #if   TONE_ALARM_TIMER == 2
 # define TONE_ALARM_BASE		STM32_TIM2_BASE
 # define TONE_ALARM_CLOCK		STM32_APB1_TIM2_CLKIN
@@ -228,8 +226,6 @@
 #define rCCR4    	REG(STM32_GTIM_CCR4_OFFSET)
 #define rDCR     	REG(STM32_GTIM_DCR_OFFSET)
 #define rDMAR    	REG(STM32_GTIM_DMAR_OFFSET)
-
-#endif
 
 class ToneAlarm : public device::CDev
 {
@@ -379,7 +375,6 @@ ToneAlarm::init()
 	if (ret != OK)
 		return ret;
 
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	/* configure the GPIO to the idle state */
 	stm32_configgpio(GPIO_TONE_ALARM_IDLE);
 
@@ -405,7 +400,6 @@ ToneAlarm::init()
 
 	/* make sure the timer is running */
 	rCR1 = GTIM_CR1_CEN;
-#endif
 
 	debug("ready");
 	return OK;
@@ -414,7 +408,6 @@ ToneAlarm::init()
 unsigned
 ToneAlarm::note_to_divisor(unsigned note)
 {
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	// compute the frequency first (Hz)
 	float freq = 880.0f * expf(logf(2.0f) * ((int)note - 46) / 12.0f);
 
@@ -424,15 +417,11 @@ ToneAlarm::note_to_divisor(unsigned note)
 	unsigned divisor = (period * TONE_ALARM_CLOCK) + 0.5f;
 
 	return divisor;
-#else
-	return 0;
-#endif
 }
 
 unsigned
 ToneAlarm::note_duration(unsigned &silence, unsigned note_length, unsigned dots)
 {
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	unsigned whole_note_period = (60 * 1000000 * 4) / _tempo;
 
 	if (note_length == 0)
@@ -460,15 +449,11 @@ ToneAlarm::note_duration(unsigned &silence, unsigned note_length, unsigned dots)
 	}
 
 	return note_period;
-#else
-	return 0;
-#endif
 }
 
 unsigned
 ToneAlarm::rest_duration(unsigned rest_length, unsigned dots)
 {
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	unsigned whole_note_period = (60 * 1000000 * 4) / _tempo;
 
 	if (rest_length == 0)
@@ -483,15 +468,11 @@ ToneAlarm::rest_duration(unsigned rest_length, unsigned dots)
 	}
 
 	return rest_period;
-#else
-	return 0;
-#endif
 }
 
 void
 ToneAlarm::start_note(unsigned note)
 {
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	// compute the divisor
 	unsigned divisor = note_to_divisor(note);
 
@@ -509,13 +490,11 @@ ToneAlarm::start_note(unsigned note)
 
 	// configure the GPIO to enable timer output
 	stm32_configgpio(GPIO_TONE_ALARM);
-#endif
 }
 
 void
 ToneAlarm::stop_note()
 {
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	/* stop the current note */
 	rCCER &= ~TONE_CCER;
 
@@ -523,13 +502,11 @@ ToneAlarm::stop_note()
 	 * Make sure the GPIO is not driving the speaker.
 	 */
 	stm32_configgpio(GPIO_TONE_ALARM_IDLE);
-#endif
 }
 
 void
 ToneAlarm::start_tune(const char *tune)
 {
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	// kill any current playback
 	hrt_cancel(&_note_call);
 
@@ -547,13 +524,11 @@ ToneAlarm::start_tune(const char *tune)
 
 	// schedule a callback to start playing
 	hrt_call_after(&_note_call, 0, (hrt_callout)next_trampoline, this);
-#endif
 }
 
 void
 ToneAlarm::next_note()
 {
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1) || defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
 	// do we have an inter-note gap to wait for?
 	if (_silence_length > 0) {
 		stop_note();
@@ -717,7 +692,6 @@ tune_end:
 		_default_tune_number = 0;
 	}
 	return;
-#endif
 }
 
 int
