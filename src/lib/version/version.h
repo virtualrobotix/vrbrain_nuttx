@@ -83,4 +83,8 @@
 #define	HW_ARCH "VRUBRAIN_V52"
 #endif
 
+#ifdef CONFIG_ARCH_BOARD_VRCORE_V10
+#define HW_ARCH "VRCORE_V10"
+#endif
+
 #endif /* VERSION_H_ */
