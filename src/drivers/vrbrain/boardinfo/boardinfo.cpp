@@ -125,4 +125,14 @@ int VRUBRAIN_V51P_main(int argc, char *argv[]) {exit(0);}
 extern "C" __EXPORT int VRUBRAIN_V52_main(int argc, char *argv[]);
 int VRUBRAIN_V52_main(int argc, char *argv[]) {exit(0);}
 
+#elif defined(CONFIG_SUBTYPE_BOARD_VRCORE_V10)
+
+extern "C" __EXPORT int VRCORE_V10_main(int argc, char *argv[]);
+int VRCORE_V10_main(int argc, char *argv[]) {exit(0);}
+
+#elif defined(CONFIG_SUBTYPE_BOARD_VRCORE_V10P)
+
+extern "C" __EXPORT int VRCORE_V10P_main(int argc, char *argv[]);
+int VRCORE_V10P_main(int argc, char *argv[]) {exit(0);}
+
 #endif
