@@ -143,6 +143,9 @@ private:
 #if defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	static const unsigned _max_actuators = 12;
 #endif
+#if defined(CONFIG_ARCH_BOARD_VRCORE_V10)
+    static const unsigned _max_actuators = 12;
+#endif
 
 	Mode		_mode;
 	unsigned	_pwm_default_rate;
@@ -264,6 +267,8 @@ const VROUTPUT::GPIOConfig VROUTPUT::_gpio_tab[] = {
 #if defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
+#endif
+#if defined(CONFIG_ARCH_BOARD_VRCORE_V10)
 #endif
 };
 
@@ -1754,6 +1759,10 @@ vroutput_new_mode(PortMode new_mode)
 		/* select 8-pin PWM mode */
 		servo_mode = VROUTPUT::MODE_12PWM;
 #endif
+#if defined(CONFIG_ARCH_BOARD_VRCORE_V10)
+        /* select 8-pin PWM mode */
+        servo_mode = VROUTPUT::MODE_12PWM;
+#endif
 		break;
 
 #if defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
@@ -2153,6 +2162,9 @@ vroutput_main(int argc, char *argv[])
 #endif
 #if defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
 	fprintf(stderr, "  mode_gpio, mode_pwm, test\n");
+#endif
+#if defined(CONFIG_ARCH_BOARD_VRCORE_V10)
+    fprintf(stderr, "  mode_gpio, mode_pwm, test\n");
 #endif
 	exit(1);
 }
