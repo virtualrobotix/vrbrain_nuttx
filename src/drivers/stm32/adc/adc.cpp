@@ -455,6 +455,14 @@ adc_main(int argc, char *argv[])
 		/* XXX this hardcodes the default channel set for VRUBRAINv51 - should be configurable */
 		g_adc = new ADC((1 << 1) | (1 << 2) | (1 << 3) | (1 << 10));
 #endif
+#ifdef CONFIG_ARCH_BOARD_VRCORE_V10
+        /* XXX this hardcodes the default channel set for VRBRAINv51 - should be configurable */
+#if APM_BUILD_TYPE(APM_BUILD_ArduPlane)
+        g_adc = new ADC((1 << 10) | (1 << 11) | (1 << 14));
+#else
+        g_adc = new ADC((1 << 10) | (1 << 11));
+#endif
+#endif
 
 		if (g_adc == nullptr)
 			errx(1, "couldn't allocate the ADC driver");
