@@ -108,7 +108,7 @@ const struct {
 #if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45)
 	{"tone",		test_tone,	0},
 #endif
-#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
+#if !defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) && !defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52) && !defined(CONFIG_ARCH_BOARD_VRCORE_V10)
 	{"sleep",		test_sleep,	OPT_NOJIGTEST},
 	{"time",		test_time,	OPT_NOJIGTEST},
 	{"perf",		test_perf,	OPT_NOJIGTEST},
