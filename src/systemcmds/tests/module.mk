@@ -73,5 +73,17 @@ SRCS			 = test_adc.c \
 			   test_uart_bridge.c
 endif
 
+ifneq ($(findstring VRCORE_V1, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   test_mathlib.cpp \
+			   tests_main.c \
+			   test_rc.c \
+			   test_buzzer.c \
+			   test_uart_bridge.c
+endif
+
 EXTRACXXFLAGS = -Wframe-larger-than=2500 -Wno-float-equal -Wno-double-promotion -Wno-error=logical-op
 
