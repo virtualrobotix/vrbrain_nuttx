@@ -176,7 +176,8 @@
 
 
 
-
+/* UART RX DMA configurations */
+#define DMAMAP_USART1_RX DMAMAP_USART1_RX_2
 
 /*
  * I2C
