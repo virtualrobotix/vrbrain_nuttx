@@ -173,6 +173,7 @@
 #define BIT_RAW_RDY_EN			0x01
 #define BIT_INT_ANYRD_2CLEAR		0x10
 
+#define MPU_WHOAMI_6500			0x70
 #define MPU_WHOAMI_9250			0x71
 
 #define MPU9250_DEFAULT_ONCHIP_FILTER_FREQ	41
@@ -744,6 +745,7 @@ MPU9250::probe()
 
 	// verify product revision
 	switch (_whoami) {
+	case MPU_WHOAMI_6500:
 	case MPU_WHOAMI_9250:
 		memset(_checked_values, 0, sizeof(_checked_values));
 		memset(_checked_bad, 0, sizeof(_checked_bad));
