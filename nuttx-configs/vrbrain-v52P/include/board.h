@@ -176,7 +176,8 @@
 #define GPIO_USART6_RX	GPIO_USART6_RX_1
 #define GPIO_USART6_TX	GPIO_USART6_TX_1
 
-
+/* UART RX DMA configurations */
+#define DMAMAP_USART1_RX DMAMAP_USART1_RX_2
 
 /*
  * I2C
