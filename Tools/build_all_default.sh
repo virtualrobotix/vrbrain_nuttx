@@ -15,3 +15,5 @@ make vrbrain-v52ProP_default
 make vrubrain-v51_default
 make vrubrain-v51P_default
 make vrubrain-v52_default
+make vrcore-v10_default
+make vrcore-v10P_default
