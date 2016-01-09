@@ -289,6 +289,14 @@ define SYM_TO_BIN
 	$(Q) $(OBJCOPY) -O binary $1 $2
 endef
 
+# Convert $1 from a linked object to a hex in $2
+#
+define SYM_TO_HEX
+	@$(ECHO) "HEX:     $2"
+	@$(MKDIR) -p $(dir $2)
+	$(Q) $(OBJCOPY) -O ihex $1 $2
+endef
+
 # Take the raw binary $1 and make it into an object file $2.
 # The symbol $3 points to the beginning of the file, and $3_len
 # gives its length.

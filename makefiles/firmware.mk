@@ -462,8 +462,9 @@ ifeq ($(PX4_TARGET_OS),nuttx)
 #
 # What we're going to build.
 #
-PRODUCT_BUNDLE		 = $(WORK_DIR)firmware.px4
+PRODUCT_BUNDLE		 = $(WORK_DIR)firmware.vrx
 PRODUCT_BIN		 = $(WORK_DIR)firmware.bin
+PRODUCT_HEX		 = $(WORK_DIR)firmware.hex
 PRODUCT_ELF		 = $(WORK_DIR)firmware.elf
 PRODUCT_PARAMXML = $(WORK_DIR)/parameters.xml
 
@@ -511,7 +512,8 @@ else
 endif
 
 $(PRODUCT_BIN):		$(PRODUCT_ELF)
-	$(call SYM_TO_BIN,$<,$@)
+	$(call SYM_TO_BIN,$(PRODUCT_ELF),$(PRODUCT_BIN))
+	$(call SYM_TO_HEX,$(PRODUCT_ELF),$(PRODUCT_HEX))
 
 $(PRODUCT_ELF):		$(OBJS) $(MODULE_OBJS) $(LIBRARY_LIBS) $(GLOBAL_DEPS) $(LINK_DEPS) $(MODULE_MKFILES)
 	$(call LINK,$@,$(OBJS) $(MODULE_OBJS) $(LIBRARY_LIBS))
@@ -532,7 +534,7 @@ upload:	$(PRODUCT_BUNDLE) $(PRODUCT_BIN)
 .PHONY: clean
 clean:			$(MODULE_CLEANS)
 	@$(ECHO) %% cleaning
-	$(Q) $(REMOVE) $(PRODUCT_BUNDLE) $(PRODUCT_BIN) $(PRODUCT_ELF)
+	$(Q) $(REMOVE) $(PRODUCT_BUNDLE) $(PRODUCT_BIN) $(PRODUCT_ELF) $(PRODUCT_HEX)
 	$(Q) $(REMOVE) $(OBJS) $(DEP_INCLUDES) $(EXTRA_CLEANS)
 	$(Q) $(RMDIR) $(NUTTX_EXPORT_DIR)
 endif
