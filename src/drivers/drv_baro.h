@@ -49,6 +49,8 @@
 
 #define BARO_BASE_DEVICE_PATH	"/dev/baro"
 #define BARO0_DEVICE_PATH	"/dev/baro0"
+#define BARO1_DEVICE_PATH   "/dev/baro1"
+#define BARO2_DEVICE_PATH   "/dev/baro2"
 
 #include <uORB/topics/sensor_baro.h>
 #define baro_report sensor_baro_s
