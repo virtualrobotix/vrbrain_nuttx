@@ -77,10 +77,12 @@
 #define DIR_READ			0x80
 #define DIR_WRITE			0x00
 
-#define MPU_DEVICE_PATH_ACCEL		"/dev/mpu6000_accel"
-#define MPU_DEVICE_PATH_GYRO		"/dev/mpu6000_gyro"
-#define MPU_DEVICE_PATH_ACCEL_EXT	"/dev/mpu6000_accel_ext"
-#define MPU_DEVICE_PATH_GYRO_EXT	"/dev/mpu6000_gyro_ext"
+#define MPU_DEVICE_PATH_ACCEL_INT	"/dev/mpu6000_accel_int"
+#define MPU_DEVICE_PATH_GYRO_INT	"/dev/mpu6000_gyro_int"
+#define MPU_DEVICE_PATH_ACCEL_EXP	"/dev/mpu6000_accel_exp"
+#define MPU_DEVICE_PATH_GYRO_EXP	"/dev/mpu6000_gyro_exp"
+#define MPU_DEVICE_PATH_ACCEL_IMU	"/dev/mpu6000_accel_imu"
+#define MPU_DEVICE_PATH_GYRO_IMU	"/dev/mpu6000_gyro_imu"
 
 // MPU 6000 registers
 #define MPUREG_WHOAMI			0x75
@@ -192,12 +194,6 @@
 
 #define MPU6000_ONE_G					9.80665f
 
-#ifdef PX4_SPI_BUS_EXT
-#define EXTERNAL_BUS PX4_SPI_BUS_EXT
-#else
-#define EXTERNAL_BUS 0
-#endif
-
 /*
   the MPU6000 can only handle high SPI bus speeds on the sensor and
   interrupt status registers. All other registers have a maximum 1MHz
@@ -220,7 +216,7 @@ class MPU6000 : public device::SPI
 {
 public:
 	MPU6000(int bus, const char *path_accel, const char *path_gyro, spi_dev_e device, enum Rotation rotation,
-		int device_type);
+		int device_type, enum BusSensor bustype);
 	virtual ~MPU6000();
 
 	virtual int		init();
@@ -321,6 +317,8 @@ private:
 	uint16_t		_last_accel[3];
 	bool			_got_duplicate;
 
+	enum BusSensor 		_bustype;
+
 	/**
 	 * Start automatic measurement.
 	 */
@@ -417,7 +415,7 @@ private:
 	 *
 	 * @return true if the sensor is not on the main MCU board
 	 */
-	bool			is_external() { return (_bus == EXTERNAL_BUS); }
+	bool			is_external() { return (_bustype != TYPE_BUS_SENSOR_INTERNAL); }
 
 	/**
 	 * Measurement self test
@@ -529,7 +527,7 @@ private:
 extern "C" { __EXPORT int mpu6000_main(int argc, char *argv[]); }
 
 MPU6000::MPU6000(int bus, const char *path_accel, const char *path_gyro, spi_dev_e device, enum Rotation rotation,
-		 int device_type) :
+		 int device_type, enum BusSensor bustype) :
 	SPI("MPU6000", path_accel, bus, device, SPIDEV_MODE3, MPU6000_LOW_BUS_SPEED),
 	_device_type(device_type),
 	_gyro(new MPU6000_gyro(this, path_gyro)),
@@ -572,7 +570,8 @@ MPU6000::MPU6000(int bus, const char *path_accel, const char *path_gyro, spi_dev
 	_in_factory_test(false),
 	_last_temperature(0),
 	_last_accel{},
-	_got_duplicate(false)
+	_got_duplicate(false),
+	_bustype(bustype)
 {
 	// disable debug() calls
 	_debug_enabled = false;
@@ -1759,19 +1758,68 @@ MPU6000::measure()
 	/*
 	 * Swap axes and negate y
 	 */
-	int16_t accel_xt = report.accel_y;
-	int16_t accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+	int16_t accel_xt = 0;
+	int16_t accel_yt = 0;
+	int16_t accel_zt = 0;
+	int16_t gyro_xt = 0;
+	int16_t gyro_yt = 0;
+	int16_t gyro_zt = 0;
 
-	int16_t gyro_xt = report.gyro_y;
-	int16_t gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+#if defined(CONFIG_ARCH_BOARD_VRBRAIN_V45) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52) || defined(CONFIG_ARCH_BOARD_VRCORE_V10)
+
+	if (_bustype == TYPE_BUS_SENSOR_INTERNAL) {
+
+		accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+		accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+		accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+
+		gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+		gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+		gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+
+	} else if (_bustype == TYPE_BUS_SENSOR_EXTERNAL) {
+
+		accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+		accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+		accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+
+		gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+		gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+		gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+
+	} else if (_bustype == TYPE_BUS_SENSOR_IMU) {
+
+		accel_xt = ((report.accel_y == -32768) ? 32767 : -report.accel_y);
+		accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+		accel_zt = ((report.accel_z == -32768) ? 32767 : -report.accel_z);
+
+		gyro_xt = ((report.gyro_y == -32768) ? 32767 : -report.gyro_y);
+		gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+		gyro_zt = ((report.gyro_z == -32768) ? 32767 : -report.gyro_z);
+
+	}
+
+#else
+
+	accel_xt = report.accel_y;
+	accel_yt = ((report.accel_x == -32768) ? 32767 : -report.accel_x);
+	accel_zt = report.accel_z;
+
+	gyro_xt = report.gyro_y;
+	gyro_yt = ((report.gyro_x == -32768) ? 32767 : -report.gyro_x);
+	gyro_zt = report.gyro_z;
+
+#endif
 
 	/*
 	 * Apply the swap
 	 */
 	report.accel_x = accel_xt;
 	report.accel_y = accel_yt;
+	report.accel_z = accel_zt;
 	report.gyro_x = gyro_xt;
 	report.gyro_y = gyro_yt;
+	report.gyro_z = gyro_zt;
 
 	/*
 	 * Report buffers.
@@ -1990,17 +2038,18 @@ MPU6000_gyro::ioctl(struct file *filp, int cmd, unsigned long arg)
 namespace mpu6000
 {
 
-MPU6000	*g_dev_int; // on internal bus
-MPU6000	*g_dev_ext; // on external bus
+MPU6000	*g_dev_int = nullptr;
+MPU6000	*g_dev_exp = nullptr;
+MPU6000	*g_dev_imu = nullptr;
 
-void	start(bool, enum Rotation, int range, int device_type);
-void	stop(bool);
-void	test(bool);
-void	reset(bool);
-void	info(bool);
-void	regdump(bool);
-void	testerror(bool);
-void	factorytest(bool);
+void	start(enum BusSensor bustype, enum Rotation rotation, int range, int device_type);
+void	stop(enum BusSensor bustype);
+void	test(enum BusSensor bustype);
+void	reset(enum BusSensor bustype);
+void	info(enum BusSensor bustype);
+void	regdump(enum BusSensor bustype);
+void	testerror(enum BusSensor bustype);
+void	factorytest(enum BusSensor bustype);
 void	usage();
 
 /**
@@ -2010,42 +2059,68 @@ void	usage();
  * or failed to detect the sensor.
  */
 void
-start(bool external_bus, enum Rotation rotation, int range, int device_type)
+start(enum BusSensor bustype, enum Rotation rotation, int range, int device_type)
 {
 	int fd;
-        MPU6000 **g_dev_ptr = external_bus?&g_dev_ext:&g_dev_int;
-	const char *path_accel = external_bus?MPU_DEVICE_PATH_ACCEL_EXT:MPU_DEVICE_PATH_ACCEL;
-	const char *path_gyro  = external_bus?MPU_DEVICE_PATH_GYRO_EXT:MPU_DEVICE_PATH_GYRO;
+    MPU6000 *g_dev = nullptr;
+	const char *path_accel = NULL;
+	const char *path_gyro = NULL;
 
-	if (*g_dev_ptr != nullptr)
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_NONE:
+    	break;
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+		path_accel = MPU_DEVICE_PATH_ACCEL_INT;
+		path_gyro = MPU_DEVICE_PATH_GYRO_INT;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+		path_accel = MPU_DEVICE_PATH_ACCEL_IMU;
+		path_gyro = MPU_DEVICE_PATH_GYRO_IMU;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+		path_accel = MPU_DEVICE_PATH_ACCEL_EXP;
+		path_gyro = MPU_DEVICE_PATH_GYRO_EXP;
+    	break;
+    }
+
+	if (g_dev != nullptr)
 		/* if already started, the still command succeeded */
 		errx(0, "already started");
 
 	/* create the driver */
-        if (external_bus) {
-#ifdef PX4_SPI_BUS_EXT
-# if defined(PX4_SPIDEV_EXT_ICM)
-		spi_dev_e cs = (spi_dev_e)(device_type == 6000 ? PX4_SPIDEV_EXT_MPU : PX4_SPIDEV_EXT_ICM);
-# else
-		spi_dev_e cs = (spi_dev_e) PX4_SPIDEV_EXT_MPU;
-# endif
-		*g_dev_ptr = new MPU6000(PX4_SPI_BUS_EXT, path_accel, path_gyro, cs, rotation, device_type);
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_NONE:
+    	break;
+    case TYPE_BUS_SENSOR_INTERNAL:
+#ifdef SPI_BUS_MPU6000
+		g_dev = g_dev_int = new MPU6000(SPI_BUS_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_MPU6000, rotation, device_type, bustype);
 #else
-		errx(0, "External SPI not available");
+		errx(0, "Internal SPI not available");
 #endif
-	} else {
-#if defined(PX4_SPIDEV_ICM)
-		spi_dev_e cs = (spi_dev_e)(device_type == 6000 ? PX4_SPIDEV_MPU : PX4_SPIDEV_ICM);
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+#ifdef SPI_BUS_IMU_MPU6000
+		g_dev = g_dev_imu = new MPU6000(SPI_BUS_IMU_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_IMU_MPU6000, rotation, device_type, bustype);
 #else
-		spi_dev_e cs = (spi_dev_e) PX4_SPIDEV_MPU;
+		errx(0, "External IMU SPI not available");
 #endif
-		*g_dev_ptr = new MPU6000(PX4_SPI_BUS_SENSORS, path_accel, path_gyro, cs, rotation, device_type);
-	}
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+#ifdef SPI_BUS_EXP_MPU6000
+		g_dev = g_dev_exp = new MPU6000(SPI_BUS_EXP_MPU6000, path_accel, path_gyro, (spi_dev_e)SPIDEV_EXP_MPU6000, rotation, device_type, bustype);
+#else
+		errx(0, "External EXP SPI not available");
+#endif
+    	break;
+    }
 
-	if (*g_dev_ptr == nullptr)
+	if (g_dev == nullptr)
 		goto fail;
 
-	if (OK != (*g_dev_ptr)->init())
+	if (OK != g_dev->init())
 		goto fail;
 
 	/* set the poll rate to default, starts automatic data collection */
@@ -2066,21 +2141,36 @@ start(bool external_bus, enum Rotation rotation, int range, int device_type)
 	exit(0);
 fail:
 
-	if (*g_dev_ptr != nullptr) {
-            delete (*g_dev_ptr);
-            *g_dev_ptr = nullptr;
+	if (g_dev != nullptr) {
+            delete g_dev;
+            g_dev = nullptr;
 	}
 
 	errx(1, "driver start failed");
 }
 
 void
-stop(bool external_bus)
+stop(enum BusSensor bustype)
 {
-	MPU6000 **g_dev_ptr = external_bus?&g_dev_ext:&g_dev_int;
-	if (*g_dev_ptr != nullptr) {
-		delete *g_dev_ptr;
-		*g_dev_ptr = nullptr;
+    MPU6000 *g_dev = nullptr;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_NONE:
+    	break;
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+    	break;
+    }
+	
+	if (g_dev != nullptr) {
+		delete g_dev;
+		g_dev = nullptr;
 	} else {
 		/* warn, but not an error */
 		warnx("already stopped.");
@@ -2094,13 +2184,30 @@ stop(bool external_bus)
  * and automatic modes.
  */
 void
-test(bool external_bus)
+test(enum BusSensor bustype)
 {
-	const char *path_accel = external_bus?MPU_DEVICE_PATH_ACCEL_EXT:MPU_DEVICE_PATH_ACCEL;
-	const char *path_gyro  = external_bus?MPU_DEVICE_PATH_GYRO_EXT:MPU_DEVICE_PATH_GYRO;
+	const char *path_accel = NULL;
+	const char *path_gyro = NULL;
 	accel_report a_report;
 	gyro_report g_report;
 	ssize_t sz;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_NONE:
+    	break;
+    case TYPE_BUS_SENSOR_INTERNAL:
+		path_accel = MPU_DEVICE_PATH_ACCEL_INT;
+		path_gyro = MPU_DEVICE_PATH_GYRO_INT;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		path_accel = MPU_DEVICE_PATH_ACCEL_IMU;
+		path_gyro = MPU_DEVICE_PATH_GYRO_IMU;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		path_accel = MPU_DEVICE_PATH_ACCEL_EXP;
+		path_gyro = MPU_DEVICE_PATH_GYRO_EXP;
+    	break;
+    }
 
 	/* get the driver */
 	int fd = open(path_accel, O_RDONLY);
@@ -2161,7 +2268,7 @@ test(bool external_bus)
 
 	/* XXX add poll-rate tests here too */
 
-	reset(external_bus);
+	reset(bustype);
 	errx(0, "PASS");
 }
 
@@ -2169,9 +2276,24 @@ test(bool external_bus)
  * Reset the driver.
  */
 void
-reset(bool external_bus)
+reset(enum BusSensor bustype)
 {
-	const char *path_accel = external_bus?MPU_DEVICE_PATH_ACCEL_EXT:MPU_DEVICE_PATH_ACCEL;
+	const char *path_accel = NULL;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_NONE:
+    	break;
+    case TYPE_BUS_SENSOR_INTERNAL:
+		path_accel = MPU_DEVICE_PATH_ACCEL_INT;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		path_accel = MPU_DEVICE_PATH_ACCEL_IMU;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		path_accel = MPU_DEVICE_PATH_ACCEL_EXP;
+    	break;
+    }
+
 	int fd = open(path_accel, O_RDONLY);
 
 	if (fd < 0)
@@ -2192,14 +2314,29 @@ reset(bool external_bus)
  * Print a little info about the driver.
  */
 void
-info(bool external_bus)
+info(enum BusSensor bustype)
 {
-        MPU6000 **g_dev_ptr = external_bus?&g_dev_ext:&g_dev_int;
-	if (*g_dev_ptr == nullptr)
+    MPU6000 *g_dev = nullptr;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_NONE:
+    	break;
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+    	break;
+    }
+
+	if (g_dev == nullptr)
 		errx(1, "driver not running");
 
-	printf("state @ %p\n", *g_dev_ptr);
-	(*g_dev_ptr)->print_info();
+	printf("state @ %p\n", g_dev);
+	(g_dev)->print_info();
 
 	exit(0);
 }
@@ -2208,14 +2345,29 @@ info(bool external_bus)
  * Dump the register information
  */
 void
-regdump(bool external_bus)
+regdump(enum BusSensor bustype)
 {
-	MPU6000 **g_dev_ptr = external_bus?&g_dev_ext:&g_dev_int;
-	if (*g_dev_ptr == nullptr)
+    MPU6000 *g_dev = nullptr;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_NONE:
+    	break;
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+    	break;
+    }
+
+	if (g_dev == nullptr)
 		errx(1, "driver not running");
 
-	printf("regdump @ %p\n", *g_dev_ptr);
-	(*g_dev_ptr)->print_registers();
+	printf("regdump @ %p\n", g_dev);
+	g_dev->print_registers();
 
 	exit(0);
 }
@@ -2224,13 +2376,28 @@ regdump(bool external_bus)
  * deliberately produce an error to test recovery
  */
 void
-testerror(bool external_bus)
+testerror(enum BusSensor bustype)
 {
-	MPU6000 **g_dev_ptr = external_bus?&g_dev_ext:&g_dev_int;
-	if (*g_dev_ptr == nullptr)
+    MPU6000 *g_dev = nullptr;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_NONE:
+    	break;
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+    	break;
+    }
+
+	if (g_dev == nullptr)
 		errx(1, "driver not running");
 
-	(*g_dev_ptr)->test_error();
+	g_dev->test_error();
 
 	exit(0);
 }
@@ -2239,13 +2406,28 @@ testerror(bool external_bus)
  * Dump the register information
  */
 void
-factorytest(bool external_bus)
+factorytest(enum BusSensor bustype)
 {
-	MPU6000 **g_dev_ptr = external_bus?&g_dev_ext:&g_dev_int;
-	if (*g_dev_ptr == nullptr)
+    MPU6000 *g_dev = nullptr;
+
+    switch (bustype) {
+    case TYPE_BUS_SENSOR_NONE:
+    	break;
+    case TYPE_BUS_SENSOR_INTERNAL:
+		g_dev = g_dev_int;
+    	break;
+    case TYPE_BUS_SENSOR_IMU:
+		g_dev = g_dev_imu;
+    	break;
+    case TYPE_BUS_SENSOR_EXTERNAL:
+		g_dev = g_dev_exp;
+    	break;
+    }
+
+	if (g_dev == nullptr)
 		errx(1, "driver not running");
 
-	(*g_dev_ptr)->factory_self_test();
+	g_dev->factory_self_test();
 
 	exit(0);
 }
@@ -2253,11 +2435,13 @@ factorytest(bool external_bus)
 void
 usage()
 {
-	warnx("missing command: try 'start', 'info', 'test', 'stop',\n'reset', 'regdump', 'factorytest', 'testerror'");
+	warnx("missing command: try 'start', 'info', 'test', 'stop', 'reset', 'regdump', 'factorytest', 'testerror'");
 	warnx("options:");
-	warnx("    -X    (external bus)");
-	warnx("    -M 6000|20608 (default 6000)");
 	warnx("    -R rotation");
+	warnx("    -M 6000|20608 (default 6000)");
+	warnx("    -X    (external bus)");
+	warnx("    -U    (external IMU bus)");
+	warnx("    -I    (internal bus)");
 }
 
 } // namespace
@@ -2265,17 +2449,23 @@ usage()
 int
 mpu6000_main(int argc, char *argv[])
 {
-	bool external_bus = false;
+	enum BusSensor external_bus = TYPE_BUS_SENSOR_NONE;
 	int device_type = 6000;
 	int ch;
 	enum Rotation rotation = ROTATION_NONE;
 	int accel_range = 16;
 
 	/* jump over start/off/etc and look at options first */
-	while ((ch = getopt(argc, argv, "T:XR:a:")) != EOF) {
+	while ((ch = getopt(argc, argv, "T:XIUR:a:")) != EOF) {
 		switch (ch) {
+		case 'I':
+			external_bus = TYPE_BUS_SENSOR_INTERNAL;
+			break;
+		case 'U':
+			external_bus = TYPE_BUS_SENSOR_IMU;
+			break;
 		case 'X':
-			external_bus = true;
+			external_bus = TYPE_BUS_SENSOR_EXTERNAL;
 			break;
 
 		case 'T':
