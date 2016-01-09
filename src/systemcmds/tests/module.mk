@@ -6,6 +6,7 @@ MODULE_COMMAND		 = tests
 MODULE_STACKSIZE	 = 60000
 MAXOPTIMIZATION		 = -O0
 
+ifneq ($(findstring PX4, $(CONFIG_BOARD)),)
 SRCS			 = test_adc.c \
 			   test_bson.c \
 			   test_float.c \
@@ -40,6 +41,55 @@ SRCS			+= test_time.c
 EXTRACXXFLAGS = -Wframe-larger-than=6000
 else
 EXTRACXXFLAGS =
+endif
+endif
+
+ifneq ($(findstring VRBRAIN_V4, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   test_mathlib.cpp \
+			   tests_main.c \
+			   test_rc.c \
+			   test_buzzer.c \
+			   test_uart_bridge.c
+endif
+
+ifneq ($(findstring VRBRAIN_V5, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   test_mathlib.cpp \
+			   tests_main.c \
+			   test_rc.c \
+			   test_buzzer.c \
+			   test_uart_bridge.c
+endif
+
+ifneq ($(findstring VRUBRAIN_V5, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   test_mathlib.cpp \
+			   tests_main.c \
+			   test_rc.c \
+			   test_buzzer.c \
+			   test_uart_bridge.c
+endif
+
+ifneq ($(findstring VRCORE_V1, $(CONFIG_BOARD)),)
+SRCS			 = test_adc.c \
+			   test_hrt.c \
+			   test_led.c \
+			   test_sensors.c \
+			   test_mathlib.cpp \
+			   tests_main.c \
+			   test_rc.c \
+			   test_buzzer.c \
+			   test_uart_bridge.c
 endif
 
 EXTRACXXFLAGS += -Wno-float-equal
