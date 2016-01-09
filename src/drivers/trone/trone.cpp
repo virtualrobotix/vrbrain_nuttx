@@ -73,7 +73,6 @@
 #include <board_config.h>
 
 /* Configuration Constants */
-#define TRONE_BUS           PX4_I2C_BUS_EXPANSION
 #define TRONE_BASEADDR      0x30 /* 7-bit address */
 #define TRONE_DEVICE_PATH   	"/dev/trone"
 
@@ -103,7 +102,7 @@ static const int ERROR = -1;
 class TRONE : public device::I2C
 {
 public:
-	TRONE(int bus = TRONE_BUS, int address = TRONE_BASEADDR);
+	TRONE(int bus, int address = TRONE_BASEADDR);
 	virtual ~TRONE();
 
 	virtual int 		init();
@@ -749,15 +748,24 @@ start()
 	}
 
 	/* create the driver */
-	g_dev = new TRONE(TRONE_BUS);
-
+	g_dev = new TRONE(PX4_I2C_BUS_EXPANSION);
 
 	if (g_dev == nullptr) {
 		goto fail;
 	}
 
 	if (OK != g_dev->init()) {
-		goto fail;
+		delete g_dev;
+		/* try 2nd bus */
+		g_dev = new TRONE(PX4_I2C_BUS_ONBOARD);
+
+		if (g_dev == nullptr) {
+			goto fail;
+		}
+
+		if (OK != g_dev->init()) {
+			goto fail;
+		}
 	}
 
 	/* set the poll rate to default, starts automatic data collection */
