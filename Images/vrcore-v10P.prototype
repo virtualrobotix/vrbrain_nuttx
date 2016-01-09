@@ -1,0 +1,12 @@
+{
+    "board_id": 1910, 
+    "magic": "VRCOREv10", 
+    "description": "Firmware for the VRCORE board", 
+    "image": "", 
+    "build_time": 0, 
+    "summary": "VRCORE",
+    "version": "1.0",
+    "image_size": 0,
+    "git_identity": "",
+    "board_revision": 0
+}
