@@ -16,4 +16,4 @@ make -f Makefile.make archives MAXOPTIMIZATION=-Os BOARDS=vrubrain-v52
 make -f Makefile.make archives MAXOPTIMIZATION=-Os BOARDS=vrcore-v10
 make -f Makefile.make archives MAXOPTIMIZATION=-Os BOARDS=vrcore-v10P
 
-make distclean
+make -f Makefile.make distclean
