@@ -1,8 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2012, 2013 PX4 Development Team. All rights reserved.
- *   Author: Julian Oes <joes@student.ethz.ch>
- *           Anton Babushkin <anton.babushkin@me.com>
+ *   Copyright (c) 2012-2015 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,6 +36,8 @@
  *
  * Driver for the onboard RGB LED controller (TCA62724FMG) connected via I2C.
  *
+ * @author Julian Oes <julian@px4.io>
+ * @author Anton Babushkin <anton.babushkin@me.com>
  */
 
 #include <nuttx/config.h>
@@ -67,7 +67,7 @@
 #define RGBLED_ONTIME 120
 #define RGBLED_OFFTIME 120
 
-#define ADDR			I2C_BUS_RGBLED	/**< I2C adress of TCA62724FMG */
+#define ADDR			PX4_I2C_OBDEV_LED	/**< I2C adress of TCA62724FMG */
 #define SUB_ADDR_START		0x01	/**< write everything (with auto-increment) */
 #define SUB_ADDR_PWM0		0x81	/**< blue     (without auto-increment) */
 #define SUB_ADDR_PWM1		0x82	/**< green    (without auto-increment) */
@@ -121,7 +121,7 @@ private:
 /* for now, we only support one RGBLED */
 namespace
 {
-RGBLED *g_rgbled;
+RGBLED *g_rgbled = nullptr;
 }
 
 void rgbled_usage();
@@ -181,11 +181,17 @@ RGBLED::probe()
 	   to be enough, as the 3rd one consistently fails if no
 	   RGBLED is on the bus.
 	 */
+
+	unsigned prevretries = _retries;
+	_retries = 4;
+
 	if ((ret=get(on, powersave, r, g, b)) != OK ||
 	    (ret=send_led_enable(false) != OK) ||
 	    (ret=send_led_enable(false) != OK)) {
 		return ret;
 	}
+
+	_retries = prevretries;
 
 	return ret;
 }
@@ -563,7 +569,7 @@ rgbled_usage()
 {
 	warnx("missing command: try 'start', 'test', 'info', 'off', 'stop', 'rgb 30 40 50'");
 	warnx("options:");
-	warnx("    -b i2cbus (%d)", I2C_BUS_RGBLED);
+	warnx("    -b i2cbus (%d)", PX4_I2C_BUS_LED);
 	warnx("    -a addr (0x%x)", ADDR);
 }
 
@@ -588,13 +594,13 @@ rgbled_main(int argc, char *argv[])
 
 		default:
 			rgbled_usage();
-			exit(0);
+			return 1;
 		}
 	}
 
         if (optind >= argc) {
             rgbled_usage();
-            exit(1);
+            return 1;
         }
 
 	const char *verb = argv[optind];
@@ -603,56 +609,63 @@ rgbled_main(int argc, char *argv[])
 	int ret;
 
 	if (!strcmp(verb, "start")) {
-		if (g_rgbled != nullptr)
-			errx(1, "already started");
+		if (g_rgbled != nullptr) {
+			warnx("already started");
+			return 1;
+		}
 
 		if (i2cdevice == -1) {
 			// try the external bus first
-			i2cdevice = I2C_BUS_RGBLED;
+			i2cdevice = PX4_I2C_BUS_EXPANSION;
+			g_rgbled = new RGBLED(PX4_I2C_BUS_EXPANSION, rgbledadr);
 
+			if (g_rgbled != nullptr && OK != g_rgbled->init()) {
+				delete g_rgbled;
+				g_rgbled = nullptr;
+			}
 
-
-
-
-
-
-
-
-
-
-
-
-
+			if (g_rgbled == nullptr) {
+				// fall back to default bus
+				if (PX4_I2C_BUS_LED == PX4_I2C_BUS_EXPANSION) {
+					warnx("no RGB led on bus #%d", i2cdevice);
+					return 1;
+				}
+				i2cdevice = PX4_I2C_BUS_LED;
+			}
 		}
 
 		if (g_rgbled == nullptr) {
 			g_rgbled = new RGBLED(i2cdevice, rgbledadr);
 
-			if (g_rgbled == nullptr)
-				errx(1, "new failed");
+			if (g_rgbled == nullptr) {
+				warnx("new failed");
+				return 1;
+			}
 
 			if (OK != g_rgbled->init()) {
 				delete g_rgbled;
 				g_rgbled = nullptr;
-				errx(1, "init failed");
+				warnx("no RGB led on bus #%d", i2cdevice);
+				return 1;
 			}
 		}
 
-		exit(0);
+		return 0;
 	}
 
 	/* need the driver past this point */
 	if (g_rgbled == nullptr) {
 		warnx("not started");
 		rgbled_usage();
-		exit(1);
+		return 1;
 	}
 
 	if (!strcmp(verb, "test")) {
 		fd = open(RGBLED_DEVICE_PATH, 0);
 
 		if (fd == -1) {
-			errx(1, "Unable to open " RGBLED_DEVICE_PATH);
+			warnx("Unable to open " RGBLED_DEVICE_PATH);
+			return 1;
 		}
 
 		rgbled_pattern_t pattern = { {RGBLED_COLOR_RED, RGBLED_COLOR_GREEN, RGBLED_COLOR_BLUE, RGBLED_COLOR_WHITE, RGBLED_COLOR_OFF, RGBLED_COLOR_OFF},
@@ -663,41 +676,44 @@ rgbled_main(int argc, char *argv[])
 		ret = ioctl(fd, RGBLED_SET_MODE, (unsigned long)RGBLED_MODE_PATTERN);
 
 		close(fd);
-		exit(ret);
+		return ret;
 	}
 
 	if (!strcmp(verb, "info")) {
 		g_rgbled->info();
-		exit(0);
+		return 0;
 	}
 
 	if (!strcmp(verb, "off") || !strcmp(verb, "stop")) {
 		fd = open(RGBLED_DEVICE_PATH, 0);
 
 		if (fd == -1) {
-			errx(1, "Unable to open " RGBLED_DEVICE_PATH);
+			warnx("Unable to open " RGBLED_DEVICE_PATH);
+			return 1;
 		}
 
 		ret = ioctl(fd, RGBLED_SET_MODE, (unsigned long)RGBLED_MODE_OFF);
 		close(fd);
-		exit(ret);
-	}
-
-	if (!strcmp(verb, "stop")) {
-		delete g_rgbled;
-		g_rgbled = nullptr;
-		exit(0);
+		/* delete the rgbled object if stop was requested, in addition to turning off the LED. */
+		if (!strcmp(verb, "stop")) {
+			delete g_rgbled;
+			g_rgbled = nullptr;
+			return 0;
+		}
+		return ret;
 	}
 
 	if (!strcmp(verb, "rgb")) {
 		if (argc < 5) {
-			errx(1, "Usage: rgbled rgb <red> <green> <blue>");
+			warnx("Usage: rgbled rgb <red> <green> <blue>");
+			return 1;
 		}
 
 		fd = open(RGBLED_DEVICE_PATH, 0);
 
 		if (fd == -1) {
-			errx(1, "Unable to open " RGBLED_DEVICE_PATH);
+			warnx("Unable to open " RGBLED_DEVICE_PATH);
+			return 1;
 		}
 
 		rgbled_rgbset_t v;
@@ -707,9 +723,9 @@ rgbled_main(int argc, char *argv[])
 		ret = ioctl(fd, RGBLED_SET_RGB, (unsigned long)&v);
 		ret = ioctl(fd, RGBLED_SET_MODE, (unsigned long)RGBLED_MODE_ON);
 		close(fd);
-		exit(ret);
+		return ret;
 	}
 
 	rgbled_usage();
-	exit(0);
+	return 1;
 }
