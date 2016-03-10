@@ -173,19 +173,22 @@ __BEGIN_DECLS
 /*
  * I2C busses
  */
-#define I2C_BUS_HMC5883			2
-#define I2C_BUS_EXT_HMC5883		1
-#define I2C_BUS_EEPROM			2
-#define I2C_BUS_MEAS_AIRSPEED	1
-#define I2C_BUS_MB12XX          1
-#define I2C_BUS_RGBLED          1
+#define PX4_I2C_BUS_EXPANSION   1
+#define PX4_I2C_BUS_ONBOARD     2
 
+#define I2C_BUS_HMC5883			PX4_I2C_BUS_ONBOARD
+#define I2C_BUS_EXT_HMC5883		PX4_I2C_BUS_EXPANSION
+#define I2C_BUS_EEPROM			PX4_I2C_BUS_ONBOARD
+#define I2C_BUS_MEAS_AIRSPEED	PX4_I2C_BUS_EXPANSION
+#define I2C_BUS_MB12XX          PX4_I2C_BUS_EXPANSION
+#define PX4_I2C_BUS_LED         PX4_I2C_BUS_EXPANSION
 
 /*
  * Devices on the onboard bus.
  *
  * Note that these are unshifted addresses.
  */
+#define PX4_I2C_OBDEV_LED        0x55
 #define I2CDEV_HMC5883    0x1E
 
 
