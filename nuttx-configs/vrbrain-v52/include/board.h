@@ -47,9 +47,7 @@
 # include <stdint.h>
 #endif
 
-#include "stm32_rcc.h"
-#include "stm32_sdio.h"
-#include "stm32.h"
+#include <stm32.h>
 
 /************************************************************************************
  * Definitions
@@ -91,7 +89,7 @@
 #define STM32_HSI_FREQUENCY     16000000ul
 #define STM32_LSI_FREQUENCY     32000
 #define STM32_HSE_FREQUENCY     STM32_BOARD_XTAL
-#define STM32_LSE_FREQUENCY     32768
+//#define STM32_LSE_FREQUENCY     32768
 
 /* Main PLL Configuration.
  *
@@ -241,7 +239,7 @@ extern "C" {
  *
  ************************************************************************************/
 
-void stm32_boardinitialize(void);
+EXTERN void stm32_boardinitialize(void);
 
 #undef EXTERN
 #if defined(__cplusplus)
